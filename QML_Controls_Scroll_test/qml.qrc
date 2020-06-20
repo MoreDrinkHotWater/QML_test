@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>qtquickcontrols2.conf</file>
+        <file>Images/屏幕截图(21).png</file>
+        <file>Images/1.png</file>
+        <file>Images/copy.png</file>
+        <file>Images/cut.png</file>
+        <file>Images/new.png</file>
+        <file>Images/paste.png</file>
+    </qresource>
+</RCC>
