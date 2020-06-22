@@ -8,5 +8,7 @@
         <file>Images/cut.png</file>
         <file>Images/new.png</file>
         <file>Images/paste.png</file>
+        <file>test_data/snake.stl</file>
+        <file>test_data/toyplane.obj</file>
     </qresource>
 </RCC>

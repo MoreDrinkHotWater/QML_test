@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>test_data/snake.stl</file>
+    </qresource>
+</RCC>

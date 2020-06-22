@@ -1,9 +1,13 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <Qt3DQuickExtras/qt3dquickwindow.h>
+#include <Qt3DQuick/QQmlAspectEngine>
 
 int main(int argc, char *argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+
+    QCoreApplication::setOrganizationName("somethings");
 
     QGuiApplication app(argc, argv);
 
