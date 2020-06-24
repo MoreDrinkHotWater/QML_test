@@ -45,7 +45,7 @@ ApplicationWindow
 
     FileDialog
     {
-        id: fileDialog
+        id: fileOpenDialog
 
         title: "Select file"
         folder: shortcuts.home
@@ -56,7 +56,7 @@ ApplicationWindow
 
         onAccepted:
         {
-            sceneLoader.source = fileDialog.fileUrl
+            sceneLoader.source = fileOpenDialog.fileUrl
         }
     }
 
