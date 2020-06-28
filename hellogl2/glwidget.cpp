@@ -173,7 +173,7 @@ static const char *fragmentShaderSourceCore =
     "   highp float NL = max(dot(normalize(vertNormal), L), 0.0);\n"
     "   highp vec3 color = vec3(0.39, 1.0, 0.0);\n"
     "   highp vec3 col = clamp(color * 0.2 + color * 0.8 * NL, 0.0, 1.0);\n"
-    "   fragColor = vec4(col, 1.0);\n"
+    "   fragColor = vec4(1.0,0,0, 1.0);//vec4(col, 1.0);\n"
     "}\n";
 
 static const char *vertexShaderSource =
@@ -249,6 +249,8 @@ void GLWidget::initializeGL()
     // 设置顶点缓冲区对象
     m_logoVbo.create();
     m_logoVbo.bind();
+    // m_logo.constData(): const GLfloat *constData()  ->  QVector<GLfloat>
+    // 分配内存
     m_logoVbo.allocate(m_logo.constData(), m_logo.count() * sizeof(GLfloat));
 
     // 设定顶点的属性
@@ -280,7 +282,9 @@ void GLWidget::setupVertexAttribs()
 
 void GLWidget::paintGL()
 {
+    // 设定有效的其他缓存的初始值
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
@@ -296,6 +300,7 @@ void GLWidget::paintGL()
     QMatrix3x3 normalMatrix = m_world.normalMatrix();
     m_program->setUniformValue(m_normalMatrixLoc, normalMatrix);
 
+    // m_logo.vertexCount()：  m_count / 6
     glDrawArrays(GL_TRIANGLES, 0, m_logo.vertexCount());
 
     m_program->release();
