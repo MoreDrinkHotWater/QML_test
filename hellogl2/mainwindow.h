@@ -55,6 +55,11 @@
 
 #include "ReadFile.h"
 #include <QThread>
+#include <QTextStream>
+
+#include <qopengl.h>
+
+class GLWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -63,23 +68,26 @@ class MainWindow : public QMainWindow
 public:
     MainWindow();
 
-    ~MainWindow() override;
-
 Q_SIGNALS:
     void emitParentWindowSignal(QMainWindow *mainWindow);
+
+    void emitVectorDataSignal(QVector<GLfloat> temp);
 
 private slots:
     void onAddNew();
 
     void tempSlot();
 
-private:
-    QMainWindow *mainWindow;
-
 public:
     ReadFile *readFile;
 
     QThread readFileThread;
+
+    QVector<GLfloat> temp;
+
+public:
+    GLWidget *glwidget;
+
 };
 
 #endif

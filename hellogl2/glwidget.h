@@ -80,6 +80,8 @@ public slots:
     void setZRotation(int angle);
     void cleanup();
 
+    void reviceVectorDataSlot(QVector<GLfloat> temp);
+
 signals:
     void xRotationChanged(int angle);
     void yRotationChanged(int angle);
@@ -101,10 +103,17 @@ private:
     int m_zRot;
     // 使用整数精度在平面中定义一个点。
     QPoint m_lastPos;
+
     Logo m_logo;
     QOpenGLVertexArrayObject m_vao;
     QOpenGLBuffer m_logoVbo;
     QOpenGLShaderProgram *m_program;
+
+    // add by lixuelong
+    QOpenGLVertexArrayObject m_vao_2;
+    QOpenGLBuffer m_Vbo;
+    QVector<GLfloat> temp;
+
     int m_projMatrixLoc;
     int m_mvMatrixLoc;
     int m_normalMatrixLoc;

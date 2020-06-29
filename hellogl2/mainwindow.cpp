@@ -57,10 +57,17 @@
 #include <QDebug>
 #include <iostream>
 
+#include <fstream>
+#include <string>
+
+#include <QVector>
+
 #include "ReadFile.h"
+#include "glwidget.h"
 
 MainWindow::MainWindow():
-    readFile(new ReadFile())
+    readFile(new ReadFile()),
+    glwidget(new GLWidget())
 {
     QMenuBar *menuBar = new QMenuBar;
     QMenu *menuWindow = menuBar->addMenu(tr("&Window"));
@@ -82,12 +89,6 @@ MainWindow::MainWindow():
     onAddNew();
 }
 
-MainWindow::~MainWindow()
-{
-    readFileThread.quit();
-    readFileThread.wait();
-}
-
 void MainWindow::onAddNew()
 {
     if (!centralWidget())
@@ -98,16 +99,109 @@ void MainWindow::onAddNew()
 
 void MainWindow::tempSlot()
 {
-    connect(this, &MainWindow::emitParentWindowSignal, readFile, &ReadFile::startReadSlot);
+    QString filePath =
+            QFileDialog::getOpenFileName(this, "Select File", "",
+                                         "stl(*.stl)");
 
-    readFile->moveToThread(&readFileThread);
+    qDebug() << filePath;
 
-    connect(&readFileThread, &QThread::finished, readFile, &QObject::deleteLater);
+    QFile file(filePath);
 
-    std::cout << "Main thread: " << QThread::currentThreadId() << std::endl;
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QMessageBox::warning(nullptr, "warning", "Can't open file!");
+        return ;
+    }
 
-    emit emitParentWindowSignal(this);
+    QString lineString;
+    QTextStream in(&file);
 
-    readFileThread.start();
+    QString headStr = in.readLine();
 
+    if (headStr == "")
+        return;
+
+    // ReadASCII
+    if (headStr[0] == 's')
+    {
+        qDebug() <<"ReadASCII";
+    }
+
+    // ReadBinary
+    else
+    {
+        qDebug() <<"ReadBinary";
+
+//        QVector<GLfloat> normal;
+//        QVector<GLfloat> coorX;
+//        QVector<GLfloat> coorY;
+//        QVector<GLfloat> coorZ;
+
+        std::ifstream in(filePath.toStdString(), std::ifstream::in | std::ifstream::binary);
+
+        char str[80];
+
+        in.read(str, 80);
+
+        //number of triangles
+        int triangles;
+        in.read((char*)&triangles, sizeof(int));
+
+        if (triangles == 0)
+            return;
+
+        for (int i = 0; i < triangles; i++)
+        {
+            float coorXYZ[12];
+            in.read((char*)coorXYZ, 12 * sizeof(float));
+
+            for (int j = 1; j < 4; j++)
+            {
+                // 顶点
+                temp.push_back(coorXYZ[j * 3]);
+                temp.push_back(coorXYZ[j * 3 + 1]);
+                temp.push_back(coorXYZ[j * 3 + 2]);
+
+                // 法向量
+                for(int j = 0; j < 3; j++)
+                {
+                    temp.push_back(coorXYZ[j]);
+                }
+            }
+
+//            if(i==0)
+//            {
+//                std::cout<< "temp size: "<< temp.size() << std::endl;
+//            }
+
+            in.read((char*)coorXYZ, 2);
+
+        }
+
+        std::cout << "the triangles size: "<< triangles <<std::endl;
+
+        connect(this, &MainWindow::emitVectorDataSignal, glwidget, &GLWidget::reviceVectorDataSlot);
+
+
+//        for(int i = 0; i < normal.size(); i++)
+//        {
+//            temp_vector.append(normal[i]);
+//            temp_vector.append(coorX[i]);
+//            temp_vector.append(coorY[i]);
+//            temp_vector.append(coorZ[i]);
+//        }
+
+//        for (int i = 0; i<12; i++) {
+//            std::cout<< temp[i]<<std::endl;
+//        }
+
+        std::cout << temp.size() <<std::endl;
+
+        emit emitVectorDataSignal(temp);
+
+        in.close();
+
+    }
+
+    file.close();
 }
+

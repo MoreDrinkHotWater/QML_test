@@ -54,6 +54,8 @@
 #include <QCoreApplication>
 #include <math.h>
 
+#include <iostream>
+
 bool GLWidget::m_transparent = false;
 
 GLWidget::GLWidget(QWidget *parent)
@@ -249,9 +251,18 @@ void GLWidget::initializeGL()
     // 设置顶点缓冲区对象
     m_logoVbo.create();
     m_logoVbo.bind();
+
     // m_logo.constData(): const GLfloat *constData()  ->  QVector<GLfloat>
+
     // 分配内存
-    m_logoVbo.allocate(m_logo.constData(), m_logo.count() * sizeof(GLfloat));
+    if(temp.count() != 0)
+    {
+        m_logoVbo.allocate(temp.constData(), temp.count() * sizeof(GLfloat));
+    }
+    else
+    {
+        m_logoVbo.allocate(m_logo.constData(), m_logo.count() * sizeof(GLfloat));
+    }
 
     // 设定顶点的属性
     setupVertexAttribs();
@@ -275,7 +286,9 @@ void GLWidget::setupVertexAttribs()
     QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
     f->glEnableVertexAttribArray(0);
     f->glEnableVertexAttribArray(1);
+    // 顶点的偏移量
     f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), 0);
+    // 法向量的偏移量
     f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), reinterpret_cast<void *>(3 * sizeof(GLfloat)));
     m_logoVbo.release();
 }
@@ -288,6 +301,7 @@ void GLWidget::paintGL()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
+    // 控制旋转
     m_world.setToIdentity();
     m_world.rotate(180.0f - (m_xRot / 16.0f), 1, 0, 0);
     m_world.rotate(m_yRot / 16.0f, 0, 1, 0);
@@ -300,8 +314,21 @@ void GLWidget::paintGL()
     QMatrix3x3 normalMatrix = m_world.normalMatrix();
     m_program->setUniformValue(m_normalMatrixLoc, normalMatrix);
 
-    // m_logo.vertexCount()：  m_count / 6
-    glDrawArrays(GL_TRIANGLES, 0, m_logo.vertexCount());
+    if(temp.count() != 0)
+    {
+        std::cout<< "temp.count: "<< temp.count() <<std::endl;
+
+//        qDebug() << QOpenGLContext::currentContext();
+
+        glDrawArrays(GL_TRIANGLES, 0, temp.count()/6);
+
+        std::cout<< "===========Test success=========="<<std::endl;
+
+    }
+    else
+    {
+        glDrawArrays(GL_TRIANGLES, 0, m_logo.vertexCount());
+    }
 
     m_program->release();
 }
@@ -332,4 +359,16 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
         setZRotation(m_zRot + 8 * dx);
     }
     m_lastPos = event->pos();
+}
+
+void GLWidget::reviceVectorDataSlot(QVector<GLfloat> temp)
+{
+    this->temp = temp;
+
+//    initializeGL();
+
+//    paintGL();
+
+    qDebug()<<"revice vector size:"<< temp.size();
+
 }
