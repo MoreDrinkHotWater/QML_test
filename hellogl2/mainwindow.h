@@ -53,6 +53,9 @@
 
 #include <QMainWindow>
 
+#include "ReadFile.h"
+#include <QThread>
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -60,8 +63,23 @@ class MainWindow : public QMainWindow
 public:
     MainWindow();
 
+    ~MainWindow() override;
+
+Q_SIGNALS:
+    void emitParentWindowSignal(QMainWindow *mainWindow);
+
 private slots:
     void onAddNew();
+
+    void tempSlot();
+
+private:
+    QMainWindow *mainWindow;
+
+public:
+    ReadFile *readFile;
+
+    QThread readFileThread;
 };
 
 #endif

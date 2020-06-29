@@ -54,17 +54,38 @@
 #include <QMenu>
 #include <QMessageBox>
 
-MainWindow::MainWindow()
+#include <QDebug>
+#include <iostream>
+
+#include "ReadFile.h"
+
+MainWindow::MainWindow():
+    readFile(new ReadFile())
 {
     QMenuBar *menuBar = new QMenuBar;
     QMenu *menuWindow = menuBar->addMenu(tr("&Window"));
+
+
     QAction *addNew = new QAction(menuWindow);
     addNew->setText(tr("Add new"));
     menuWindow->addAction(addNew);
     connect(addNew, &QAction::triggered, this, &MainWindow::onAddNew);
+
+    QAction *readFileAction = new QAction(menuWindow);
+    readFileAction->setText(tr("Read file"));
+    menuWindow->addAction(readFileAction);
+
+    connect(readFileAction, &QAction::triggered, this, &MainWindow::tempSlot);
+
     setMenuBar(menuBar);
 
     onAddNew();
+}
+
+MainWindow::~MainWindow()
+{
+    readFileThread.quit();
+    readFileThread.wait();
 }
 
 void MainWindow::onAddNew()
@@ -73,4 +94,20 @@ void MainWindow::onAddNew()
         setCentralWidget(new Window(this));
     else
         QMessageBox::information(0, tr("Cannot add new window"), tr("Already occupied. Undock first."));
+}
+
+void MainWindow::tempSlot()
+{
+    connect(this, &MainWindow::emitParentWindowSignal, readFile, &ReadFile::startReadSlot);
+
+    readFile->moveToThread(&readFileThread);
+
+    connect(&readFileThread, &QThread::finished, readFile, &QObject::deleteLater);
+
+    std::cout << "Main thread: " << QThread::currentThreadId() << std::endl;
+
+    emit emitParentWindowSignal(this);
+
+    readFileThread.start();
+
 }
