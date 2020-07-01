@@ -58,6 +58,8 @@
 #include <QMatrix4x4>
 #include "logo.h"
 
+class MainWindow;
+
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
 class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
@@ -73,6 +75,8 @@ public:
 
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;
+
+    void test();
 
 public slots:
     void setXRotation(int angle);
@@ -105,13 +109,17 @@ private:
     QPoint m_lastPos;
 
     Logo m_logo;
+
+    // OpenGL顶点数组对象
     QOpenGLVertexArrayObject m_vao;
+
+    // 用于创建和管理OpenGL缓冲区对象的函数。
     QOpenGLBuffer m_logoVbo;
+
+    // 允许OpenGL着色程序被链接和使用。
     QOpenGLShaderProgram *m_program;
 
     // add by lixuelong
-    QOpenGLVertexArrayObject m_vao_2;
-    QOpenGLBuffer m_Vbo;
     QVector<GLfloat> temp;
 
     int m_projMatrixLoc;
@@ -122,6 +130,8 @@ private:
     QMatrix4x4 m_camera;
     QMatrix4x4 m_world;
     static bool m_transparent;
+
+//    MainWindow *mainWindow;
 };
 
 #endif

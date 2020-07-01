@@ -55,6 +55,10 @@
 #include <math.h>
 
 #include <iostream>
+#include "mainwindow.h"
+
+#include <fstream>
+#include <QMessageBox>
 
 bool GLWidget::m_transparent = false;
 
@@ -64,6 +68,7 @@ GLWidget::GLWidget(QWidget *parent)
       m_yRot(0),
       m_zRot(0),
       m_program(0)
+//      mainWindow(new MainWindow())
 {
     m_core = QSurfaceFormat::defaultFormat().profile() == QSurfaceFormat::CoreProfile;
     // --transparent causes the clear color to be transparent. Therefore, on systems that
@@ -74,6 +79,9 @@ GLWidget::GLWidget(QWidget *parent)
         fmt.setAlphaBufferSize(8);
         setFormat(fmt);
     }
+
+    test();
+
 }
 
 GLWidget::~GLWidget()
@@ -90,7 +98,7 @@ QSize GLWidget::minimumSizeHint() const
 // 设定画布的初始大小
 QSize GLWidget::sizeHint() const
 {
-    return QSize(400, 400);
+    return QSize(500, 500);
 }
 
 static void qNormalizeAngle(int &angle)
@@ -142,7 +150,6 @@ void GLWidget::cleanup()
     doneCurrent();
 }
 
-
 // 顶点着色器 内置变量： gl_Position = projMatrix * mvMatrix * vertex;
 //            变换后的位置 = 投影矩阵 × 模型视图变换矩阵 × 顶点的坐标
 
@@ -175,7 +182,7 @@ static const char *fragmentShaderSourceCore =
     "   highp float NL = max(dot(normalize(vertNormal), L), 0.0);\n"
     "   highp vec3 color = vec3(0.39, 1.0, 0.0);\n"
     "   highp vec3 col = clamp(color * 0.2 + color * 0.8 * NL, 0.0, 1.0);\n"
-    "   fragColor = vec4(1.0,0,0, 1.0);//vec4(col, 1.0);\n"
+    "   fragColor = vec4(col, 1.0); //vec4(1.0,0,0, 1.0);\n"
     "}\n";
 
 static const char *vertexShaderSource =
@@ -206,6 +213,7 @@ static const char *fragmentShaderSource =
     "   gl_FragColor = vec4(col, 1.0);\n"
     "}\n";
 
+// 设置OpenGL资源和状态
 void GLWidget::initializeGL()
 {
     // In this example the widget's corresponding top-level window can change
@@ -252,11 +260,11 @@ void GLWidget::initializeGL()
     m_logoVbo.create();
     m_logoVbo.bind();
 
-    // m_logo.constData(): const GLfloat *constData()  ->  QVector<GLfloat>
-
     // 分配内存
     if(temp.count() != 0)
     {
+        std::cout<<"=====================Test1==================="<<std::endl;
+
         m_logoVbo.allocate(temp.constData(), temp.count() * sizeof(GLfloat));
     }
     else
@@ -270,7 +278,7 @@ void GLWidget::initializeGL()
     // Our camera never changes in this example.
     // 设置相机
     m_camera.setToIdentity();
-    m_camera.translate(0, 0, -1);
+    m_camera.translate(0, 0, -3);
 
     // Light position is fixed.
     // 固定灯光
@@ -282,6 +290,8 @@ void GLWidget::initializeGL()
 
 void GLWidget::setupVertexAttribs()
 {
+    // 着色管线装配： 将应用程序的数据与着色器程序的变量关联起来
+
     m_logoVbo.bind();
     QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
     f->glEnableVertexAttribArray(0);
@@ -293,9 +303,10 @@ void GLWidget::setupVertexAttribs()
     m_logoVbo.release();
 }
 
+// 渲染OpenGL场景
 void GLWidget::paintGL()
 {
-    // 设定有效的其他缓存的初始值
+    // 清除窗口的内容
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glEnable(GL_DEPTH_TEST);
@@ -307,6 +318,7 @@ void GLWidget::paintGL()
     m_world.rotate(m_yRot / 16.0f, 0, 1, 0);
     m_world.rotate(m_zRot / 16.0f, 0, 0, 1);
 
+    // 绑定 OpenGL 顶点数组对象
     QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
     m_program->bind();
     m_program->setUniformValue(m_projMatrixLoc, m_proj);
@@ -316,23 +328,23 @@ void GLWidget::paintGL()
 
     if(temp.count() != 0)
     {
-        std::cout<< "temp.count: "<< temp.count() <<std::endl;
 
-//        qDebug() << QOpenGLContext::currentContext();
+//        std::cout<<"=====================Test2==================="<<std::endl;
 
         glDrawArrays(GL_TRIANGLES, 0, temp.count()/6);
-
-        std::cout<< "===========Test success=========="<<std::endl;
 
     }
     else
     {
+        // 渲染对象
         glDrawArrays(GL_TRIANGLES, 0, m_logo.vertexCount());
     }
 
+    // 从当前的 QOpenGLContext 中释放活动的着色程序。这相当于调用glUseProgram(0)。
     m_program->release();
 }
 
+// 设置OpenGL视口、投影等
 void GLWidget::resizeGL(int w, int h)
 {
     m_proj.setToIdentity();
@@ -365,10 +377,79 @@ void GLWidget::reviceVectorDataSlot(QVector<GLfloat> temp)
 {
     this->temp = temp;
 
-//    initializeGL();
-
-//    paintGL();
-
     qDebug()<<"revice vector size:"<< temp.size();
 
 }
+
+void GLWidget::test()
+{
+    QString filePath = "/home/damon/Qt_Project/hellogl2_build/circle.stl";
+    QFile file(filePath);
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QMessageBox::warning(nullptr, "warning", "Can't open file!");
+        return ;
+    }
+
+    QString lineString;
+    QTextStream in(&file);
+
+    QString headStr = in.readLine();
+
+    if (headStr == "")
+        return;
+
+    // ReadASCII
+    if (headStr[0] == 's')
+    {
+        qDebug() <<"ReadASCII";
+    }
+
+    // ReadBinary
+    else
+    {
+        qDebug() <<"ReadBinary";
+
+        std::ifstream in(filePath.toStdString(), std::ifstream::in | std::ifstream::binary);
+
+        char str[80];
+
+        in.read(str, 80);
+
+        //number of triangles
+        int triangles;
+        in.read((char*)&triangles, sizeof(int));
+
+        if (triangles == 0)
+            return;
+
+        for (int i = 0; i < triangles; i++)
+        {
+            float coorXYZ[12];
+            in.read((char*)coorXYZ, 12 * sizeof(float));
+
+            for (int j = 1; j < 4; j++)
+            {
+                // 顶点
+                temp.push_back(coorXYZ[j * 3]);
+                temp.push_back(coorXYZ[j * 3 + 1]);
+                temp.push_back(coorXYZ[j * 3 + 2]);
+
+                // 法向量
+                for(int j = 0; j < 3; j++)
+                {
+                    temp.push_back(coorXYZ[j]);
+                }
+            }
+
+            in.read((char*)coorXYZ, 2);
+
+        }
+
+        in.close();
+    }
+
+    std::cout<<"temp size: "<<temp.size()<<std::endl;
+
+    file.close();
+};

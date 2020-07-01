@@ -65,6 +65,8 @@
 #include "ReadFile.h"
 #include "glwidget.h"
 
+#include <math.h>
+
 MainWindow::MainWindow():
     readFile(new ReadFile()),
     glwidget(new GLWidget())
@@ -131,10 +133,10 @@ void MainWindow::tempSlot()
     {
         qDebug() <<"ReadBinary";
 
-//        QVector<GLfloat> normal;
-//        QVector<GLfloat> coorX;
-//        QVector<GLfloat> coorY;
-//        QVector<GLfloat> coorZ;
+        //        QVector<GLfloat> normal;
+        //        QVector<GLfloat> coorX;
+        //        QVector<GLfloat> coorY;
+        //        QVector<GLfloat> coorZ;
 
         std::ifstream in(filePath.toStdString(), std::ifstream::in | std::ifstream::binary);
 
@@ -168,10 +170,36 @@ void MainWindow::tempSlot()
                 }
             }
 
-//            if(i==0)
-//            {
-//                std::cout<< "temp size: "<< temp.size() << std::endl;
-//            }
+            //            if(i == 0)
+            //            {
+            //                for (int j = 0; j < 12; j++) {
+            //                    std::cout<<"coorXYZ "<<j<<": "<<coorXYZ[j]<<std::endl;
+            //                }
+            //            }
+
+            if(i == 0)
+            {
+                //                std::cout<< "temp size: "<< temp.size() << std::endl;
+                float a = coorXYZ[6]-coorXYZ[3];
+                float b = coorXYZ[7]-coorXYZ[4];
+                float c = coorXYZ[8]-coorXYZ[5];
+
+                float d = coorXYZ[9]-coorXYZ[3];
+                float e = coorXYZ[10]-coorXYZ[4];
+                float f = coorXYZ[11]-coorXYZ[5];
+
+                float  x = b*f-c*e; // 计算三阶行列式
+                float  y = c*d-a*f;
+                float  z = a*e-b*d;
+
+                float length = sqrt(x*x + y*y + z*z);
+
+                x /= length; // 变为单位化向量
+                y /= length;
+                z /= length;
+
+                std::cout<<"("<<x<<","<<y<<","<<z<<")"<<std::endl;
+            }
 
             in.read((char*)coorXYZ, 2);
 
@@ -181,16 +209,7 @@ void MainWindow::tempSlot()
 
         connect(this, &MainWindow::emitVectorDataSignal, glwidget, &GLWidget::reviceVectorDataSlot);
 
-
-//        for(int i = 0; i < normal.size(); i++)
-//        {
-//            temp_vector.append(normal[i]);
-//            temp_vector.append(coorX[i]);
-//            temp_vector.append(coorY[i]);
-//            temp_vector.append(coorZ[i]);
-//        }
-
-//        for (int i = 0; i<12; i++) {
+//        for (int i = 0; i<18; i++) {
 //            std::cout<< temp[i]<<std::endl;
 //        }
 
