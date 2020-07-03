@@ -81,6 +81,7 @@ private:
     QSlider *xSlider;
     QSlider *ySlider;
     QSlider *zSlider;
+    QSlider *breadthSlider;
     QPushButton *dockBtn;
     MainWindow *mainWindow;
 };

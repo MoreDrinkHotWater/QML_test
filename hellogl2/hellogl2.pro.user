@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.11.0, 2020-07-01T18:53:29. -->
+<!-- Written by QtCreator 4.11.0, 2020-07-03T09:06:06. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -289,7 +289,6 @@
      <value type="QString">MESA_GL_VERSION_OVERRIDE=3.2</value>
      <value type="QString">MESA_GLSL_VERSION_OVERRIDE=150</value>
     </valuelist>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">hellogl22</value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:/home/damon/Qt_Project/hellogl2/hellogl2.pro</value>
     <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">/home/damon/Qt_Project/hellogl2/hellogl2.pro</value>
     <value type="QString" key="RunConfiguration.Arguments"></value>

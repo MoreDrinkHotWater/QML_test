@@ -57,10 +57,14 @@
 #include <iostream>
 #include "mainwindow.h"
 
+#include <window.h>
+
 #include <fstream>
 #include <QMessageBox>
 
 bool GLWidget::m_transparent = false;
+
+extern bool flag;
 
 GLWidget::GLWidget(QWidget *parent)
     : QOpenGLWidget(parent),
@@ -68,7 +72,7 @@ GLWidget::GLWidget(QWidget *parent)
       m_yRot(0),
       m_zRot(0),
       m_program(0)
-//      mainWindow(new MainWindow())
+    //      mainWindow(new MainWindow())
 {
     m_core = QSurfaceFormat::defaultFormat().profile() == QSurfaceFormat::CoreProfile;
     // --transparent causes the clear color to be transparent. Therefore, on systems that
@@ -81,6 +85,8 @@ GLWidget::GLWidget(QWidget *parent)
     }
 
     test();
+
+//    setMouseTracking(true);
 
 }
 
@@ -150,68 +156,69 @@ void GLWidget::cleanup()
     doneCurrent();
 }
 
-// 顶点着色器 内置变量： gl_Position = projMatrix * mvMatrix * vertex;
+// 顶点着色器（指定几何形状的顶点） 内置变量： gl_Position = projMatrix * mvMatrix * vertex;
 //            变换后的位置 = 投影矩阵 × 模型视图变换矩阵 × 顶点的坐标
 
 static const char *vertexShaderSourceCore =
-    "#version 150\n"
-    "in vec4 vertex;\n"
-    "in vec3 normal;\n"
-    "out vec3 vert;\n"
-    "out vec3 vertNormal;\n"
-    "uniform mat4 projMatrix;\n"
-    "uniform mat4 mvMatrix;\n"
-    "uniform mat3 normalMatrix;\n"
-    "void main() {\n"
-    "   vert = vertex.xyz;\n"
-    "   vertNormal = normalMatrix * normal;\n"
-    "   gl_Position = projMatrix * mvMatrix * vertex;\n"
-    "}\n";
+        "#version 150\n"
+        "in vec4 vertex;\n"
+        "in vec3 normal;\n"
+        "out vec3 vert;\n"
+        "out vec3 vertNormal;\n"
+        "uniform mat4 projMatrix;\n"
+        "uniform mat4 mvMatrix;\n"
+        "uniform mat3 normalMatrix;\n"
+        "void main() {\n"
+        "   vert = vertex.xyz;\n"
+        "   vertNormal = normalMatrix * normal;\n"
+        "   gl_Position = projMatrix * mvMatrix * vertex;\n"
+        "}\n";
 
 
-// 像素着色器 内置颜色变量： fragColor = vec4(col, 1.0)
+// 片元着色器（指定每个顶点的着色） 内置颜色变量： fragColor = vec4(col, 1.0)
 
 static const char *fragmentShaderSourceCore =
-    "#version 150\n"
-    "in highp vec3 vert;\n"
-    "in highp vec3 vertNormal;\n"
-    "out highp vec4 fragColor;\n"
-    "uniform highp vec3 lightPos;\n"
-    "void main() {\n"
-    "   highp vec3 L = normalize(lightPos - vert);\n"
-    "   highp float NL = max(dot(normalize(vertNormal), L), 0.0);\n"
-    "   highp vec3 color = vec3(0.39, 1.0, 0.0);\n"
-    "   highp vec3 col = clamp(color * 0.2 + color * 0.8 * NL, 0.0, 1.0);\n"
-    "   fragColor = vec4(col, 1.0); //vec4(1.0,0,0, 1.0);\n"
-    "}\n";
+        "#version 150\n"
+        "in highp vec3 vert;\n"
+        "in highp vec3 vertNormal;\n"
+        "out highp vec4 fragColor;\n"
+        "uniform highp vec3 lightPos;\n"
+        "void main() {\n"
+        "   highp vec3 L = normalize(lightPos - vert);\n"
+        "   highp float NL = max(dot(normalize(vertNormal), L), 0.0);\n"
+        "   highp vec3 color = vec3(0.39, 1.0, 0.0);\n"
+        "   highp vec3 col = clamp(color * 0.2 + color * 0.8 * NL, 0.0, 1.0);\n"
+        "   fragColor = vec4(col, 1.0); //vec4(1.0,0,0, 1.0);\n"
+        "}\n";
 
 static const char *vertexShaderSource =
         "#version 150\n"
-    "attribute vec4 vertex;\n"
-    "attribute vec3 normal;\n"
-    "varying vec3 vert;\n"
-    "varying vec3 vertNormal;\n"
-    "uniform mat4 projMatrix;\n"
-    "uniform mat4 mvMatrix;\n"
-    "uniform mat3 normalMatrix;\n"
-    "void main() {\n"
-    "   vert = vertex.xyz;\n"
-    "   vertNormal = normalMatrix * normal;\n"
-    "   gl_Position = projMatrix * mvMatrix * vertex;\n"
-    "}\n";
+        "attribute vec4 vertex;\n"
+        "attribute vec3 normal;\n"
+        "varying vec3 vert;\n"
+        "varying vec3 vertNormal;\n"
+        "uniform mat4 projMatrix;\n"
+        "uniform mat4 mvMatrix;\n"
+        "uniform mat3 normalMatrix;\n"
+        "void main() {\n"
+        "   vert = vertex.xyz;\n"
+        "   vertNormal = normalMatrix * normal;\n"
+        "   gl_Position = projMatrix * mvMatrix * vertex;\n"
+        "}\n";
 
 static const char *fragmentShaderSource =
         "#version 150\n"
-    "varying highp vec3 vert;\n"
-    "varying highp vec3 vertNormal;\n"
-    "uniform highp vec3 lightPos;\n"
-    "void main() {\n"
-    "   highp vec3 L = normalize(lightPos - vert);\n"
-    "   highp float NL = max(dot(normalize(vertNormal), L), 0.0);\n"
-    "   highp vec3 color = vec3(0.39, 1.0, 0.0);\n"
-    "   highp vec3 col = clamp(color * 0.2 + color * 0.8 * NL, 0.0, 1.0);\n"
-    "   gl_FragColor = vec4(col, 1.0);\n"
-    "}\n";
+        "varying highp vec3 vert;\n"
+        "varying highp vec3 vertNormal;\n"
+        "uniform highp vec3 lightPos;\n"
+
+        "void main() {\n"
+        "   highp vec3 L = normalize(lightPos - vert);\n"
+        "   highp float NL = max(dot(normalize(vertNormal), L), 0.0);\n"
+        "   highp vec3 color = vec3(0.39, 1.0, 0.0);\n"
+        "   highp vec3 col = clamp(color * 0.2 + color * 0.8 * NL, 0.0, 1.0);\n"
+        "   gl_FragColor = vec4(col, 1.0);\n"
+        "}\n";
 
 // 设置OpenGL资源和状态
 void GLWidget::initializeGL()
@@ -224,29 +231,39 @@ void GLWidget::initializeGL()
     // the signal will be followed by an invocation of initializeGL() where we
     // can recreate all resources.
 
-    // OpenGL的状态机： 上下文（context）
+    // OpenGL的状态机： 设置上下文（context）
     connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &GLWidget::cleanup);
 
     // 初始化状态设置函数，这类函数将会改变上下文
     initializeOpenGLFunctions();
-    glClearColor(0, 0, 0, m_transparent ? 0 : 1);
+
+    // 设置背景色
+//    glClearColor(0, 0, 0, m_transparent ? 0 : 1);
+    glClearColor(0, 0.5, 1, 1);
+
 
     // 创建 OpenGL 程序
     m_program = new QOpenGLShaderProgram;
-    // 着色
+
+    // 装载顶点着色器和片元着色器，从source
     m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, m_core ? vertexShaderSourceCore : vertexShaderSource);
     m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, m_core ? fragmentShaderSourceCore : fragmentShaderSource);
 
-    // 链接程序
+
+    // 将属性名称绑定到指定位置。这个函数可以在程序链接之前或之后调用。
+    // 在链接程序时没有显式绑定的任何属性将自动分配位置
+    // （当该函数在程序链接后被调用时，需要重新链接该程序以使更改生效）
     m_program->bindAttributeLocation("vertex", 0);
     m_program->bindAttributeLocation("normal", 1);
+
+    // 链接程序
     m_program->link();
 
     // 相当于在programId()上调用glUseProgram()，如果程序被成功绑定，则返回true;否则错误。
     // 如果着色程序还没有被链接，或者需要重新链接，这个函数将调用link()。
     m_program->bind();
 
-    // 返回这个着色程序的参数列表中的统一变量名
+    // 设置着色程序的变量
     m_projMatrixLoc = m_program->uniformLocation("projMatrix");
     m_mvMatrixLoc = m_program->uniformLocation("mvMatrix");
     m_normalMatrixLoc = m_program->uniformLocation("normalMatrix");
@@ -275,13 +292,12 @@ void GLWidget::initializeGL()
     // 设定顶点的属性
     setupVertexAttribs();
 
-    // Our camera never changes in this example.
-    // 设置相机
+    // 设置相机，且相机为单位矩阵（Our camera never changes in this example.）
     m_camera.setToIdentity();
-    m_camera.translate(0, 0, -3);
+    m_camera.translate(0, 0, -5);
 
-    // Light position is fixed.
-    // 固定灯光
+    // 固定灯光 （Light position is fixed.）
+    //  函数 setUniformValue()：为上下文的变量赋值
     m_program->setUniformValue(m_lightPosLoc, QVector3D(0, 0, 70));
 
     // 释放活动的着色程序。这相当于调用glUseProgram(0)。
@@ -291,9 +307,11 @@ void GLWidget::initializeGL()
 void GLWidget::setupVertexAttribs()
 {
     // 着色管线装配： 将应用程序的数据与着色器程序的变量关联起来
-
     m_logoVbo.bind();
+    // 获取此上下文的 QOpenGLFunctions 实例
     QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
+
+    // 指定要启用（或禁用）的通用顶点属性的索引
     f->glEnableVertexAttribArray(0);
     f->glEnableVertexAttribArray(1);
     // 顶点的偏移量
@@ -306,7 +324,7 @@ void GLWidget::setupVertexAttribs()
 // 渲染OpenGL场景
 void GLWidget::paintGL()
 {
-    // 清除窗口的内容
+    // 清空缓冲区
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glEnable(GL_DEPTH_TEST);
@@ -329,7 +347,7 @@ void GLWidget::paintGL()
     if(temp.count() != 0)
     {
 
-//        std::cout<<"=====================Test2==================="<<std::endl;
+        //        std::cout<<"=====================Test2==================="<<std::endl;
 
         glDrawArrays(GL_TRIANGLES, 0, temp.count()/6);
 
@@ -370,7 +388,32 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
         setXRotation(m_xRot + 8 * dy);
         setZRotation(m_zRot + 8 * dx);
     }
+
     m_lastPos = event->pos();
+}
+
+//void GLWidget::wheelEvent(QWheelEvent *event)    // 滚轮事件
+//{
+//    float z = -5;
+//    float size = 0.00001;
+
+
+//    if(event->delta() > 0)  // 当滚轮远离使用者时
+//    {
+//        m_camera.translate(0, 0, z+size);             // 进行放大
+//    }
+//    else                    // 当滚轮向使用者方向旋转时
+//    {
+//        m_camera.translate(0, 0, z-size);                   // 进行缩小
+//    }
+
+//}
+
+void GLWidget::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() & Qt::Key_A) {
+        std::cout<<"test key A success"<<std::endl;
+    }
 }
 
 void GLWidget::reviceVectorDataSlot(QVector<GLfloat> temp)
@@ -383,7 +426,7 @@ void GLWidget::reviceVectorDataSlot(QVector<GLfloat> temp)
 
 void GLWidget::test()
 {
-    QString filePath = "/home/damon/Qt_Project/hellogl2_build/circle.stl";
+    QString filePath = "/home/damon/Qt_Project/hellogl2_build/cube.stl";
     QFile file(filePath);
 
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {

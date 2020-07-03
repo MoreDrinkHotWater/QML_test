@@ -60,6 +60,8 @@
 #include <QApplication>
 #include <QMessageBox>
 
+#include <iostream>
+
 Window::Window(MainWindow *mw)
     : mainWindow(mw)
 {
@@ -69,6 +71,8 @@ Window::Window(MainWindow *mw)
     xSlider = createSlider();
     ySlider = createSlider();
     zSlider = createSlider();
+    // add by lixuelong
+    breadthSlider = createSlider();
 
     // 滑动条和模型同时更新
     connect(xSlider, &QSlider::valueChanged, glWidget, &GLWidget::setXRotation);
@@ -87,6 +91,7 @@ Window::Window(MainWindow *mw)
     container->addWidget(xSlider);
     container->addWidget(ySlider);
     container->addWidget(zSlider);
+    container->addWidget(breadthSlider);
 
     QWidget *w = new QWidget;
     w->setLayout(container);
@@ -101,6 +106,7 @@ Window::Window(MainWindow *mw)
     xSlider->setValue(15 * 16);
     ySlider->setValue(345 * 16);
     zSlider->setValue(0 * 16);
+    breadthSlider->setValue(0 * 16);
 
     setWindowTitle(tr("Hello GL"));
 }
@@ -121,6 +127,10 @@ void Window::keyPressEvent(QKeyEvent *e)
     // 键盘事件
     if (e->key() == Qt::Key_Escape)
         close();
+    else if(e->key() == Qt::Key_A)
+    {
+        glWidget->keyPressEvent(e);
+    }
     else
         QWidget::keyPressEvent(e);
 }

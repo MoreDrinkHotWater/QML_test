@@ -62,13 +62,13 @@
 
 #include <QVector>
 
-#include "ReadFile.h"
 #include "glwidget.h"
 
 #include <math.h>
 
+#include <QFileDialog>
+
 MainWindow::MainWindow():
-    readFile(new ReadFile()),
     glwidget(new GLWidget())
 {
     QMenuBar *menuBar = new QMenuBar;

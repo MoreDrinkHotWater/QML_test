@@ -1,10 +1,8 @@
 HEADERS       = glwidget.h \
-                ReadFile.h \
                 window.h \
                 mainwindow.h \
                 logo.h
 SOURCES       = glwidget.cpp \
-                ReadFile.cpp \
                 main.cpp \
                 window.cpp \
                 mainwindow.cpp \

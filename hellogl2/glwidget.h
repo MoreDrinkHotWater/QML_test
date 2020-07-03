@@ -98,6 +98,11 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
 
+//    void wheelEvent(QWheelEvent *event) override;
+
+public:
+    void keyPressEvent(QKeyEvent *event) override;
+
 private:
     void setupVertexAttribs();
 
@@ -130,8 +135,6 @@ private:
     QMatrix4x4 m_camera;
     QMatrix4x4 m_world;
     static bool m_transparent;
-
-//    MainWindow *mainWindow;
 };
 
 #endif

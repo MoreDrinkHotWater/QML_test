@@ -53,7 +53,6 @@
 
 #include <QMainWindow>
 
-#include "ReadFile.h"
 #include <QThread>
 #include <QTextStream>
 
@@ -79,7 +78,6 @@ private slots:
     void tempSlot();
 
 public:
-    ReadFile *readFile;
 
     QThread readFileThread;
 
