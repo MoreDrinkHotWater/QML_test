@@ -1,4 +1,4 @@
-/****************************************************************************
+﻿/****************************************************************************
 **
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
@@ -86,7 +86,7 @@ GLWidget::GLWidget(QWidget *parent)
 
     test();
 
-//    setMouseTracking(true);
+    //    setMouseTracking(true);
 
 }
 
@@ -174,23 +174,6 @@ static const char *vertexShaderSourceCore =
         "   gl_Position = projMatrix * mvMatrix * vertex;\n"
         "}\n";
 
-
-// 片元着色器（指定每个顶点的着色） 内置颜色变量： fragColor = vec4(col, 1.0)
-
-static const char *fragmentShaderSourceCore =
-        "#version 150\n"
-        "in highp vec3 vert;\n"
-        "in highp vec3 vertNormal;\n"
-        "out highp vec4 fragColor;\n"
-        "uniform highp vec3 lightPos;\n"
-        "void main() {\n"
-        "   highp vec3 L = normalize(lightPos - vert);\n"
-        "   highp float NL = max(dot(normalize(vertNormal), L), 0.0);\n"
-        "   highp vec3 color = vec3(0.39, 1.0, 0.0);\n"
-        "   highp vec3 col = clamp(color * 0.2 + color * 0.8 * NL, 0.0, 1.0);\n"
-        "   fragColor = vec4(col, 1.0); //vec4(1.0,0,0, 1.0);\n"
-        "}\n";
-
 static const char *vertexShaderSource =
         "#version 150\n"
         "attribute vec4 vertex;\n"
@@ -206,6 +189,23 @@ static const char *vertexShaderSource =
         "   gl_Position = projMatrix * mvMatrix * vertex;\n"
         "}\n";
 
+
+// 片元着色器（指定每个顶点的着色） 内置颜色变量： fragColor = vec4(col, 1.0)
+
+static const char *fragmentShaderSourceCore =
+        "#version 150\n"
+        "in highp vec3 vert;\n"
+        "in highp vec3 vertNormal;\n"
+        "out highp vec4 fragColor;\n"
+        "uniform highp vec3 lightPos;\n"
+        "void main() {\n"
+        "   highp vec3 L = normalize(lightPos - vert);\n"
+        "   highp float NL = max(dot(normalize(vertNormal), L), 0.0);\n"
+        "   highp vec3 color = vec3(0.39, 1.0, 0.0);\n"
+        "   highp vec3 col = clamp(color * 0.2 + color * 0.8 * NL, 0.0, 1.0);\n"
+        "   fragColor = vec4(1.0,0,0, 1.0); \n"
+        "}\n";
+
 static const char *fragmentShaderSource =
         "#version 150\n"
         "varying highp vec3 vert;\n"
@@ -217,7 +217,7 @@ static const char *fragmentShaderSource =
         "   highp float NL = max(dot(normalize(vertNormal), L), 0.0);\n"
         "   highp vec3 color = vec3(0.39, 1.0, 0.0);\n"
         "   highp vec3 col = clamp(color * 0.2 + color * 0.8 * NL, 0.0, 1.0);\n"
-        "   gl_FragColor = vec4(col, 1.0);\n"
+        "   gl_FragColor = vec4(col, 1.0); // vec4(1.0,0,0, 1.0);\n"
         "}\n";
 
 // 设置OpenGL资源和状态
@@ -238,16 +238,19 @@ void GLWidget::initializeGL()
     initializeOpenGLFunctions();
 
     // 设置背景色
-//    glClearColor(0, 0, 0, m_transparent ? 0 : 1);
+    //    glClearColor(0, 0, 0, m_transparent ? 0 : 1);
     glClearColor(0, 0.5, 1, 1);
 
 
     // 创建 OpenGL 程序
     m_program = new QOpenGLShaderProgram;
 
-    // 装载顶点着色器和片元着色器，从source
+    // 装载顶点着色器和片元着色器，从source. 此处 m_core = false
     m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, m_core ? vertexShaderSourceCore : vertexShaderSource);
+
+    //    m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, textureShaderSource);
     m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, m_core ? fragmentShaderSourceCore : fragmentShaderSource);
+
 
 
     // 将属性名称绑定到指定位置。这个函数可以在程序链接之前或之后调用。
@@ -314,10 +317,13 @@ void GLWidget::setupVertexAttribs()
     // 指定要启用（或禁用）的通用顶点属性的索引
     f->glEnableVertexAttribArray(0);
     f->glEnableVertexAttribArray(1);
+
     // 顶点的偏移量
     f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), 0);
+
     // 法向量的偏移量
     f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), reinterpret_cast<void *>(3 * sizeof(GLfloat)));
+
     m_logoVbo.release();
 }
 
@@ -329,6 +335,17 @@ void GLWidget::paintGL()
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+
+    glEnable(GL_LINE_SMOOTH); //开启线的反走样
+
+//    glDepthFunc(GL_LESS);
+
+//    glCullFace(GL_BACK);//GL_BACK GL_FRONT
+//    glDisable(GL_CULL_FACE);
+
+
+//    glDisable(GL_BLEND);
+
 
     // 控制旋转
     m_world.setToIdentity();
@@ -349,7 +366,22 @@ void GLWidget::paintGL()
 
         //        std::cout<<"=====================Test2==================="<<std::endl;
 
-        glDrawArrays(GL_TRIANGLES, 0, temp.count()/6);
+        //        glDrawArrays(GL_TRIANGLES, 0, temp.count()/6);
+
+        // GL_POINTS ： 传入渲染管线的一系列顶点单独进行绘制。
+
+        // GL_LINES : 传入渲染管线的一系列顶点按照顺序两两组织成线段进行绘制，若顶点个数为奇数，管线会自动忽略最后一个顶点。
+        // GL_LINE_STRIP : 传入渲染管线的一系列顶点按照顺序依次组织成线段进行绘制。
+        // GL_LINE_LOOP ： 传入渲染管线的一系列顶点按照顺序依次组织成线段进行绘制，最后一个顶点与第一个顶点相连。
+
+        // GL_TRIANGLES ： 传入渲染管线的一系列顶点按照每3个组织成一个三角形进行绘制。
+        // GL_TRIANGLES_STRIP ： 传入渲染管线的一系列顶点按照依次组织成三角形进行绘制，最后实际形成的是一个三角形条带。
+        // GL_TRIANGLES_FAN ： 传入渲染管线的一系列顶点中第一个顶点作为中心点，其他顶点作为边缘点绘制出一系列形成扇形的相邻三角形。
+
+        // 采用索引法进行绘制时可以有效地减少重复顶点数据，有重复时只需要提供重复的索引号就可
+        // 顶点法： glDrawArrays 索引法： glDrawElements
+
+        glDrawArrays(GL_LINES, 0, 6);
 
     }
     else
@@ -426,6 +458,7 @@ void GLWidget::reviceVectorDataSlot(QVector<GLfloat> temp)
 
 void GLWidget::test()
 {
+    // cube circle snake
     QString filePath = "/home/damon/Qt_Project/hellogl2_build/cube.stl";
     QFile file(filePath);
 
