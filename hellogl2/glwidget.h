@@ -127,6 +127,10 @@ private:
     // add by lixuelong
     QVector<GLfloat> temp;
 
+    QVector<GLfloat> temp_onlyVertex;
+
+    bool flag;
+
     int m_projMatrixLoc;
     int m_mvMatrixLoc;
     int m_normalMatrixLoc;

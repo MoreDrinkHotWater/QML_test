@@ -54,6 +54,10 @@
 #include <QCoreApplication>
 #include <math.h>
 
+
+#include <QtOpenGL/QGLFunctions>
+
+
 #include <iostream>
 #include "mainwindow.h"
 
@@ -86,7 +90,9 @@ GLWidget::GLWidget(QWidget *parent)
 
     test();
 
-    //    setMouseTracking(true);
+    // true 即 渲染三角面
+    // false 即 渲染线
+    flag = false;
 
 }
 
@@ -237,6 +243,7 @@ void GLWidget::initializeGL()
     // 初始化状态设置函数，这类函数将会改变上下文
     initializeOpenGLFunctions();
 
+
     // 设置背景色
     //    glClearColor(0, 0, 0, m_transparent ? 0 : 1);
     glClearColor(0, 0.5, 1, 1);
@@ -285,7 +292,15 @@ void GLWidget::initializeGL()
     {
         std::cout<<"=====================Test1==================="<<std::endl;
 
-        m_logoVbo.allocate(temp.constData(), temp.count() * sizeof(GLfloat));
+        if(flag)
+        {
+            m_logoVbo.allocate(temp.constData(), temp.count() * sizeof(GLfloat));
+        }
+        else
+        {
+            m_logoVbo.allocate(temp_onlyVertex.constData(), temp_onlyVertex.count() * sizeof(GLfloat));
+        }
+
     }
     else
     {
@@ -316,13 +331,23 @@ void GLWidget::setupVertexAttribs()
 
     // 指定要启用（或禁用）的通用顶点属性的索引
     f->glEnableVertexAttribArray(0);
-    f->glEnableVertexAttribArray(1);
 
-    // 顶点的偏移量
-    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), 0);
+    if(flag)
+    {
+        f->glEnableVertexAttribArray(1);
 
-    // 法向量的偏移量
-    f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), reinterpret_cast<void *>(3 * sizeof(GLfloat)));
+        // 顶点的偏移量
+        f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), 0);
+
+        // 法向量的偏移量
+        f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), reinterpret_cast<void *>(3 * sizeof(GLfloat)));
+    }
+
+    else
+    {
+        // 顶点的偏移量
+        f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+    }
 
     m_logoVbo.release();
 }
@@ -337,15 +362,6 @@ void GLWidget::paintGL()
     glEnable(GL_CULL_FACE);
 
     glEnable(GL_LINE_SMOOTH); //开启线的反走样
-
-//    glDepthFunc(GL_LESS);
-
-//    glCullFace(GL_BACK);//GL_BACK GL_FRONT
-//    glDisable(GL_CULL_FACE);
-
-
-//    glDisable(GL_BLEND);
-
 
     // 控制旋转
     m_world.setToIdentity();
@@ -381,7 +397,15 @@ void GLWidget::paintGL()
         // 采用索引法进行绘制时可以有效地减少重复顶点数据，有重复时只需要提供重复的索引号就可
         // 顶点法： glDrawArrays 索引法： glDrawElements
 
-        glDrawArrays(GL_LINES, 0, 6);
+        if(flag)
+        {
+            glDrawArrays(GL_TRIANGLES, 0, temp.count() / 6 );
+        }
+
+        else
+        {
+            glDrawArrays(GL_LINES, 0, temp_onlyVertex.count() / 3 );
+        }
 
     }
     else
@@ -416,6 +440,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
     if (event->buttons() & Qt::LeftButton) {
         setXRotation(m_xRot + 8 * dy);
         setYRotation(m_yRot + 8 * dx);
+
     } else if (event->buttons() & Qt::RightButton) {
         setXRotation(m_xRot + 8 * dy);
         setZRotation(m_zRot + 8 * dx);
@@ -423,23 +448,6 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 
     m_lastPos = event->pos();
 }
-
-//void GLWidget::wheelEvent(QWheelEvent *event)    // 滚轮事件
-//{
-//    float z = -5;
-//    float size = 0.00001;
-
-
-//    if(event->delta() > 0)  // 当滚轮远离使用者时
-//    {
-//        m_camera.translate(0, 0, z+size);             // 进行放大
-//    }
-//    else                    // 当滚轮向使用者方向旋转时
-//    {
-//        m_camera.translate(0, 0, z-size);                   // 进行缩小
-//    }
-
-//}
 
 void GLWidget::keyPressEvent(QKeyEvent *event)
 {
@@ -458,8 +466,8 @@ void GLWidget::reviceVectorDataSlot(QVector<GLfloat> temp)
 
 void GLWidget::test()
 {
-    // cube circle snake
-    QString filePath = "/home/damon/Qt_Project/hellogl2_build/cube.stl";
+    // cube circle snake cylinder
+    QString filePath = "/home/damon/Qt_Project/hellogl2_build/cylinder.stl";
     QFile file(filePath);
 
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -507,9 +515,9 @@ void GLWidget::test()
             for (int j = 1; j < 4; j++)
             {
                 // 顶点
-                temp.push_back(coorXYZ[j * 3]);
-                temp.push_back(coorXYZ[j * 3 + 1]);
-                temp.push_back(coorXYZ[j * 3 + 2]);
+                temp.push_back(coorXYZ[j * 3] );
+                temp.push_back(coorXYZ[j * 3 + 1] );
+                temp.push_back(coorXYZ[j * 3 + 2] );
 
                 // 法向量
                 for(int j = 0; j < 3; j++)
@@ -517,6 +525,31 @@ void GLWidget::test()
                     temp.push_back(coorXYZ[j]);
                 }
             }
+
+            int j = 1;
+            temp_onlyVertex.push_back(coorXYZ[j * 3]);
+            temp_onlyVertex.push_back(coorXYZ[j * 3 + 1]);
+            temp_onlyVertex.push_back(coorXYZ[j * 3 + 2]);
+
+            temp_onlyVertex.push_back(coorXYZ[j * 3 + 3]);
+            temp_onlyVertex.push_back(coorXYZ[j * 3 + 4]);
+            temp_onlyVertex.push_back(coorXYZ[j * 3 + 5]);
+
+            temp_onlyVertex.push_back(coorXYZ[j * 3 + 3]);
+            temp_onlyVertex.push_back(coorXYZ[j * 3 + 4]);
+            temp_onlyVertex.push_back(coorXYZ[j * 3 + 5]);
+
+            temp_onlyVertex.push_back(coorXYZ[j * 3 + 6]);
+            temp_onlyVertex.push_back(coorXYZ[j * 3 + 7]);
+            temp_onlyVertex.push_back(coorXYZ[j * 3 + 8]);
+
+            temp_onlyVertex.push_back(coorXYZ[j * 3 + 6]);
+            temp_onlyVertex.push_back(coorXYZ[j * 3 + 7]);
+            temp_onlyVertex.push_back(coorXYZ[j * 3 + 8]);
+
+            temp_onlyVertex.push_back(coorXYZ[j * 3]);
+            temp_onlyVertex.push_back(coorXYZ[j * 3 + 1]);
+            temp_onlyVertex.push_back(coorXYZ[j * 3 + 2]);
 
             in.read((char*)coorXYZ, 2);
 
