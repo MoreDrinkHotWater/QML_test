@@ -54,9 +54,7 @@
 #include <QCoreApplication>
 #include <math.h>
 
-
-#include <QtOpenGL/QGLFunctions>
-
+#include <random>
 
 #include <iostream>
 #include "mainwindow.h"
@@ -88,7 +86,7 @@ GLWidget::GLWidget(QWidget *parent)
         setFormat(fmt);
     }
 
-//       test();
+    //    test();
 
     // true 即 渲染三角面
     // false 即 渲染线
@@ -96,7 +94,9 @@ GLWidget::GLWidget(QWidget *parent)
 
     // 当 cylinder = true 时， 要取消调用上面的 test 函数 并且 flag = false 。
     cylinder = true;
-    draw_cylinder();
+
+    recognition();
+    //    draw_cylinder();
 
 
 }
@@ -321,7 +321,7 @@ void GLWidget::initializeGL()
 
     // 设置相机，且相机为单位矩阵（Our camera never changes in this example.）
     m_camera.setToIdentity();
-    m_camera.translate(0, 0, -5);
+    m_camera.translate(0, 0, -15);
 
     // 固定灯光 （Light position is fixed.）
     //  函数 setUniformValue()：为上下文的变量赋值
@@ -582,17 +582,46 @@ void GLWidget::test()
     file.close();
 };
 
+void GLWidget::recognition()
+{
+    QVector<QVector2D> head_circle;
+    QVector2D center(0,0);
+    head_circle.push_back(center);
+
+    //    cylinder_vector.push_back(center.x());
+    //    cylinder_vector.push_back(center.y());
+    //    cylinder_vector.push_back(0);
+
+    // 生成椭圆的随机宽度和高度
+    std::random_device rd;  //Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+    std::uniform_real_distribution<> dis(1.0, 5.0);
+    GLfloat circle_width = dis(gen);
+    GLfloat circle_height = dis(gen);
+
+    std::cout<<"circle_width: "<<circle_width<<" circle_height: "<<circle_height<<std::endl;
+
+    for (int i = 0; i <= 360 ; i++) {
+        if( i % 100 == 0)
+            cylinder_vector.push_back(circle_width*cos(i) + dis(gen));
+        else
+            cylinder_vector.push_back(circle_width*cos(i));
+        cylinder_vector.push_back(circle_height*sin(i));
+        cylinder_vector.push_back(0);
+    }
+
+    QVector<QVector2D> left_line;
+    QVector<QVector2D> right_line;
+    QVector<QVector2D> end_circle;
+}
+
 void GLWidget::draw_cylinder()
 {
     // 半径
     GLfloat r = 1.5;
 
     // 圆心
-    GLfloat center[3];
-
-    center[0] = 3;
-    center[1] = 0.8765;
-    center[2] = 5.5000;
+    GLfloat center[3] = {0.5, 0.4, 5.5};
 
     for ( int i = 0; i < 3; i++) {
         cylinder_vector.push_back(center[i]);
@@ -652,11 +681,7 @@ void GLWidget::draw_cylinder()
     }
 
     // 画第二个圆
-    GLfloat center_2[3];
-
-    center_2[0] = 3;
-    center_2[1] = 0.3665;
-    center_2[2] = 2.5000;
+    GLfloat center_2[3] = {0.5, 0.3, 2.5};
 
     for (int i = 0; i <= 360; i++) {
 

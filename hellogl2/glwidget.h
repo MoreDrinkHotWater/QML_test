@@ -80,6 +80,8 @@ public:
 
     void draw_cylinder();
 
+    void recognition();
+
 public slots:
     void setXRotation(int angle);
     void setYRotation(int angle);
@@ -133,6 +135,8 @@ private:
 
     // draw cylinder
     QVector<GLfloat> cylinder_vector;
+
+    QVector<QVector<QVector2D>> Lines;
 
     bool flag;
 
