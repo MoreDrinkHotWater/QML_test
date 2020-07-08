@@ -78,6 +78,8 @@ public:
 
     void test();
 
+    void draw_cylinder();
+
 public slots:
     void setXRotation(int angle);
     void setYRotation(int angle);
@@ -129,7 +131,12 @@ private:
 
     QVector<GLfloat> temp_onlyVertex;
 
+    // draw cylinder
+    QVector<GLfloat> cylinder_vector;
+
     bool flag;
+
+    bool cylinder;
 
     int m_projMatrixLoc;
     int m_mvMatrixLoc;

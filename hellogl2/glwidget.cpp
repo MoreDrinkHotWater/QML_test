@@ -88,11 +88,16 @@ GLWidget::GLWidget(QWidget *parent)
         setFormat(fmt);
     }
 
-    test();
+//       test();
 
     // true 即 渲染三角面
     // false 即 渲染线
     flag = false;
+
+    // 当 cylinder = true 时， 要取消调用上面的 test 函数 并且 flag = false 。
+    cylinder = true;
+    draw_cylinder();
+
 
 }
 
@@ -288,10 +293,8 @@ void GLWidget::initializeGL()
     m_logoVbo.bind();
 
     // 分配内存
-    if(temp.count() != 0)
+    if(temp.count() != 0 && temp_onlyVertex.count() != 0)
     {
-        std::cout<<"=====================Test1==================="<<std::endl;
-
         if(flag)
         {
             m_logoVbo.allocate(temp.constData(), temp.count() * sizeof(GLfloat));
@@ -301,6 +304,12 @@ void GLWidget::initializeGL()
             m_logoVbo.allocate(temp_onlyVertex.constData(), temp_onlyVertex.count() * sizeof(GLfloat));
         }
 
+    }
+    else if(cylinder)
+    {
+        //        std::cout<<"=====================Test1==================="<<std::endl;
+
+        m_logoVbo.allocate(cylinder_vector.constData(), cylinder_vector.count() * sizeof(GLfloat));
     }
     else
     {
@@ -332,7 +341,7 @@ void GLWidget::setupVertexAttribs()
     // 指定要启用（或禁用）的通用顶点属性的索引
     f->glEnableVertexAttribArray(0);
 
-    if(flag)
+    if(flag && temp.count() != 0)
     {
         f->glEnableVertexAttribArray(1);
 
@@ -343,9 +352,17 @@ void GLWidget::setupVertexAttribs()
         f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), reinterpret_cast<void *>(3 * sizeof(GLfloat)));
     }
 
-    else
+    else if (flag == false && temp_onlyVertex.count() != 0)
     {
         // 顶点的偏移量
+        f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+    }
+
+    // set cylinder_vector
+    if(cylinder)
+    {
+        //        std::cout<<"=====================Test2==================="<<std::endl;
+
         f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
     }
 
@@ -377,12 +394,8 @@ void GLWidget::paintGL()
     QMatrix3x3 normalMatrix = m_world.normalMatrix();
     m_program->setUniformValue(m_normalMatrixLoc, normalMatrix);
 
-    if(temp.count() != 0)
+    if(temp.count() != 0 && temp_onlyVertex.count() != 0)
     {
-
-        //        std::cout<<"=====================Test2==================="<<std::endl;
-
-        //        glDrawArrays(GL_TRIANGLES, 0, temp.count()/6);
 
         // GL_POINTS ： 传入渲染管线的一系列顶点单独进行绘制。
 
@@ -408,6 +421,12 @@ void GLWidget::paintGL()
         }
 
     }
+
+    else if(cylinder)
+    {
+        glDrawArrays(GL_LINE_STRIP, 1, cylinder_vector.count() / 3 );
+    }
+
     else
     {
         // 渲染对象
@@ -562,3 +581,145 @@ void GLWidget::test()
 
     file.close();
 };
+
+void GLWidget::draw_cylinder()
+{
+    // 半径
+    GLfloat r = 1.5;
+
+    // 圆心
+    GLfloat center[3];
+
+    center[0] = 3;
+    center[1] = 0.8765;
+    center[2] = 5.5000;
+
+    for ( int i = 0; i < 3; i++) {
+        cylinder_vector.push_back(center[i]);
+    }
+
+    // 角度 (0-360) // 画第一个圆
+    for (int i = 0; i <= 360; i++) {
+
+        cylinder_vector.push_back(center[0] + r * cos(i*3.14/180));
+        cylinder_vector.push_back(center[1] + r * sin(i*3.14/180));
+        cylinder_vector.push_back(center[2] );
+
+    }
+
+    for (int i = 0; i <= 360; i++) {
+        if(i == 45 ||  i == 90 ||  i == 135 || i == 180 || i == 225 || i == 270 || i == 315 ||  i == 360)
+        {
+            cylinder_vector.push_back(center[0] + r * cos(i*3.14/180));
+            cylinder_vector.push_back(center[1] + r * sin(i*3.14/180));
+            cylinder_vector.push_back(center[2] );
+        }
+    }
+
+    // 360->45 多画了一次
+    for (int i = 0; i <= 360; i++) {
+        // 画大矩形
+        if(i == 45 ||   i == 135 ||  i == 225 || i == 315 )
+        {
+            cylinder_vector.push_back(center[0] + r * cos(i*3.14/180));
+            cylinder_vector.push_back(center[1] + r * sin(i*3.14/180));
+            cylinder_vector.push_back(center[2] );
+
+            if( i == 315 )
+            {
+                // 画大矩形的
+                int j = 45;
+                cylinder_vector.push_back(center[0] + r * cos(j*3.14/180));
+                cylinder_vector.push_back(center[1] + r * sin(j*3.14/180));
+                cylinder_vector.push_back(center[2] );
+
+                // 画矩形的对角线
+                int k = 225;
+                cylinder_vector.push_back(center[0] + r * cos(k*3.14/180));
+                cylinder_vector.push_back(center[1] + r * sin(k*3.14/180));
+                cylinder_vector.push_back(center[2] );
+
+                // 225->315->360
+                cylinder_vector.push_back(center[0] + r * cos(315*3.14/180));
+                cylinder_vector.push_back(center[1] + r * sin(315*3.14/180));
+                cylinder_vector.push_back(center[2] );
+
+                cylinder_vector.push_back(center[0] + r * cos(360*3.14/180));
+                cylinder_vector.push_back(center[1] + r * sin(360*3.14/180));
+                cylinder_vector.push_back(center[2] );
+            }
+        }
+    }
+
+    // 画第二个圆
+    GLfloat center_2[3];
+
+    center_2[0] = 3;
+    center_2[1] = 0.3665;
+    center_2[2] = 2.5000;
+
+    for (int i = 0; i <= 360; i++) {
+
+        cylinder_vector.push_back(center_2[0] + r * cos(i*3.14/180));
+        cylinder_vector.push_back(center_2[1] + r * sin(i*3.14/180));
+        cylinder_vector.push_back(center_2[2] );
+
+    }
+
+    // 画圆之间的区域
+    float i = 0;
+    do
+    {
+        cylinder_vector.push_back(center[0] + r * cos(i*3.14/180));
+        cylinder_vector.push_back(center[1] + r * sin(i*3.14/180) );
+        cylinder_vector.push_back(center[2] );
+
+        // (i + 22.5)
+        cylinder_vector.push_back(center_2[0] + r * cos(i*3.14/180));
+        cylinder_vector.push_back(center_2[1] + r * sin(i*3.14/180));
+        cylinder_vector.push_back(center_2[2] );
+
+        i += 11.25;
+    }while(i<=360);
+
+    for (int i = 0; i <= 360; i++) {
+        if(i == 45 ||  i == 90 ||  i == 135 || i == 180 || i == 225 || i == 270 || i == 315 ||  i == 360)
+        {
+            cylinder_vector.push_back(center_2[0] + r * cos(i*3.14/180));
+            cylinder_vector.push_back(center_2[1] + r * sin(i*3.14/180));
+            cylinder_vector.push_back(center_2[2] );
+        }
+    }
+
+    // 360->315 多画了一次
+    for (int i = 360; i >= 0; i--) {
+        // 画大矩形
+        if(i == 315 ||   i == 225 ||  i == 135 || i == 45 )
+        {
+            cylinder_vector.push_back(center_2[0] + r * cos(i*3.14/180));
+            cylinder_vector.push_back(center_2[1] + r * sin(i*3.14/180));
+            cylinder_vector.push_back(center_2[2] );
+
+            if( i == 135 )
+            {
+                // 画矩形的对角线
+                int k = 315;
+                cylinder_vector.push_back(center_2[0] + r * cos(k*3.14/180));
+                cylinder_vector.push_back(center_2[1] + r * sin(k*3.14/180));
+                cylinder_vector.push_back(center_2[2] );
+
+            }
+
+            if(i==45)
+            {
+                int k = 135;
+                cylinder_vector.push_back(center_2[0] + r * cos(k*3.14/180));
+                cylinder_vector.push_back(center_2[1] + r * sin(k*3.14/180));
+                cylinder_vector.push_back(center_2[2] );
+            }
+        }
+    }
+
+    std::cout<<"the cylinder_vector size is: "<< cylinder_vector.size() <<std::endl;
+
+}
