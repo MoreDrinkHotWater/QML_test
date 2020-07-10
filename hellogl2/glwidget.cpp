@@ -86,19 +86,6 @@ GLWidget::GLWidget(QWidget *parent)
         setFormat(fmt);
     }
 
-    //    test();
-
-    // true 即 渲染三角面
-    // false 即 渲染线
-    flag = false;
-
-    // 当 cylinder = true 时， 要取消调用上面的 test 函数 并且 flag = false 。
-    cylinder = true;
-
-    recognition();
-    //    draw_cylinder();
-
-
 }
 
 GLWidget::~GLWidget()
@@ -241,6 +228,22 @@ void GLWidget::initializeGL()
     // aboutToBeDestroyed() signal, instead of the destructor. The emission of
     // the signal will be followed by an invocation of initializeGL() where we
     // can recreate all resources.
+
+
+
+    //    test();
+
+    // true 即 渲染三角面
+    // false 即 渲染线
+    flag = false;
+
+    // 当 cylinder = true 时， 要取消调用上面的 test 函数 并且 flag = false 。
+    cylinder = true;
+
+
+    //    draw_cylinder();
+
+    recognition();
 
     // OpenGL的状态机： 设置上下文（context）
     connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &GLWidget::cleanup);
@@ -588,31 +591,265 @@ void GLWidget::recognition()
     QVector2D center(0,0);
     head_circle.push_back(center);
 
-    //    cylinder_vector.push_back(center.x());
-    //    cylinder_vector.push_back(center.y());
-    //    cylinder_vector.push_back(0);
+    cylinder_vector.push_back(center.x());
+    cylinder_vector.push_back(center.y());
+    cylinder_vector.push_back(0);
+
+    QVector<QVector2D> left_line;
+    QVector2D l_line;
+    QVector<QVector2D> right_line;
+    QVector2D r_line;
+    QVector<QVector2D> end_circle;
 
     // 生成椭圆的随机宽度和高度
     std::random_device rd;  //Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
     std::uniform_real_distribution<> dis(1.0, 5.0);
+    std::uniform_real_distribution<> dis_coords(0.0, 0.1);
+
     GLfloat circle_width = dis(gen);
     GLfloat circle_height = dis(gen);
 
     std::cout<<"circle_width: "<<circle_width<<" circle_height: "<<circle_height<<std::endl;
 
-    for (int i = 0; i <= 360 ; i++) {
-        if( i % 100 == 0)
-            cylinder_vector.push_back(circle_width*cos(i) + dis(gen));
-        else
-            cylinder_vector.push_back(circle_width*cos(i));
-        cylinder_vector.push_back(circle_height*sin(i));
+
+    // 画上面的椭圆
+    float t = 0.0;
+    int n = 1000;
+    for (int i = 0; i <= n ; i++) {
+
+        // i 是弧度，需要转成角度 t
+        t = i * 2 * M_PI / n;
+
+        // 改变圆心位置，只用给 x,y 加入固定的数值即可。
+
+//        if( i % 10 == 0)
+//            cylinder_vector.push_back(circle_width * cos(t) + dis_coords(gen));
+//        else
+            cylinder_vector.push_back(circle_width * cos(t));
+        cylinder_vector.push_back(circle_height * sin(t));
         cylinder_vector.push_back(0);
+
+        QVector2D temp(cylinder_vector[cylinder_vector.size()-3], cylinder_vector[cylinder_vector.size()-2]);
+
+        // 保存上椭圆的 2D 坐标
+        head_circle.push_back(temp);
+
+        // 记录左边线段的坐标的(x, y)坐标
+        if(i == n/2)
+        {
+            l_line.setX(cylinder_vector[cylinder_vector.size()-3]);
+            l_line.setY(cylinder_vector[cylinder_vector.size()-2]);
+            left_line.push_back(l_line);
+            std::cout<<cylinder_vector[cylinder_vector.size()-3]<<" "<<cylinder_vector[cylinder_vector.size()-2]<<" "<<cylinder_vector[cylinder_vector.size()-1]<<std::endl;
+        }
+
+        // 记录右边线段的坐标的(x, y)坐标
+        if(i == n)
+        {
+            r_line.setX(cylinder_vector[cylinder_vector.size()-3]);
+            r_line.setY(cylinder_vector[cylinder_vector.size()-2]);
+            right_line.push_back(r_line);
+        }
     }
 
-    QVector<QVector2D> left_line;
-    QVector<QVector2D> right_line;
-    QVector<QVector2D> end_circle;
+    // 画右边的线段
+    cylinder_vector.push_back(r_line.x());
+    cylinder_vector.push_back(r_line.y());
+    cylinder_vector.push_back(5);
+
+
+    // 画下面椭圆的半弧
+    for (int i = n; i >= n/2 ; i--) {
+
+        t = i * 2 * M_PI / n;
+        if( i % 10 == 0)
+            cylinder_vector.push_back(circle_width*cos(t) + dis_coords(gen));
+        else
+            cylinder_vector.push_back(circle_width*cos(t));
+        cylinder_vector.push_back(circle_height*sin(t));
+        cylinder_vector.push_back(5);
+    }
+
+    // 画左边的线段
+    cylinder_vector.push_back(l_line.x());
+    cylinder_vector.push_back(l_line.y());
+    cylinder_vector.push_back(0);
+
+    QVector<float> step_vector;
+    std::uniform_int_distribution<> dist_int(1, 1000);
+
+    QVector<QVector2D> Points_vector;
+    QVector<QVector2D> OriginPoints_vector;
+
+    // 取10组测试数据
+    //    for (int i = 0; i < 10; i++) {
+    // 随机取四个点数据
+    for (int i = 0; i < 4; i++) {
+        QVector2D temp;
+        temp.setX(head_circle[dist_int(gen)].x());
+        temp.setY(head_circle[dist_int(gen)].y());
+        Points_vector.push_back(temp);
+        OriginPoints_vector.push_back(temp);
+    }
+
+    for (int i = 0; i < 4; i++) {
+
+        std::cout<<OriginPoints_vector[i].x()<<" "<<OriginPoints_vector[i].y()<<std::endl;
+
+    }
+
+    float AB =  sqrt(pow(Points_vector[1].y() - Points_vector[0].y(),2) + pow(Points_vector[1].x() - Points_vector[0].x(),2));
+    std::cout<<"AB: "<<AB<<std::endl;
+
+    float CD =  sqrt(pow(Points_vector[3].y() - Points_vector[2].y(),2) + pow(Points_vector[3].x() - Points_vector[2].x(),2));
+    std::cout<<"CD: "<<CD<<std::endl;
+
+    float BC =  sqrt(pow(Points_vector[2].y() - Points_vector[1].y(),2) + pow(Points_vector[2].x() - Points_vector[1].x(),2));
+    std::cout<<"BC: "<<BC<<std::endl;
+
+    float AD =  sqrt(pow(Points_vector[3].y() - Points_vector[0].y(),2) + pow(Points_vector[3].x() - Points_vector[0].x(),2));
+    std::cout<<"AD: "<<AD<<std::endl;
+
+    float AC =  sqrt(pow(Points_vector[2].y() - Points_vector[0].y(),2) + pow(Points_vector[2].x() - Points_vector[0].x(),2));
+    std::cout<<"AC: "<<AC<<std::endl;
+
+    float BD =  sqrt(pow(Points_vector[3].y() - Points_vector[1].y(),2) + pow(Points_vector[3].x() - Points_vector[1].x(),2));
+    std::cout<<"BD: "<<BD<<std::endl;
+
+    float step = 1.0;
+    // 托勒密定理 判断 四点共圆
+    auto left = [](QVector<QVector2D> Points_vector){
+
+        float AB =  sqrt(pow(Points_vector[1].y() - Points_vector[0].y(),2) + pow(Points_vector[1].x() - Points_vector[0].x(),2));
+        float CD =  sqrt(pow(Points_vector[3].y() - Points_vector[2].y(),2) + pow(Points_vector[3].x() - Points_vector[2].x(),2));
+        float BC =  sqrt(pow(Points_vector[2].y() - Points_vector[1].y(),2) + pow(Points_vector[2].x() - Points_vector[1].x(),2));
+        float AD =  sqrt(pow(Points_vector[3].y() - Points_vector[0].y(),2) + pow(Points_vector[3].x() - Points_vector[0].x(),2));
+
+        float AC =  sqrt(pow(Points_vector[2].y() - Points_vector[0].y(),2) + pow(Points_vector[2].x() - Points_vector[0].x(),2));
+        float BD =  sqrt(pow(Points_vector[3].y() - Points_vector[1].y(),2) + pow(Points_vector[3].x() - Points_vector[1].x(),2));
+
+        if(abs(AB*CD + BC*AD - AC *BD) < 0.000001)
+        {
+            std::cout<<"find the step"<<std::endl;
+            return false;
+        }
+
+        return true;
+    };
+
+    // 拉伸 y 值
+    if(circle_width>circle_height)
+    {
+        do
+        {
+            if(step == 2.0)
+            {
+                std::cout<<"can't find the step "<<std::endl;
+            }
+
+            for (int i = 0; i < 4; i++) {
+                Points_vector[i].setY(OriginPoints_vector[i].y() * step);
+            }
+
+            step+=0.000001;
+
+        }while(left(Points_vector) && step <= 2);
+
+    }
+    // 拉伸 x 值
+    else
+    {
+        do
+        {
+            if(step == 2.0)
+            {
+                std::cout<<"can't find the step "<<std::endl;
+            }
+
+            for (int i = 0; i < 4; i++) {
+                Points_vector[i].setX(OriginPoints_vector[i].x() * step);
+            }
+
+            step+=0.000001;
+
+        }while(left(Points_vector) && step <= 2);
+
+    }
+
+    step_vector.push_back(step-0.00001);
+
+    std::cout<<"the final step = "<<step<<std::endl;
+
+    //    }
+
+
+
+    //        QMap<float,int> num_map;
+    //        for (int i = 0; i < 10 ; i++) {
+    //            num_map[step_vector[i]]++;
+    //        }
+
+    //        int max = 0;
+    //        float ans;
+    //        for(auto it = num_map.begin();it != num_map.end();it++){
+    //            if(it.value() > max){
+    //                max = it.value();//后面的元素 value
+    //                ans = it.key();//前面的元素 key
+    //            }
+    //        }
+
+    //        std::cout<<ans<<std::endl;
+
+    //        for (auto it = num_map.begin(); it!=num_map.end();it++)
+    //        {
+    //            std::cout<<"it.key: "<<it.key()<<" it.value: "<<it.value()<<std::endl;
+    //        }
+
+    // 已知椭圆上两点和圆心坐标(0,0)，求长短轴
+    //    float x1 = head_circle[32].x(), y1 = head_circle[32].y();
+    //    float x2 = head_circle[33].x(), y2 = head_circle[33].y();
+
+    //    float b = sqrt((pow(x1,2)*pow(y2,2) - pow(x2,2)*pow(y1,2))/(pow(x1,2)-pow(x2,2)));
+    //    float a = sqrt(pow(b,2)*pow(x1,2)/(pow(b,2)-pow(y1,2)));
+
+    //    std::cout<<"a: "<<a<<" b: "<<b<<std::endl;
+
+    //    int num = head_circle.size() - 1;
+
+    //    float maxX = 0.0, minX = 0.0, maxY = 0.0, minY = 0.0;
+    //    for(auto it = head_circle.begin(); it != head_circle.end(); it++)
+    //    {
+    //        if(it ->x() > maxX)
+    //            maxX = it->x();
+
+    //        if(it ->x() < minX)
+    //            minX = it->x();
+
+    //        if(it ->y() > maxY)
+    //            maxY = it->y();
+
+    //        if(it ->y() < minY)
+    //            minY = it->y();
+
+    //    }
+
+    //    std::cout<<"maxX: "<<maxX<<" minX:"<<minX<<" maxY"<<maxY<<" minY"<<minY<<std::endl;
+
+    // 利用长短轴画椭圆, 对比原来的椭圆数据，看匹配度
+
+    //    cylinder_vector.clear();
+
+    //    QVector<QVector2D> new_vector2D;
+
+    //    for (int i = 0; i <= 360 ; i++) {
+
+    //        t = i * 2 * M_PI / 360;
+    //        QVector2D temp(maxX * cos(t), maxY * sin(t));
+    //        new_vector2D.push_back(temp);
+
+    //    }
+
 }
 
 void GLWidget::draw_cylinder()
