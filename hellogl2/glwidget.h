@@ -78,9 +78,9 @@ public:
 
     void test();
 
-    void draw_cylinder();
-
     void recognition();
+
+    void draw_cylinder();
 
 public slots:
     void setXRotation(int angle);
@@ -132,6 +132,10 @@ private:
     QVector<GLfloat> temp;
 
     QVector<GLfloat> temp_onlyVertex;
+
+    GLfloat radius,height;
+
+    QVector<GLfloat> test_cylinder_vector;
 
     // draw cylinder
     QVector<GLfloat> cylinder_vector;
