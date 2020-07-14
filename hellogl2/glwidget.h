@@ -60,6 +60,8 @@
 
 class MainWindow;
 
+class RecognizeCube;
+
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
 class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
@@ -154,6 +156,10 @@ private:
     QMatrix4x4 m_camera;
     QMatrix4x4 m_world;
     static bool m_transparent;
+
+    RecognizeCube *recognizeCube;
+
+    bool recognize_cube;
 };
 
 #endif

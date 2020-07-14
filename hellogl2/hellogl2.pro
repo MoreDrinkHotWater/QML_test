@@ -1,9 +1,11 @@
 HEADERS       = glwidget.h \
+                recognizecube.h \
                 window.h \
                 mainwindow.h \
                 logo.h
 SOURCES       = glwidget.cpp \
                 main.cpp \
+                recognizecube.cpp \
                 window.cpp \
                 mainwindow.cpp \
                 logo.cpp

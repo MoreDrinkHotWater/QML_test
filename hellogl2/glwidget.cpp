@@ -65,6 +65,8 @@
 #include <fstream>
 #include <QMessageBox>
 
+#include "recognizecube.h"
+
 bool GLWidget::m_transparent = false;
 
 extern bool flag;
@@ -74,8 +76,9 @@ GLWidget::GLWidget(QWidget *parent)
       m_xRot(0),
       m_yRot(0),
       m_zRot(0),
-      m_program(0)
-    //      mainWindow(new MainWindow())
+      m_program(0),
+      recognizeCube(new RecognizeCube()),
+      recognize_cube(false)
 {
     m_core = QSurfaceFormat::defaultFormat().profile() == QSurfaceFormat::CoreProfile;
     // --transparent causes the clear color to be transparent. Therefore, on systems that
@@ -230,18 +233,27 @@ void GLWidget::initializeGL()
     // the signal will be followed by an invocation of initializeGL() where we
     // can recreate all resources.
 
+    // loader data
     //    test();
 
+    // flag 决定是否渲染加载的数据
     // true 即 渲染三角面
     // false 即 渲染线
     flag = false;
 
+    // cylinder 决定是否渲染识别出的 cylinder 数据
     // 当 cylinder = true 时， 要取消调用上面的 test 函数 并且 flag = false 。
-    cylinder = true;
+    // 当 cylinder = false 时， 取消调用 recognition 和 draw_cylinder 函数。
+    cylinder = false;
 
-    recognition();
+//    recognition();
 
-    draw_cylinder();
+//    draw_cylinder();
+
+    if(recognizeCube->recognize_cube())
+    {
+        recognize_cube = true;
+    }
 
     // OpenGL的状态机： 设置上下文（context）
     connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &GLWidget::cleanup);
@@ -296,22 +308,30 @@ void GLWidget::initializeGL()
     // 分配内存
     if(temp.count() != 0 && temp_onlyVertex.count() != 0)
     {
+        // GL_TRIANGLES(loader)
         if(flag)
         {
             m_logoVbo.allocate(temp.constData(), temp.count() * sizeof(GLfloat));
         }
+        // GL_LINES(loader)
         else
         {
             m_logoVbo.allocate(temp_onlyVertex.constData(), temp_onlyVertex.count() * sizeof(GLfloat));
         }
 
     }
+    // GL_LINES(draw)
     else if(cylinder)
     {
         //        std::cout<<"=====================Test1==================="<<std::endl;
 
         m_logoVbo.allocate(cylinder_vector.constData(), cylinder_vector.count() * sizeof(GLfloat));
     }
+    else if(recognize_cube)
+    {
+        m_logoVbo.allocate(recognizeCube->cube_vector.constData(), recognizeCube->cube_vector.count() * sizeof(GLfloat));
+    }
+    // GL_TRIANGLES(origin_data)
     else
     {
         m_logoVbo.allocate(m_logo.constData(), m_logo.count() * sizeof(GLfloat));
@@ -365,6 +385,14 @@ void GLWidget::setupVertexAttribs()
         //        std::cout<<"=====================Test2==================="<<std::endl;
 
         f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+    }
+    else
+    {
+        // set cube_vector
+        if(recognize_cube)
+        {
+            f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+        }
     }
 
     m_logoVbo.release();
@@ -426,6 +454,10 @@ void GLWidget::paintGL()
     else if(cylinder)
     {
         glDrawArrays(GL_LINE_STRIP, 0, cylinder_vector.count() / 3 );
+    }
+    else if(recognize_cube)
+    {
+        glDrawArrays(GL_LINE_STRIP, 1, recognizeCube->cube_vector.count() / 3 );
     }
 
     else
@@ -971,7 +1003,7 @@ void GLWidget::draw_cylinder()
 
             cylinder_vector.push_back(center[0] + r * cos(t));
             cylinder_vector.push_back(center[1] + r * sin(t));
-            cylinder_vector.push_back(height );
+            cylinder_vector.push_back(height);
         }
     }
 

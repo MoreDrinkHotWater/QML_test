@@ -54,6 +54,7 @@ OBJECTS_DIR   = ./
 
 SOURCES       = ../hellogl2/glwidget.cpp \
 		../hellogl2/main.cpp \
+		../hellogl2/recognizecube.cpp \
 		../hellogl2/window.cpp \
 		../hellogl2/mainwindow.cpp \
 		../hellogl2/logo.cpp moc_glwidget.cpp \
@@ -61,6 +62,7 @@ SOURCES       = ../hellogl2/glwidget.cpp \
 		moc_mainwindow.cpp
 OBJECTS       = glwidget.o \
 		main.o \
+		recognizecube.o \
 		window.o \
 		mainwindow.o \
 		logo.o \
@@ -280,10 +282,12 @@ DIST          = ../hellogl2/test_data/snake.stl \
 		../../Qt5.14.0/5.14.0/gcc_64/mkspecs/features/yacc.prf \
 		../../Qt5.14.0/5.14.0/gcc_64/mkspecs/features/lex.prf \
 		../hellogl2/hellogl2.pro ../hellogl2/glwidget.h \
+		../hellogl2/recognizecube.h \
 		../hellogl2/window.h \
 		../hellogl2/mainwindow.h \
 		../hellogl2/logo.h ../hellogl2/glwidget.cpp \
 		../hellogl2/main.cpp \
+		../hellogl2/recognizecube.cpp \
 		../hellogl2/window.cpp \
 		../hellogl2/mainwindow.cpp \
 		../hellogl2/logo.cpp
@@ -738,8 +742,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents ../../Qt5.14.0/5.14.0/gcc_64/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../hellogl2/glwidget.h ../hellogl2/window.h ../hellogl2/mainwindow.h ../hellogl2/logo.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../hellogl2/glwidget.cpp ../hellogl2/main.cpp ../hellogl2/window.cpp ../hellogl2/mainwindow.cpp ../hellogl2/logo.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../hellogl2/glwidget.h ../hellogl2/recognizecube.h ../hellogl2/window.h ../hellogl2/mainwindow.h ../hellogl2/logo.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../hellogl2/glwidget.cpp ../hellogl2/main.cpp ../hellogl2/recognizecube.cpp ../hellogl2/window.cpp ../hellogl2/mainwindow.cpp ../hellogl2/logo.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -1303,7 +1307,8 @@ glwidget.o: ../hellogl2/glwidget.cpp ../hellogl2/glwidget.h \
 		../hellogl2/window.h \
 		../../Qt5.14.0/5.14.0/gcc_64/include/QtWidgets/QMessageBox \
 		../../Qt5.14.0/5.14.0/gcc_64/include/QtWidgets/qmessagebox.h \
-		../../Qt5.14.0/5.14.0/gcc_64/include/QtWidgets/qdialog.h
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtWidgets/qdialog.h \
+		../hellogl2/recognizecube.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o glwidget.o ../hellogl2/glwidget.cpp
 
 main.o: ../hellogl2/main.cpp ../../Qt5.14.0/5.14.0/gcc_64/include/QtWidgets/QApplication \
@@ -1459,6 +1464,9 @@ main.o: ../hellogl2/main.cpp ../../Qt5.14.0/5.14.0/gcc_64/include/QtWidgets/QApp
 		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qthread.h \
 		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/QTextStream
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../hellogl2/main.cpp
+
+recognizecube.o: ../hellogl2/recognizecube.cpp ../hellogl2/recognizecube.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o recognizecube.o ../hellogl2/recognizecube.cpp
 
 window.o: ../hellogl2/window.cpp ../hellogl2/glwidget.h \
 		../../Qt5.14.0/5.14.0/gcc_64/include/QtWidgets/QOpenGLWidget \
