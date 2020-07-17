@@ -67,15 +67,14 @@ Window::Window(QWidget *mw)
     :QWidget(mw),    
      mainWindow(mw)
 {
+
+    // 构建 GLWidget的实例, 在这里会调用 glWidget 的构造函数和 initializeGL 方法
     glWidget = new GLWidget;
 
     // 创建滑动条
     xSlider = createSlider();
     ySlider = createSlider();
     zSlider = createSlider();
-
-
-
 
     // 滑动条和模型同时更新
     connect(xSlider, &QSlider::valueChanged, glWidget, &GLWidget::setXRotation);
@@ -105,7 +104,8 @@ Window::Window(QWidget *mw)
     ySlider->setValue(345 * 16);
     zSlider->setValue(0 * 16);
 
-    setWindowTitle(tr("Hello GL"));
+//    setWindowTitle(tr("Hello GL"));
+
     show();
 }
 

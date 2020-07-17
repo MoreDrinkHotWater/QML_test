@@ -65,6 +65,8 @@
 #include <fstream>
 #include <QMessageBox>
 
+#include <QTimer>
+
 #include "recognizecube.h"
 
 bool GLWidget::m_transparent = false;
@@ -77,8 +79,10 @@ GLWidget::GLWidget(QWidget *parent)
       m_yRot(0),
       m_zRot(0),
       m_program(0),
+      _step(0.0f),
       recognizeCube(new RecognizeCube()),
       recognize_cube(false)
+
 {
     m_core = QSurfaceFormat::defaultFormat().profile() == QSurfaceFormat::CoreProfile;
     // --transparent causes the clear color to be transparent. Therefore, on systems that
@@ -90,6 +94,16 @@ GLWidget::GLWidget(QWidget *parent)
         setFormat(fmt);
     }
 
+    _qTimer.setInterval(1000); // 100 ms -> 10 Hz
+    QObject::connect(&_qTimer, &QTimer::timeout,
+                     this, &GLWidget::timeout);
+
+}
+
+void GLWidget::timeout()
+{
+    _step = fmod(_step + 0.1, 2 * 3.141);
+    update(); // force redraw
 }
 
 GLWidget::~GLWidget()
@@ -241,22 +255,17 @@ void GLWidget::initializeGL()
     // false 即 渲染线
     flag = false;
 
-    // cylinder 决定是否渲染识别出的 cylinder 数据
-    // 当 cylinder = true 时， 要取消调用上面的 test 函数 并且 flag = false 。
-    // 当 cylinder = false 时， 取消调用 recognition 和 draw_cylinder 函数。
-    cylinder = false;
-
-
-//    recognition();
-
-//    draw_cylinder();
+    // draw_model_flag 决定是否渲染识别出的 draw_model 数据
+    // 当 draw_model_flag = true 时， 要取消调用上面的 test 函数 并且 flag = false 。
+    // 当 draw_model_flag = false 时， 取消调用 recognition 和 draw_cylinder 函数。
+    draw_model_flag = true;
 
     // 调用 recognizeCube 时，只要开启注释就可啦
 
-//    if(recognizeCube->recognize_cube())
-//    {
-//        recognize_cube = true;
-//    }
+    //    if(recognizeCube->recognize_cube())
+    //    {
+    //        recognize_cube = true;
+    //    }
 
     // OpenGL的状态机： 设置上下文（context）
     connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &GLWidget::cleanup);
@@ -299,14 +308,15 @@ void GLWidget::initializeGL()
 
     // 创建顶点数组对象
     if(m_vao.isCreated())
-         QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+        QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
     else
-         m_vao.create();
-         QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+        m_vao.create();
+    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
 
     // 设置顶点缓冲区对象
     m_logoVbo.create();
     m_logoVbo.bind();
+
 
     // 分配内存
     if(temp.count() != 0 && temp_onlyVertex.count() != 0)
@@ -323,14 +333,13 @@ void GLWidget::initializeGL()
         }
 
     }
-    // GL_LINES(draw)
-    else if(cylinder)
-    {
-        m_logoVbo.allocate(cylinder_vector.constData(), cylinder_vector.count() * sizeof(GLfloat));
-    }
     else if(recognize_cube)
     {
         m_logoVbo.allocate(recognizeCube->cube_vector.constData(), recognizeCube->cube_vector.count() * sizeof(GLfloat));
+    }
+    else if(draw_model_flag)
+    {
+        allocate_vector();
     }
     // GL_TRIANGLES(origin_data)
     else
@@ -351,6 +360,17 @@ void GLWidget::initializeGL()
 
     // 释放活动的着色程序。这相当于调用glUseProgram(0)。
     m_program->release();
+}
+
+void GLWidget::allocate_vector()
+{
+
+    // GL_LINES(draw)
+
+    std::cout<<"=====================test1=================="<<std::endl;
+
+    m_logoVbo.allocate(cylinder_vector.constData(), cylinder_vector.count() * sizeof(GLfloat));
+
 }
 
 void GLWidget::setupVertexAttribs()
@@ -380,10 +400,10 @@ void GLWidget::setupVertexAttribs()
         f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
     }
 
-    // set cylinder_vector
-    if(cylinder)
+    // set draw_vector
+    if(draw_model_flag)
     {
-        //        std::cout<<"=====================Test2==================="<<std::endl;
+        std::cout<<"=====================test2=================="<<std::endl;
 
         f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
     }
@@ -397,11 +417,15 @@ void GLWidget::setupVertexAttribs()
     }
 
     m_logoVbo.release();
+
 }
 
 // 渲染OpenGL场景
 void GLWidget::paintGL()
 {
+
+    //    _qTimer.start();
+
     // 清空缓冲区
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -452,8 +476,10 @@ void GLWidget::paintGL()
 
     }
 
-    else if(cylinder)
+    else if(draw_model_flag)
     {
+        std::cout<<"=====================test3=================="<<std::endl;
+
         glDrawArrays(GL_LINE_STRIP, 0, cylinder_vector.count() / 3 );
     }
     else if(recognize_cube)
@@ -507,6 +533,14 @@ void GLWidget::reviceVectorDataSlot(QVector<float> draw_vector)
     this->draw_vector = draw_vector;
 
     qDebug()<<"revice vector size: "<< draw_vector.size();
+
+    recognition();
+
+    draw_cylinder();
+
+    allocate_vector();
+
+    update();
 
 }
 
@@ -763,7 +797,7 @@ void GLWidget::recognition()
             //        std::cout<<"AB*CD + BC*AD - AC *BD: "<<abs(AB*CD + BC*AD - AC *BD)<<std::endl;
             if(AB*CD + BC*AD == AC *BD)
             {
-                std::cout<<"find the step"<<std::endl;
+                //                std::cout<<"find the step"<<std::endl;
                 return false;
             }
 
@@ -780,7 +814,7 @@ void GLWidget::recognition()
             {
                 if(step == 5.0)
                 {
-                    std::cout<<"can't find the step "<<std::endl;
+                    //                    std::cout<<"can't find the step "<<std::endl;
                 }
 
                 step+=0.0001;
@@ -795,7 +829,7 @@ void GLWidget::recognition()
             {
                 if(step == 5.0)
                 {
-                    std::cout<<"can't find the step "<<std::endl;
+                    //                    std::cout<<"can't find the step "<<std::endl;
                 }
 
                 step+=0.0001;
@@ -805,7 +839,7 @@ void GLWidget::recognition()
 
         step_vector.push_back(step);
 
-        std::cout<<"the final step = "<<step<<std::endl;
+        //        std::cout<<"the final step = "<<step<<std::endl;
 
     }
 
@@ -847,16 +881,6 @@ void GLWidget::recognition()
     std::cout<<"flag: "<< flag <<std::endl;
     std::cout<<"invalid: "<< invalid <<std::endl;
     std::cout<<"匹配度: "<< float( flag * 100/(num-invalid) ) <<"%"<<std::endl;
-
-    // 已知椭圆上两点和圆心坐标(0,0)，求长短轴
-    //    float x1 = head_circle[32].x(), y1 = head_circle[32].y();
-    //    float x2 = head_circle[33].x(), y2 = head_circle[33].y();
-
-
-    //    float b = sqrt((pow(x1,2)*pow(y2,2) - pow(x2,2)*pow(y1,2))/(pow(x1,2)-pow(x2,2)));
-    //    float a = sqrt(pow(b,2)*pow(x1,2)/(pow(b,2)-pow(y1,2)));
-
-    //    std::cout<<"长半轴: "<<a<<" 短半轴: "<<b<<std::endl;
 
     float maxX = 0.0, minX = 0.0, maxY = 0.0, minY = 0.0;
     for(auto it = head_circle.begin(); it != head_circle.end(); it++)

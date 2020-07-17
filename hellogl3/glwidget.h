@@ -58,6 +58,8 @@
 #include <QMatrix4x4>
 #include "logo.h"
 
+#include <QTimer>
+
 class MainWindow;
 
 class RecognizeCube;
@@ -90,7 +92,7 @@ public slots:
     void setZRotation(int angle);
     void cleanup();
 
-    void  reviceVectorDataSlot(QVector<float> draw_vector);
+    void reviceVectorDataSlot(QVector<float> draw_vector);
 
 signals:
     void xRotationChanged(int angle);
@@ -106,6 +108,8 @@ protected:
 
 private:
     void setupVertexAttribs();
+
+    void allocate_vector();
 
     bool m_core;
     int m_xRot;
@@ -139,9 +143,16 @@ private:
 
     bool flag;
 
-    bool cylinder;
+    bool draw_model_flag;
 
     QVector<float> draw_vector;
+
+    // 延迟
+    QTimer _qTimer;
+
+    void timeout();
+
+    float _step;
 
     int m_projMatrixLoc;
     int m_mvMatrixLoc;
