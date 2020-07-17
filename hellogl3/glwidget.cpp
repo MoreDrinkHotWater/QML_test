@@ -246,13 +246,13 @@ void GLWidget::initializeGL()
     // 当 cylinder = false 时， 取消调用 recognition 和 draw_cylinder 函数。
     cylinder = false;
 
-    draw_lines_flag = true;
 
 //    recognition();
 
 //    draw_cylinder();
 
     // 调用 recognizeCube 时，只要开启注释就可啦
+
 //    if(recognizeCube->recognize_cube())
 //    {
 //        recognize_cube = true;
@@ -263,7 +263,6 @@ void GLWidget::initializeGL()
 
     // 初始化状态设置函数，这类函数将会改变上下文
     initializeOpenGLFunctions();
-
 
     // 设置背景色
     //    glClearColor(0, 0, 0, m_transparent ? 0 : 1);
@@ -327,19 +326,11 @@ void GLWidget::initializeGL()
     // GL_LINES(draw)
     else if(cylinder)
     {
-        //        std::cout<<"=====================Test1==================="<<std::endl;
-
         m_logoVbo.allocate(cylinder_vector.constData(), cylinder_vector.count() * sizeof(GLfloat));
     }
     else if(recognize_cube)
     {
         m_logoVbo.allocate(recognizeCube->cube_vector.constData(), recognizeCube->cube_vector.count() * sizeof(GLfloat));
-    }
-    // draw lines by editor
-    else if(draw_lines_flag)
-    {
-        std::cout<<"==============test allocate draw_lines_vector============="<<std::endl;
-        m_logoVbo.allocate(draw_lines_vector.constData(), draw_lines_vector.count() * sizeof(GLfloat));
     }
     // GL_TRIANGLES(origin_data)
     else
@@ -401,13 +392,6 @@ void GLWidget::setupVertexAttribs()
         // set cube_vector
         if(recognize_cube)
         {
-            f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
-        }
-        // set draw_lines_vector
-        else
-        {
-            std::cout<<"==============test set draw_lines_vector============="<<std::endl;
-
             f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
         }
     }
@@ -476,12 +460,6 @@ void GLWidget::paintGL()
     {
         glDrawArrays(GL_LINE_STRIP, 0, recognizeCube->cube_vector.count() / 3 );
     }
-    else if(draw_lines_flag)
-    {
-        std::cout<<"==============test draw_lines_flag============="<<std::endl;
-
-        glDrawArrays(GL_LINE_STRIP, 0, draw_lines_vector.count() / 3 );
-    }
     else
     {
         // 渲染对象
@@ -503,26 +481,6 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 {
     // 获得鼠标点击的坐标
     m_lastPos = event->pos();
-
-    if (event->buttons() & Qt::LeftButton) {
-
-        std::cout<<"==============test LeftButton============="<<std::endl;
-
-        int dx = event->x() - m_lastPos.x();
-        int dy = event->y() - m_lastPos.y();
-
-        draw_lines_vector.push_back(dx);
-        draw_lines_vector.push_back(dy);
-        draw_lines_vector.push_back(0);
-
-        std::cout<<"dx: "<<dx<<" dy: "<<dy<<std::endl;
-
-        initializeGL();
-
-        update();
-
-    }
-
 }
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event)
@@ -531,11 +489,11 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
     int dx = event->x() - m_lastPos.x();
     int dy = event->y() - m_lastPos.y();
 
-    if (event->buttons() & Qt::RightButton) {
+    if (event->buttons() & Qt::LeftButton) {
         setXRotation(m_xRot + 8 * dy);
         setYRotation(m_yRot + 8 * dx);
 
-    } else if (event->buttons() & Qt::MiddleButton) {
+    } else if (event->buttons() & Qt::RightButton) {
         setXRotation(m_xRot + 8 * dy);
         setZRotation(m_zRot + 8 * dx);
     }
@@ -543,18 +501,12 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
     m_lastPos = event->pos();
 }
 
-void GLWidget::keyPressEvent(QKeyEvent *event)
+void GLWidget::reviceVectorDataSlot(QVector<float> draw_vector)
 {
-    if (event->key() & Qt::Key_A) {
-        std::cout<<"test key A success"<<std::endl;
-    }
-}
 
-void GLWidget::reviceVectorDataSlot(QVector<GLfloat> temp)
-{
-    this->temp = temp;
+    this->draw_vector = draw_vector;
 
-    qDebug()<<"revice vector size:"<< temp.size();
+    qDebug()<<"revice vector size: "<< draw_vector.size();
 
 }
 

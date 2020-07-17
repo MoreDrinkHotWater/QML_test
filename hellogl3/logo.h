@@ -48,120 +48,28 @@
 **
 ****************************************************************************/
 
-#ifndef GLWIDGET_H
-#define GLWIDGET_H
+#ifndef LOGO_H
+#define LOGO_H
 
-#include <QOpenGLWidget>
-#include <QOpenGLFunctions>
-#include <QOpenGLVertexArrayObject>
-#include <QOpenGLBuffer>
-#include <QMatrix4x4>
-#include "logo.h"
+#include <qopengl.h>
+#include <QVector>
+#include <QVector3D>
 
-class MainWindow;
-
-class RecognizeCube;
-
-QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
-
-class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
+class Logo
 {
-    Q_OBJECT
-
 public:
-    GLWidget(QWidget *parent = 0);
-    ~GLWidget();
-
-    static bool isTransparent() { return m_transparent; }
-    static void setTransparent(bool t) { m_transparent = t; }
-
-    QSize minimumSizeHint() const override;
-    QSize sizeHint() const override;
-
-    void test();
-
-    void recognition();
-
-    void draw_cylinder();
-
-public slots:
-    void setXRotation(int angle);
-    void setYRotation(int angle);
-    void setZRotation(int angle);
-    void cleanup();
-
-    void reviceVectorDataSlot(QVector<GLfloat> temp);
-
-signals:
-    void xRotationChanged(int angle);
-    void yRotationChanged(int angle);
-    void zRotationChanged(int angle);
-
-protected:
-    void initializeGL() override;
-    void paintGL() override;
-    void resizeGL(int width, int height) override;
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-
-//    void wheelEvent(QWheelEvent *event) override;
-
-public:
-    void keyPressEvent(QKeyEvent *event) override;
+    Logo();
+    const GLfloat *constData() const { return m_data.constData(); }
+    int count() const { return m_count; }
+    int vertexCount() const { return m_count / 6; }
 
 private:
-    void setupVertexAttribs();
+    void quad(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2, GLfloat x3, GLfloat y3, GLfloat x4, GLfloat y4);
+    void extrude(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
+    void add(const QVector3D &v, const QVector3D &n);
 
-    bool m_core;
-    int m_xRot;
-    int m_yRot;
-    int m_zRot;
-    // 使用整数精度在平面中定义一个点。
-    QPoint m_lastPos;
-
-    Logo m_logo;
-
-    // OpenGL顶点数组对象
-    QOpenGLVertexArrayObject m_vao;
-
-    // 用于创建和管理OpenGL缓冲区对象的函数。
-    QOpenGLBuffer m_logoVbo;
-
-    // 允许OpenGL着色程序被链接和使用。
-    QOpenGLShaderProgram *m_program;
-
-    // add by lixuelong
-    QVector<GLfloat> temp;
-
-    QVector<GLfloat> temp_onlyVertex;
-
-    GLfloat radius,height;
-
-    QVector<GLfloat> test_cylinder_vector;
-
-    // draw cylinder
-    QVector<GLfloat> cylinder_vector;
-
-    bool flag;
-
-    bool cylinder;
-
-    QVector<GLfloat> draw_lines_vector;
-
-    bool draw_lines_flag;
-
-    int m_projMatrixLoc;
-    int m_mvMatrixLoc;
-    int m_normalMatrixLoc;
-    int m_lightPosLoc;
-    QMatrix4x4 m_proj;
-    QMatrix4x4 m_camera;
-    QMatrix4x4 m_world;
-    static bool m_transparent;
-
-    RecognizeCube *recognizeCube;
-
-    bool recognize_cube;
+    QVector<GLfloat> m_data;
+    int m_count;
 };
 
-#endif
+#endif // LOGO_H

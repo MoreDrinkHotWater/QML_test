@@ -18,3 +18,4 @@ INSTALLS += target
 
 DISTFILES += \
     test_data/snake.stl
+

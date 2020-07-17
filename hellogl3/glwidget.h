@@ -90,7 +90,7 @@ public slots:
     void setZRotation(int angle);
     void cleanup();
 
-    void reviceVectorDataSlot(QVector<GLfloat> temp);
+    void  reviceVectorDataSlot(QVector<float> draw_vector);
 
 signals:
     void xRotationChanged(int angle);
@@ -103,11 +103,6 @@ protected:
     void resizeGL(int width, int height) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
-
-//    void wheelEvent(QWheelEvent *event) override;
-
-public:
-    void keyPressEvent(QKeyEvent *event) override;
 
 private:
     void setupVertexAttribs();
@@ -146,9 +141,7 @@ private:
 
     bool cylinder;
 
-    QVector<GLfloat> draw_lines_vector;
-
-    bool draw_lines_flag;
+    QVector<float> draw_vector;
 
     int m_projMatrixLoc;
     int m_mvMatrixLoc;

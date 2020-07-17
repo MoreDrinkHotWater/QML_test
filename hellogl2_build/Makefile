@@ -1465,7 +1465,87 @@ main.o: ../hellogl2/main.cpp ../../Qt5.14.0/5.14.0/gcc_64/include/QtWidgets/QApp
 		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/QTextStream
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../hellogl2/main.cpp
 
-recognizecube.o: ../hellogl2/recognizecube.cpp ../hellogl2/recognizecube.h
+recognizecube.o: ../hellogl2/recognizecube.cpp ../hellogl2/recognizecube.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtGui/QOpenGLFunctions \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtGui/qopenglfunctions.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtGui/qtguiglobal.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qglobal.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qconfig-bootstrapped.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qconfig.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qtcore-config.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qsystemdetection.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qprocessordetection.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qcompilerdetection.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qtypeinfo.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qsysinfo.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qlogging.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qflags.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qatomic.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qbasicatomic.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qatomic_bootstrap.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qgenericatomic.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qatomic_cxx11.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qatomic_msvc.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qglobalstatic.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qmutex.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qnumeric.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qversiontagging.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtGui/qtgui-config.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtGui/qopengl.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qt_windows.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtGui/qopengles2ext.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtGui/qopenglext.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtGui/qopenglcontext.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qnamespace.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/QObject \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qobject.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qobjectdefs.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qobjectdefs_impl.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qstring.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qchar.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qbytearray.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qrefcount.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qarraydata.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qstringliteral.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qstringalgorithms.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qstringview.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qstringbuilder.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qlist.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qalgorithms.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qiterator.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qhashfunctions.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qpair.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qvector.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qcontainertools_impl.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qpoint.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qbytearraylist.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qstringlist.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qregexp.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qstringmatcher.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qcoreevent.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qscopedpointer.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qmetatype.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qvarlengtharray.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qcontainerfwd.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qobject_impl.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/QScopedPointer \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtGui/QSurfaceFormat \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtGui/qsurfaceformat.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtGui/qopenglversionfunctions.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qhash.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qvariant.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qmap.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qdebug.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qtextstream.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qiodevice.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qlocale.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qshareddata.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qset.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qcontiguouscache.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qsharedpointer.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtCore/qsharedpointer_impl.h \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtGui/QVector2D \
+		../../Qt5.14.0/5.14.0/gcc_64/include/QtGui/qvector2d.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o recognizecube.o ../hellogl2/recognizecube.cpp
 
 window.o: ../hellogl2/window.cpp ../hellogl2/glwidget.h \
