@@ -86,6 +86,8 @@ public:
 
     void recognition();
 
+    void recognition_cylinder();
+
     void draw_cylinder();
 public slots:
     void setXRotation(int angle);

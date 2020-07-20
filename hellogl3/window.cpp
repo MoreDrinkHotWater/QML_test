@@ -100,8 +100,8 @@ Window::Window(QWidget *mw)
     setLayout(mainLayout);
 
     // 滑动条初始值
-    xSlider->setValue(15 * 16);
-    ySlider->setValue(345 * 16);
+    xSlider->setValue(0 * 16);
+    ySlider->setValue(0 * 16);
     zSlider->setValue(0 * 16);
 
 //    setWindowTitle(tr("Hello GL"));
