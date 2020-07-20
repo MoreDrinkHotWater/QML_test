@@ -7,15 +7,12 @@
 #include "glwidget.h"
 
 Canvas::Canvas(QWidget *parent):
-    QWidget(parent),
-    glwidget(new GLWidget())
+    QWidget(parent)
 {
     // keyPressEvent 函数没有响应键盘事件的解决方法
     setFocusPolicy(Qt::ClickFocus);
 
-    QPushButton *button = new QPushButton("生成", this);
 
-    connect(button, &QPushButton::clicked, this, &Canvas::send_dataSlot);
 
 }
 
@@ -144,23 +141,4 @@ void Canvas::keyPressEvent(QKeyEvent *event)
 }
 
 
-
-void Canvas::send_dataSlot()
-{
-
-    for(auto it = draw_stack.begin(); it != draw_stack.end(); ++it)
-    {
-        for (int i = 0; i < it->size(); i++) {
-
-            draw_vector.push_back(it->data()[i]);
-        }
-    }
-
-    std::cout<<"draw_vector size: "<<draw_vector.size()<<std::endl;
-
-    connect(this, &Canvas::send_dataSignal, glwidget, &GLWidget::reviceVectorDataSlot, Qt::UniqueConnection);
-
-    emit send_dataSignal(draw_vector);
-
-}
 

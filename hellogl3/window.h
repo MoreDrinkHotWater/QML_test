@@ -68,14 +68,13 @@ class Window : public QWidget
 public:
     Window(QWidget *mw);
 
+    GLWidget *glWidget;
 //protected:
 //    void keyPressEvent(QKeyEvent *event) override;
-
 
 private:
     QSlider *createSlider();
 
-    GLWidget *glWidget;
     QSlider *xSlider;
     QSlider *ySlider;
     QSlider *zSlider;

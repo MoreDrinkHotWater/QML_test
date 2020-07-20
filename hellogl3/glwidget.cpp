@@ -75,6 +75,7 @@ extern bool flag;
 
 GLWidget::GLWidget(QWidget *parent)
     : QOpenGLWidget(parent),
+      appendingFlag(false),
       m_xRot(0),
       m_yRot(0),
       m_zRot(0),
@@ -255,17 +256,18 @@ void GLWidget::initializeGL()
     // false 即 渲染线
     flag = false;
 
-    // draw_model_flag 决定是否渲染识别出的 draw_model 数据
-    // 当 draw_model_flag = true 时， 要取消调用上面的 test 函数 并且 flag = false 。
-    // 当 draw_model_flag = false 时， 取消调用 recognition 和 draw_cylinder 函数。
-    draw_model_flag = true;
+    appendingFlag = true;
+
+//    recognition();
+
+//    draw_cylinder();
 
     // 调用 recognizeCube 时，只要开启注释就可啦
 
-    //    if(recognizeCube->recognize_cube())
-    //    {
-    //        recognize_cube = true;
-    //    }
+    //        if(recognizeCube->recognize_cube())
+    //        {
+    //            recognize_cube = true;
+    //        }
 
     // OpenGL的状态机： 设置上下文（context）
     connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &GLWidget::cleanup);
@@ -307,16 +309,15 @@ void GLWidget::initializeGL()
     m_lightPosLoc = m_program->uniformLocation("lightPos");
 
     // 创建顶点数组对象
-    if(m_vao.isCreated())
-        QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
-    else
+//    if(m_vao.isCreated())
+//        QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+//    else
         m_vao.create();
     QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
 
     // 设置顶点缓冲区对象
     m_logoVbo.create();
     m_logoVbo.bind();
-
 
     // 分配内存
     if(temp.count() != 0 && temp_onlyVertex.count() != 0)
@@ -336,10 +337,6 @@ void GLWidget::initializeGL()
     else if(recognize_cube)
     {
         m_logoVbo.allocate(recognizeCube->cube_vector.constData(), recognizeCube->cube_vector.count() * sizeof(GLfloat));
-    }
-    else if(draw_model_flag)
-    {
-        allocate_vector();
     }
     // GL_TRIANGLES(origin_data)
     else
@@ -364,12 +361,18 @@ void GLWidget::initializeGL()
 
 void GLWidget::allocate_vector()
 {
-
-    // GL_LINES(draw)
-
     std::cout<<"=====================test1=================="<<std::endl;
 
+    // 将与此对象关联的缓冲区绑定到当前OpenGL上下文。不加这个无法分配成功
+    m_logoVbo.bind();
+
     m_logoVbo.allocate(cylinder_vector.constData(), cylinder_vector.count() * sizeof(GLfloat));
+
+    m_logoVbo.release();
+
+    this->appendingFlag = true;
+
+    setupVertexAttribs();
 
 }
 
@@ -401,7 +404,7 @@ void GLWidget::setupVertexAttribs()
     }
 
     // set draw_vector
-    if(draw_model_flag)
+    if(appendingFlag)
     {
         std::cout<<"=====================test2=================="<<std::endl;
 
@@ -423,9 +426,6 @@ void GLWidget::setupVertexAttribs()
 // 渲染OpenGL场景
 void GLWidget::paintGL()
 {
-
-    //    _qTimer.start();
-
     // 清空缓冲区
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -476,16 +476,19 @@ void GLWidget::paintGL()
 
     }
 
-    else if(draw_model_flag)
+    else if(appendingFlag)
     {
-        std::cout<<"=====================test3=================="<<std::endl;
+//        std::cout<<"=====================test3=================="<<std::endl;
 
         glDrawArrays(GL_LINE_STRIP, 0, cylinder_vector.count() / 3 );
     }
+
     else if(recognize_cube)
     {
         glDrawArrays(GL_LINE_STRIP, 0, recognizeCube->cube_vector.count() / 3 );
+
     }
+
     else
     {
         // 渲染对象
@@ -494,6 +497,13 @@ void GLWidget::paintGL()
 
     // 从当前的 QOpenGLContext 中释放活动的着色程序。这相当于调用glUseProgram(0)。
     m_program->release();
+
+    // 定时器
+    //    _qTimer.start();
+
+    // 将 update 方法加入事件循环中
+    //    QMetaObject::invokeMethod(this,"update",Qt::QueuedConnection);
+
 }
 
 // 设置OpenGL视口、投影等
@@ -527,8 +537,10 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
     m_lastPos = event->pos();
 }
 
-void GLWidget::reviceVectorDataSlot(QVector<float> draw_vector)
+void GLWidget::reviceVectorDataSlot(QVector<float> &draw_vector)
 {
+
+    cylinder_vector.clear();
 
     this->draw_vector = draw_vector;
 
@@ -541,7 +553,6 @@ void GLWidget::reviceVectorDataSlot(QVector<float> draw_vector)
     allocate_vector();
 
     update();
-
 }
 
 void GLWidget::test()

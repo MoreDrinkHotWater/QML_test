@@ -8,7 +8,7 @@
 
 #include <QPushButton>
 
-class GLWidget;
+
 
 class Canvas : public QWidget
 {
@@ -28,7 +28,7 @@ private:
 
     void drawLines(QPainter &painter);
 
-    GLWidget *glwidget;
+
 
 public:
     QVector<float> draw_lines_vector;
@@ -51,10 +51,8 @@ protected:
 public slots:
     void paintEvent(QPaintEvent *event) override;
 
-    void send_dataSlot();
 
-signals:
-    void send_dataSignal(QVector<float> draw_vector);
+
 
 };
 

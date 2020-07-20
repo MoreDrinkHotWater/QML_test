@@ -80,19 +80,20 @@ public:
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;
 
+    bool appendingFlag;
+
     void test();
 
     void recognition();
 
     void draw_cylinder();
-
 public slots:
     void setXRotation(int angle);
     void setYRotation(int angle);
     void setZRotation(int angle);
     void cleanup();
 
-    void reviceVectorDataSlot(QVector<float> draw_vector);
+    void reviceVectorDataSlot(QVector<float> &draw_vector);
 
 signals:
     void xRotationChanged(int angle);
