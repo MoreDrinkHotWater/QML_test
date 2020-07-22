@@ -37,8 +37,6 @@ public:
 
     QVector<float> draw_vector;
 
-    QPushButton *button;
-
 protected:
     void mousePressEvent(QMouseEvent *event) override;
 

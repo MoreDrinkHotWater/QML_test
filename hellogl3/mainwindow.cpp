@@ -29,11 +29,15 @@ void MainWindow::on_pushButton_clicked()
         }
     }
 
+
+
+//    qDebug() <<"draw_vector size: "<<draw_vector.size();
+
+//    ui->glwidget->glWidget->reviceVectorDataSlot(draw_vector);
+
+    ui->glwidget->glWidget->reviceStackDataSlot(ui->canvas->draw_stack);
+
     // 用于 test
-//    ui->canvas->draw_stack.clear();
-
-    qDebug() <<"draw_vector size: "<<draw_vector.size();
-
-    ui->glwidget->glWidget->reviceVectorDataSlot(draw_vector);
+    ui->canvas->draw_stack.clear();
 
 }

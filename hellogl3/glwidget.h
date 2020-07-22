@@ -59,6 +59,7 @@
 #include "logo.h"
 
 #include <QTimer>
+#include <QStack>
 
 class MainWindow;
 
@@ -97,6 +98,8 @@ public slots:
 
     void reviceVectorDataSlot(QVector<float> &draw_vector);
 
+    void reviceStackDataSlot(QStack<QVector<float>> draw_stack);
+
 signals:
     void xRotationChanged(int angle);
     void yRotationChanged(int angle);
@@ -108,6 +111,7 @@ protected:
     void resizeGL(int width, int height) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
+    void wheelEvent(QWheelEvent *event) override;
 
 private:
     void setupVertexAttribs();
@@ -150,6 +154,10 @@ private:
 
     QVector<float> draw_vector;
 
+    QStack<QVector<float>> draw_stack;
+
+    QStack<QVector<float>> draw_coorstack;
+
     // 延迟
     QTimer _qTimer;
 
@@ -166,6 +174,7 @@ private:
     QMatrix4x4 m_world;
     static bool m_transparent;
 
+    float m_cameraZ;
     RecognizeCube *recognizeCube;
 
     bool recognize_cube;

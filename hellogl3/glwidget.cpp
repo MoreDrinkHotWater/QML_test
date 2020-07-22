@@ -82,8 +82,7 @@ GLWidget::GLWidget(QWidget *parent)
       m_program(0),
       _step(0.0f),
       recognizeCube(new RecognizeCube()),
-      recognize_cube(false)
-
+      recognize_cube(false),m_cameraZ(-15)
 {
     m_core = QSurfaceFormat::defaultFormat().profile() == QSurfaceFormat::CoreProfile;
     // --transparent causes the clear color to be transparent. Therefore, on systems that
@@ -444,6 +443,10 @@ void GLWidget::paintGL()
     QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
     m_program->bind();
     m_program->setUniformValue(m_projMatrixLoc, m_proj);
+
+    m_camera.setToIdentity();
+    m_camera.translate(0, 0, m_cameraZ);
+
     m_program->setUniformValue(m_mvMatrixLoc, m_camera * m_world);
     QMatrix3x3 normalMatrix = m_world.normalMatrix();
     m_program->setUniformValue(m_normalMatrixLoc, normalMatrix);
@@ -480,13 +483,12 @@ void GLWidget::paintGL()
     {
         //        std::cout<<"=====================test3=================="<<std::endl;
 
-        glDrawArrays(GL_LINE_STRIP, 0, cylinder_vector.count() / 3 );
+        glDrawArrays(GL_LINES, 0, cylinder_vector.count() / 3 );
     }
 
     else if(recognize_cube)
     {
         glDrawArrays(GL_LINE_STRIP, 0, recognizeCube->cube_vector.count() / 3 );
-
     }
 
     else
@@ -537,6 +539,17 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
     m_lastPos = event->pos();
 }
 
+void GLWidget::wheelEvent(QWheelEvent *event)
+{
+    if(event->delta() > 0){                    // 当滚轮远离使用者时
+        m_cameraZ += 0.5;                // 进行放大
+        update();
+    }else{                                     // 当滚轮向使用者方向旋转时
+        m_cameraZ -= 0.5;            // 进行缩小
+        update();
+    }
+}
+
 void GLWidget::reviceVectorDataSlot(QVector<float> &draw_vector)
 {
 
@@ -567,6 +580,63 @@ void GLWidget::reviceVectorDataSlot(QVector<float> &draw_vector)
     //    recognition();
 
     //    draw_cylinder();
+
+    allocate_vector();
+
+    update();
+}
+
+void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
+{
+    this->draw_stack = draw_stack;
+
+    // 用于 test
+    draw_coorstack.clear();
+
+    qDebug()<<"revice stack size: "<< draw_stack.size();
+
+    QVector<float> temp_vector;
+
+    for(auto it = draw_stack.begin(); it != draw_stack.end(); ++it)
+    {
+        std::cout<< "it->size: "<<it->size()<<std::endl;
+
+        //        for (int i = 0; i < it->size(); i+=2) {
+
+        //            float x = ( it->data()[i]  - 602 / 2.0 ) / (602.0 / 2.0 );
+        //            float y = ( it->data()[i+1]   - 612.0 / 2.0 ) / (612.0 / 2.0 );
+
+        //            cylinder_vector.push_back(x);
+        //            cylinder_vector.push_back(y);
+        //            cylinder_vector.push_back(-10);
+
+        //            if(i!=0 && i!=it->size()-2)
+        //            {
+        //                cylinder_vector.push_back(x);
+        //                cylinder_vector.push_back(y);
+        //                cylinder_vector.push_back(-10);
+        //            }
+        //        }
+
+        temp_vector.clear();
+
+        for (int j = 0; j < it->size(); j+=2) {
+            float x = ( it->data()[j]  - 602 / 2 ) / (602 / 2 );
+            float y = ( it->data()[j+1]   - 612 / 2 ) / (612 / 2 );
+
+            temp_vector.push_back(x);
+            temp_vector.push_back(y);
+            //            temp_vector.push_back(-10);
+        }
+
+        draw_coorstack.push_back(temp_vector);
+    }
+
+    qDebug()<<"draw_coorstack size: "<< draw_coorstack.size();
+
+    recognition_cylinder();
+
+    draw_cylinder();
 
     allocate_vector();
 
@@ -678,14 +748,21 @@ void GLWidget::recognition_cylinder()
     //    QVector2D center(0,0);
     //    head_circle.push_back(center);
 
-    for (int var = 0; var < cylinder_vector.size(); var+=3) {
-        QVector2D temp(cylinder_vector[var],cylinder_vector[var+1]);
+    std::cout<<"draw_coorstack[0].size(): "<<draw_coorstack[0].size()<<std::endl;
+
+    for (int var = 0; var < draw_coorstack[0].size(); var+=2) {
+        QVector2D temp(draw_coorstack[0][var],draw_coorstack[0][var+1]);
         head_circle.push_back(temp);
     }
 
     std::cout<<"head_circle size: "<<head_circle.size()<<std::endl;
 
-    float maxX = cylinder_vector[0], minX = cylinder_vector[0], maxY = cylinder_vector[1], minY = cylinder_vector[1];
+    //    for(int i = 0; i<10; i++)
+    //    {
+    //        std::cout<<"head_circle: "<<head_circle[i].x()<<" "<<head_circle[i].y()<<std::endl;
+    //    }
+
+    float maxX = head_circle[0].x(), minX = head_circle[0].x(), maxY = head_circle[0].y(), minY = head_circle[0].y();
     for(auto it = head_circle.begin(); it != head_circle.end(); it++)
     {
         if(it ->x() > maxX)
@@ -716,7 +793,7 @@ void GLWidget::recognition_cylinder()
 
 
     int num = 50;
-    // 取20组测试数据
+    // 取50组测试数据
     for (int i = 0; i < num; i++) {
 
         QVector<QVector2D> OriginPoints_vector;
@@ -765,10 +842,11 @@ void GLWidget::recognition_cylinder()
                 BD =  sqrt(pow(OriginPoints_vector[3].y()  - OriginPoints_vector[1].y(),2) + pow(OriginPoints_vector[3].x() * step - OriginPoints_vector[1].x() * step,2));
             }
 
-//                    std::cout<<"AB*CD + BC*AD - AC *BD: "<<abs(AB*CD + BC*AD - AC *BD)<<std::endl;
-            if(abs((AB*CD + BC*AD) - AC *BD) < 0.001)
+            //                    std::cout<<"AB*CD + BC*AD - AC *BD: "<<abs(AB*CD + BC*AD - AC *BD)<<std::endl;
+            if(AB*CD + BC*AD== AC *BD)
+                //            if(abs((AB*CD + BC*AD) - AC *BD) < 0.001)
             {
-//                                std::cout<<"find the step"<<std::endl;
+                //                                std::cout<<"find the step"<<std::endl;
                 return false;
             }
 
@@ -785,7 +863,7 @@ void GLWidget::recognition_cylinder()
             {
                 if(step == 5.0)
                 {
-//                                        std::cout<<"can't find the step "<<std::endl;
+                    //                                        std::cout<<"can't find the step "<<std::endl;
                 }
 
                 step+=0.0001;
@@ -800,7 +878,7 @@ void GLWidget::recognition_cylinder()
             {
                 if(step == 5.0)
                 {
-//                                        std::cout<<"can't find the step "<<std::endl;
+                    //                                        std::cout<<"can't find the step "<<std::endl;
                 }
 
                 step+=0.0001;
@@ -810,59 +888,118 @@ void GLWidget::recognition_cylinder()
 
         step_vector.push_back(step);
 
-//        std::cout<<"the final step = "<<step<<std::endl;
+        //        std::cout<<"the final step = "<<step<<std::endl;
 
     }
-
 
     // 匹配标准？
-    int flag = 0; // 记录匹配数
-    int invalid = 0; // 记录无效数据
-    QMap<float,int> num_map;
-    for (int i = 0; i < num ; i++) {
-        num_map[step_vector[i]]++;
-    }
+    std::sort(step_vector.begin(), step_vector.end());
 
-    int max = 0;
-    float ans = 0;
-    // 统计次数最多的数据跳过头和尾
-    for(auto it = num_map.begin(); it != num_map.end() ;it++){
-        // 剔除无效数据： 最小的可能取的恰好满足四点共圆， 最大的是无解的情况
-        if(it == num_map.begin() || it == num_map.end()-1)
-        {
-            invalid += it.value();
-            continue;
-        }
-
-        if(it.value() > max){
-            max = it.value();//后面的元素 value
-            ans = it.key();//前面的元素 key
-        }
-    }
-
-    std::cout<<ans<<std::endl;
-
-//    std::cout<<"num_map.size: "<<num_map.size()<<std::endl;
-
-//    float ans = num_map[num_map.size()/2];
-
-//    std::cout<<ans<<std::endl;
-
-    for (auto it = num_map.begin(); it!=num_map.end();it++)
+    for(int i = 0 ; i < step_vector.size(); i++)
     {
-        std::cout<<"it.key: "<<it.key()<<" it.value: "<<it.value()<<std::endl;
-        if(abs(it.key() - ans) < 0.1)
-        {
-            flag += 1;
-        }
+        std::cout<<"step_vector: "<<step_vector[i]<<std::endl;
     }
 
-    std::cout<<"flag: "<< flag <<std::endl;
-    std::cout<<"invalid: "<< invalid <<std::endl;
-    std::cout<<"匹配度: "<< float( flag * 100/(num-invalid) ) <<"%"<<std::endl;
+    // 计算方差
+    auto variance = [](QVector<float> vector){
+
+        double sum = std::accumulate(std::begin(vector) + 1, std::end(vector) - 1, 0.0);
+        double mean =  sum / vector.size(); //均值
+
+        double accum  = 0.0;
+        std::for_each (std::begin(vector), std::end(vector), [&](const double d) {
+            accum  += (d-mean)*(d-mean);
+        });
+
+        double stdev = sqrt(accum/(vector.size()-1)); //方差
+
+        return stdev;
+    };
+
+    std::cout<<"step_vector的方差: "<< variance(step_vector) <<std::endl;
 
     // 默认长半轴为半径
     radius = (maxX-minX)/2;
+
+    std::cout<<"radius: "<<radius<<std::endl;
+
+    //    radius = 4;
+
+    // 2.判断线段是否垂直上面的椭圆！（若垂直，求出高度 height）
+    // 注：由于构建数据时，为了在三维中表现出二维。 我们记录的 right_max 和 r_line 的二维坐标相同。
+    // 下面的方法不适用测试数据！
+
+    QVector<QVector2D> l_line_vector;
+    //    QVector2D center(0,0);
+    //    head_circle.push_back(center);
+
+    std::cout<<"draw_coorstack[1].size(): "<<draw_coorstack[1].size()<<std::endl;
+
+    QVector<float> xcoor_vector;
+    QVector2D l_line;
+
+    for (int var = 0; var < draw_coorstack[1].size(); var+=2) {
+        QVector2D temp(draw_coorstack[1][var],draw_coorstack[1][var+1]);
+        xcoor_vector.push_back(draw_coorstack[1][var]);
+        l_line_vector.push_back(temp);
+
+        if(var == draw_coorstack[1].size() - 2)
+        {
+            l_line = temp;
+        }
+    }
+
+    std::cout<<"l_line_vector size: "<<l_line_vector.size()<<std::endl;
+
+    // 计算 x 坐标的方差。看是不是直线
+    std::cout<<"xcoor_vector的方差: "<< variance(xcoor_vector) <<std::endl;
+
+    if(variance(xcoor_vector) < 0.03)
+    {
+        std::cout<<"l_line is straight line! "<<std::endl;
+    }
+
+    QVector2D right_max;
+    QVector2D left_min;
+    for(auto it = head_circle.begin(); it != head_circle.end(); it++)
+    {
+        // 记录 maxX 时的 点坐标。
+        if(it->x() == maxX)
+        {
+            right_max.setX(it->x());
+            right_max.setY(it->y());
+        }
+
+        // 记录 minX 时的 点坐标。
+        if(it->x() == minX)
+        {
+            left_min.setX(it->x());
+            left_min.setY(it->y());
+        }
+    }
+
+    //    std::cout<<"right_max_x: "<<right_max.x()<<" left_min_x:"<<left_min.x()<<" maxY: "<<maxY<<" minY: "<<minY<<std::endl;
+
+    // 向量
+    float min_max_x = right_max.x() - left_min.x();
+    float min_max_y = right_max.y() - left_min.y();
+
+    float min_lline_x = l_line.x() - left_min.x();
+    float min_lline_y = l_line.y() - left_min.y();
+
+    float point_multi = min_max_x * min_lline_x + min_max_y * min_lline_y;
+
+    std::cout<<"point_multi: "<<point_multi<<std::endl;
+
+    // 以 75度 为标准
+    if(point_multi < 0.25882)
+    {
+        std::cout<<"the l_line is right!"<<std::endl;
+    }
+
+    height = min_lline_y;
+
+    std::cout<<"height: "<<height<<std::endl;
 
 }
 
@@ -1172,82 +1309,249 @@ void GLWidget::recognition()
 
 void GLWidget::draw_cylinder()
 {
-    // 半径
-    GLfloat r = radius;
-
-    // 默认圆心
-    GLfloat center[3] = {0, 0, 0};
-
-    for ( int i = 0; i < 3; i++) {
-        cylinder_vector.push_back(center[i]);
-    }
-
-    int n = 360;
-    float t;
-
     // 画第一个圆  center->0->10->center->10->20...
-    for (int i = 0; i <= n; i++) {
-        t = i * 2 * M_PI / n;
+    float  all_x = 0, all_y = 0;
 
-        cylinder_vector.push_back(center[0] + r * cos(t));
-        cylinder_vector.push_back(center[1] + r * sin(t));
-        cylinder_vector.push_back(center[2] );
-
-        if(i%10 == 0)
-        {
-            for ( int i = 0; i < 3; i++) {
-                cylinder_vector.push_back(center[i]);
-            }
-
-            cylinder_vector.push_back(center[0] + r * cos(t));
-            cylinder_vector.push_back(center[1] + r * sin(t));
-            cylinder_vector.push_back(center[2] );
-        }
-    }
-
-    // 画圆之间的区域
-    float i = 0;
-    do
+    for(auto it = draw_stack.begin(); it != draw_stack.end(); ++it)
     {
-        t = i * 2 * M_PI / n;
 
-        cylinder_vector.push_back(center[0] + r * cos(t));
-        cylinder_vector.push_back(center[1] + r * sin(t) );
-        cylinder_vector.push_back(center[2] );
-
-        cylinder_vector.push_back(center[0] + r * cos(t));
-        cylinder_vector.push_back(center[1] + r * sin(t));
-        cylinder_vector.push_back(height);
-
-        i += 10;
-
-    }while(i<=n);
-
-    // 画第二个圆
-
-    for (int i = 0; i <= n; i++) {
-        t = i * 2 * M_PI / n;
-
-        cylinder_vector.push_back(center[0] + r * cos(t));
-        cylinder_vector.push_back(center[1] + r * sin(t));
-        cylinder_vector.push_back(height );
-
-        if(i%10 == 0)
+        if (it == draw_stack.begin())
         {
-            // 圆心 z = height
-            for ( int j = 0; j < 3; j++) {
-                if(j == 2)
-                    cylinder_vector.push_back(height);
-                else
-                    cylinder_vector.push_back(center[j]);
+            std::cout<< "it->size: "<<it->size()<<std::endl;
+            // 画上面的部分
+            for (int i = 0; i < it->size(); i+=2) {
+
+                float x = ( it->data()[i]  - 602 / 2.0 ) / (602.0 / 2.0 );
+                float y = ( it->data()[i+1]   - 612.0 / 2.0 ) / (612.0 / 2.0 );
+
+                all_x += x;
+                all_y += y;
+
+                cylinder_vector.push_back(x);
+                cylinder_vector.push_back(y);
+                cylinder_vector.push_back(0);
+
+                if(i!=0 && i!=it->size()-2)
+                {
+                    cylinder_vector.push_back(x);
+                    cylinder_vector.push_back(y);
+                    cylinder_vector.push_back(0);
+                }
+
             }
 
-            cylinder_vector.push_back(center[0] + r * cos(t));
-            cylinder_vector.push_back(center[1] + r * sin(t));
-            cylinder_vector.push_back(height);
+            for (int i = 0; i < it->size(); i+=2) {
+
+                // 重心
+                if(i%30 == 0)
+                {
+                    cylinder_vector.push_back(all_x/it->size());
+                    cylinder_vector.push_back(all_y/it->size());
+                    cylinder_vector.push_back(0);
+
+                    float x = ( it->data()[i]  - 602 / 2.0 ) / (602.0 / 2.0 );
+                    float y = ( it->data()[i+1]   - 612.0 / 2.0 ) / (612.0 / 2.0 );
+
+                    cylinder_vector.push_back(x);
+                    cylinder_vector.push_back(y);
+                    cylinder_vector.push_back(0);
+                }
+
+            }
+
+            QVector2D first;
+            //画中间区域
+            for (int i = 0; i < it->size(); i+=2)
+            {
+
+                float x = ( it->data()[i]  - 602 / 2.0 ) / (602.0 / 2.0 );
+                float y = ( it->data()[i+1]   - 612.0 / 2.0 ) / (612.0 / 2.0 );
+
+                if(i==0)
+                {
+                    first.setX(x);
+                    first.setY(y);
+                }
+
+                if(i!=0 && i%30 == 0)
+                {
+                    cylinder_vector.push_back(x);
+                    cylinder_vector.push_back(y);
+                    cylinder_vector.push_back(0);
+                }
+
+                if(i%30 == 0)
+                {
+                    cylinder_vector.push_back(x);
+                    cylinder_vector.push_back(y);
+                    cylinder_vector.push_back(0);
+
+                    cylinder_vector.push_back(x);
+                    cylinder_vector.push_back(y);
+                    cylinder_vector.push_back(height);
+
+                    cylinder_vector.push_back(x);
+                    cylinder_vector.push_back(y);
+                    cylinder_vector.push_back(height);
+
+                    // 连接 i=0 时的线
+                    if(it->size()-i < 30)
+                    {
+                        cylinder_vector.push_back(first.x());
+                        cylinder_vector.push_back(first.y());
+                        cylinder_vector.push_back(0);
+                    }
+                }
+            }
+
+            all_x = 0;
+            all_y = 0;
+
+            // 画下面的部分
+            for (int i = 0; i < it->size(); i+=2) {
+
+                float x = ( it->data()[i]  - 602 / 2.0 ) / (602.0 / 2.0 );
+                float y = ( it->data()[i+1]   - 612.0 / 2.0 ) / (612.0 / 2.0 );
+
+                all_x += x;
+                all_y += y;
+
+                cylinder_vector.push_back(x);
+                cylinder_vector.push_back(y);
+                cylinder_vector.push_back(height);
+
+                if(i!=0 && i!=it->size()-2)
+                {
+                    cylinder_vector.push_back(x);
+                    cylinder_vector.push_back(y);
+                    cylinder_vector.push_back(height);
+                }
+            }
+
+            for (int i = 0; i < it->size(); i+=2) {
+
+                // 重心
+                if(i%30 == 0)
+                {
+
+                    cylinder_vector.push_back(all_x/it->size());
+                    cylinder_vector.push_back(all_y/it->size());
+                    cylinder_vector.push_back(height);
+
+
+                    float x = ( it->data()[i]  - 602 / 2.0 ) / (602.0 / 2.0 );
+                    float y = ( it->data()[i+1]   - 612.0 / 2.0 ) / (612.0 / 2.0 );
+
+                    cylinder_vector.push_back(x);
+                    cylinder_vector.push_back(y);
+                    cylinder_vector.push_back(height);
+                }
+            }
+
         }
     }
-
-    std::cout<<"the cylinder_vector size is: "<< cylinder_vector.size() <<std::endl;
 
 }
+
+//void GLWidget::draw_cylinder()
+//{
+//    // 半径
+//    GLfloat r = radius;
+
+//    // 默认圆心
+//    GLfloat center[3] = {0, 0, 0};
+
+//    //    for ( int i = 0; i < 3; i++) {
+//    //        cylinder_vector.push_back(center[i]);
+//    //    }
+
+//    int n = 100;
+//    float t;
+
+//    // 画第一个圆  center->0->10->center->10->20...
+//    for (int i = 0; i <= n; i++) {
+//        t = i * 2 * M_PI / n;
+
+//        cylinder_vector.push_back(center[0] + r * cos(t));
+//        cylinder_vector.push_back(center[1] + r * sin(t));
+//        cylinder_vector.push_back(center[2] );
+
+//        if(i!=0 && i!= n)
+//        {
+//            cylinder_vector.push_back(center[0] + r * cos(t));
+//            cylinder_vector.push_back(center[1] + r * sin(t));
+//            cylinder_vector.push_back(center[2]);
+//        }
+
+
+//        if(i%10 == 0)
+//        {
+//            for ( int i = 0; i < 3; i++) {
+//                cylinder_vector.push_back(center[i]);
+//            }
+
+//            cylinder_vector.push_back(center[0] + r * cos(t));
+//            cylinder_vector.push_back(center[1] + r * sin(t));
+//            cylinder_vector.push_back(center[2] );
+//        }
+
+//    }
+
+//    // 画圆之间的区域
+//    for (int i = 0; i <= n; i+=10) {
+
+//        t = i * 2 * M_PI / n;
+
+//        if(i!=0 && i%10==0)
+//        {
+//            cylinder_vector.push_back(center[0] + r * cos(t));
+//            cylinder_vector.push_back(center[1] + r * sin(t));
+//            cylinder_vector.push_back(center[2]);
+//        }
+
+//        cylinder_vector.push_back(center[0] + r * cos(t));
+//        cylinder_vector.push_back(center[1] + r * sin(t) );
+//        cylinder_vector.push_back(center[2]);
+
+//        cylinder_vector.push_back(center[0] + r * cos(t));
+//        cylinder_vector.push_back(center[1] + r * sin(t));
+//        cylinder_vector.push_back(height);
+
+//        cylinder_vector.push_back(center[0] + r * cos(t));
+//        cylinder_vector.push_back(center[1] + r * sin(t));
+//        cylinder_vector.push_back(height);
+
+//    }
+
+//    // 画第二个圆
+
+//    for (int i = 0; i <= n; i++) {
+//        t = i * 2 * M_PI / n;
+
+//        cylinder_vector.push_back(center[0] + r * cos(t));
+//        cylinder_vector.push_back(center[1] + r * sin(t));
+//        cylinder_vector.push_back(height);
+
+//        cylinder_vector.push_back(center[0] + r * cos(t));
+//        cylinder_vector.push_back(center[1] + r * sin(t));
+//        cylinder_vector.push_back(height);
+
+//        if(i%10 == 0)
+//        {
+//            for ( int i = 0; i < 3; i++) {
+//                if(i == 2)
+//                    cylinder_vector.push_back(height);
+//                else
+//                    cylinder_vector.push_back(center[i]);
+//            }
+
+//            cylinder_vector.push_back(center[0] + r * cos(t));
+//            cylinder_vector.push_back(center[1] + r * sin(t));
+//            cylinder_vector.push_back(height);
+//        }
+
+//    }
+
+//    std::cout<<"the cylinder_vector size is: "<< cylinder_vector.size() <<std::endl;
+
+//}
