@@ -65,6 +65,8 @@ class MainWindow;
 
 class RecognizeCube;
 
+class Recognizecylinder;
+
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
 class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
@@ -83,20 +85,18 @@ public:
 
     bool appendingFlag;
 
-    void test();
-
-    void recognition();
-
-    void recognition_cylinder();
+    void loader_data();
 
     void draw_cylinder();
+
+    void draw_arbitrary();
+
+    void draw_arbitrary_line();
 public slots:
     void setXRotation(int angle);
     void setYRotation(int angle);
     void setZRotation(int angle);
     void cleanup();
-
-    void reviceVectorDataSlot(QVector<float> &draw_vector);
 
     void reviceStackDataSlot(QStack<QVector<float>> draw_stack);
 
@@ -175,9 +175,11 @@ private:
     static bool m_transparent;
 
     float m_cameraZ;
-    RecognizeCube *recognizeCube;
 
+    RecognizeCube *recognizeCube;
     bool recognize_cube;
+
+    Recognizecylinder *recognizecylinder;
 };
 
 #endif

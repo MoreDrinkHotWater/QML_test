@@ -18,20 +18,15 @@ MainWindow::~MainWindow()
 void MainWindow::on_pushButton_clicked()
 {
 
+//    QVector<float> draw_vector;
 
-    QVector<float> draw_vector;
+//    for(auto it = ui->canvas->draw_stack.begin(); it != ui->canvas->draw_stack.end(); ++it)
+//    {
+//        for (int i = 0; i < it->size(); i++) {
 
-    for(auto it = ui->canvas->draw_stack.begin(); it != ui->canvas->draw_stack.end(); ++it)
-    {
-        for (int i = 0; i < it->size(); i++) {
-
-            draw_vector.push_back(it->data()[i]);
-        }
-    }
-
-
-
-//    qDebug() <<"draw_vector size: "<<draw_vector.size();
+//            draw_vector.push_back(it->data()[i]);
+//        }
+//    }
 
 //    ui->glwidget->glWidget->reviceVectorDataSlot(draw_vector);
 

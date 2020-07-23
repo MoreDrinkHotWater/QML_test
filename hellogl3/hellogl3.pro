@@ -22,6 +22,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     recognizecube.cpp \
+    recognizecylinder.cpp \
     window.cpp
 
 HEADERS += \
@@ -30,6 +31,7 @@ HEADERS += \
     logo.h \
     mainwindow.h \
     recognizecube.h \
+    recognizecylinder.h \
     window.h
 
 FORMS += \
