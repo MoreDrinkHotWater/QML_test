@@ -70,6 +70,10 @@
 #include "recognizecube.h"
 #include "recognizecylinder.h"
 
+void genCylinder(QVector<float> &vec,QVector<QVector2D>path,float z,QVector3D offset);
+void genCylinder(QVector<float> &vec,float r,float z,QVector3D offset);
+void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVector<QVector2D> line_path, float z,QVector3D offset);
+
 bool GLWidget::m_transparent = false;
 
 extern bool flag;
@@ -410,7 +414,15 @@ void GLWidget::setupVertexAttribs()
     {
         std::cout<<"=====================test2=================="<<std::endl;
 
-        f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+        f->glEnableVertexAttribArray(1);
+
+        // 顶点的偏移量
+        f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), 0);
+
+        // 法向量的偏移量
+        f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), reinterpret_cast<void *>(3 * sizeof(GLfloat)));
+
+        //        f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
     }
     else
     {
@@ -432,6 +444,7 @@ void GLWidget::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glEnable(GL_DEPTH_TEST);
+    // 开启背面剔除
     glEnable(GL_CULL_FACE);
 
     glEnable(GL_LINE_SMOOTH); //开启线的反走样
@@ -485,8 +498,8 @@ void GLWidget::paintGL()
     else if(appendingFlag)
     {
         //        std::cout<<"=====================test3=================="<<std::endl;
-
-        glDrawArrays(GL_LINES, 0, cylinder_vector.count() / 3 );
+        //        glDrawArrays(GL_LINES, 0, cylinder_vector.count() / 3 );
+        glDrawArrays(GL_TRIANGLES, 0, cylinder_vector.count() / 6 );
     }
 
     else if(recognize_cube)
@@ -584,17 +597,43 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
 
     qDebug()<<"draw_coorstack size: "<< draw_coorstack.size();
 
+    // head_vector
+    QVector<QVector2D> head_vector;
+    for (int var = 0; var < draw_coorstack[0].size(); var+=2) {
+
+        QVector2D temp(draw_coorstack[0][var],draw_coorstack[0][var+1]);
+
+        head_vector.push_back(temp);
+    }
+
+    // line_vector
+    QVector<QVector2D> line_vector;
+    for (int var = 0; var < draw_coorstack[1].size(); var+=2) {
+
+        QVector2D temp(draw_coorstack[1][var],draw_coorstack[1][var+1]);
+
+        line_vector.push_back(temp);
+    }
+
     if(recognizecylinder->recognizecy_linder(draw_coorstack))
     {
         this->radius = recognizecylinder->radius;
         this->height = recognizecylinder->height;
     }
 
+    QVector3D offset(0,0,0);
+
+    //         genCylinder(cylinder_vector, radius, height, offset);
+
+    //            genCylinder(cylinder_vector, head_vector, height, offset);
+
+    genCylinder(cylinder_vector, head_vector, line_vector, height, offset);
+
     //        draw_cylinder();
 
     //        draw_arbitrary();
 
-    draw_arbitrary_line();
+    //        draw_arbitrary_line();
 
     allocate_vector();
 
@@ -700,37 +739,125 @@ void GLWidget::loader_data()
     file.close();
 };
 
-
 void genTriangle(QVector<float> &vec,QVector3D p0,QVector3D p1,QVector3D p2){
-        QVector3D n = QVector3D::normal(p0,p1,p2);
-        vec.append(p0.x());vec.append(p0.y());vec.append(p0.z());
-        vec.append(n.x());vec.append(n.y());vec.append(n.z());
-        vec.append(p1.x());vec.append(p1.y());vec.append(p1.z());
-        vec.append(n.x());vec.append(n.y());vec.append(n.z());
-        vec.append(p2.x());vec.append(p2.y());vec.append(p2.z());
-        vec.append(n.x());vec.append(n.y());vec.append(n.z());
+    QVector3D n = QVector3D::normal(p0,p1,p2);
+    vec.append(p0.x());vec.append(p0.y());vec.append(p0.z());
+    vec.append(n.x());vec.append(n.y());vec.append(n.z());
+    vec.append(p1.x());vec.append(p1.y());vec.append(p1.z());
+    vec.append(n.x());vec.append(n.y());vec.append(n.z());
+    vec.append(p2.x());vec.append(p2.y());vec.append(p2.z());
+    vec.append(n.x());vec.append(n.y());vec.append(n.z());
 }
+
 //斜角点
 void genRectangleZ(QVector<float> &vec,QVector3D p0,QVector3D p1){
     QVector3D p2 = QVector3D(p1.x(),p1.y(),p0.z());
     QVector3D p3 = QVector3D(p0.x(),p0.y(),p1.z());
-    genTriangle(vec,p0,p2,p3);
-    genTriangle(vec,p2,p1,p3);
+    // 定义的顺序是逆时针！ 要顺时针画鸭鸭鸭！
+    genTriangle(vec,p0,p3,p2);
+    genTriangle(vec,p2,p3,p1);
 }
 
-void genCylinder(QVector<float> &vec,QVector<QVector2D>&path,float z,QVector3D offset){
-    int n = 100;
-    QVector3D centerTop(0,0,z);
-    QVector3D centerBottom(0,0,0);
+void genNewHead(QVector<QVector2D>&nextHead,QVector<QVector2D>&head_path,float temp_proportion_1,QVector2D center){
+
+    nextHead.clear();
+    for(int i = 0; i < head_path.size(); i++){
+        nextHead.append((head_path[i] - center)*temp_proportion_1 + center);
+    }
+}
+
+void findMinMax(QVector<QVector2D> head_path, QVector2D &min,QVector2D &max){
+    float maxX = head_path[0].x(),minX = maxX,  maxY = head_path[0].y(), minY = maxY;
+    for(auto it = head_path.begin(); it != head_path.end(); it++)
+    {
+        maxX = qMax(maxX,it->x());
+        minX = qMin(minX,it->x());
+        maxY = qMax(maxY,it->y());
+        minY = qMin(minY,it->y());
+
+    }
+    min = QVector2D(minX,minY);
+    max = QVector2D(maxX,maxY);
+};
+
+QVector2D find_center(QVector<QVector2D> head_path, float &minX_){
+    QVector2D min,max;
+    findMinMax(head_path,min,max);
+    minX_ = min.x();
+    return (min + max)/2;
+};
+
+//return  1/cos()
+float mapEllipseToCicle(QVector<QVector2D> &head_path){
+    QVector2D min,max;
+    findMinMax(head_path,min,max);
+    QVector2D center = (min + max)/2;
+    float ratio = (max.x() - min.x())/(max.y() - min.y());
+    for(int i = 0; i < head_path.size(); i++){
+        head_path[i].setY((head_path[i].y() - center.y())*ratio + center.y());
+    }
+    return 1/sqrt(1 - (1/ratio)*(1/ratio));
+}
+// draw_arbitrary_line
+void genCylinder(QVector<float> &vec,QVector<QVector2D> _head_path, QVector<QVector2D> line_path, float height,QVector3D offset){
+    // 中心
+
+    float minX;
+    QVector<QVector2D> head_path = _head_path;
+    float heightRatio = mapEllipseToCicle(head_path);
+    QVector2D center = find_center(head_path, minX);
+    float proportion = center.x() - minX;
+
+    std::cout<<"proportion: "<<proportion<<std::endl;
+
+    std::cout<<"center.x: "<<center.x()<<" center.y: "<<center.y()<<std::endl;
+
+    QVector3D centerTop(center, 0);
+    QVector3D centerBottom(center,height*heightRatio);
+
+    QVector<QVector2D> head_path_bottom;
+
     int initSize = vec.size();
-    for(int i = 0; i < path.size(); i++){
-        int i_1 = (i + 1)%path.size();
-        QVector3D p0(path[i].x(),path[i].y(),z);
-        QVector3D p1(path[i_1].x(),path[i+1].y(),z);
+
+    for(int i = 0; i < head_path.size(); i++){
+        int i_1 = (i + 1)%head_path.size();
+        QVector3D p0(head_path[i].x(),head_path[i].y(), 0);
+        QVector3D p1(head_path[i_1].x(),head_path[i_1].y(), 0);
         genTriangle(vec,p0,p1,centerTop);//top
-        p1.setZ(0);
-        genRectangleZ(vec,p0,p1);       //竖条
-        p0.setZ(0);
+    }
+
+
+    QVector<QVector2D> currHead = head_path,nextHead;
+    for(int j = 0; j < line_path.size() - 1; j++){
+
+        float temp_proportion_1 =  (center.x() - line_path[j + 1].x())/proportion;
+
+
+       genNewHead(nextHead,head_path,temp_proportion_1,center);
+
+       for(int i = 0; i < currHead.size(); i++){
+            int i_1 = (i + 1)%head_path.size();
+
+
+            float z = (j) * (height / line_path.size())*heightRatio;
+            QVector3D temp1(currHead[i].x(), currHead[i].y() ,z);
+            QVector3D temp3(currHead[i_1].x() , currHead[i_1].y() ,z);
+
+            z = (j+1) * (height / line_path.size())*heightRatio;
+            QVector3D temp2(nextHead[i].x() , nextHead[i].y() ,z);
+            QVector3D temp4(nextHead[i_1].x(), nextHead[i_1].y(),z);
+//            genRectangleZ(vec,p0,p1);       //竖条
+            genTriangle(vec,temp3,temp1,temp4);
+            genTriangle(vec,temp1,temp2,temp4);
+
+        }
+        currHead = nextHead;
+    }
+
+    for(int i = 0; i < nextHead.size(); i++){          //bottom
+        int i_1 = (i + 1)%nextHead.size();
+        QVector3D p0(nextHead[i].x(),nextHead[i].y(), height*heightRatio);
+        QVector3D p1(nextHead[i_1].x(),nextHead[i_1].y(), height*heightRatio);
         genTriangle(vec,p1,p0,centerBottom);//bottom
     }
     for(int i = initSize; i < vec.size(); i += 6){
@@ -739,9 +866,11 @@ void genCylinder(QVector<float> &vec,QVector<QVector2D>&path,float z,QVector3D o
         vec[i+2] += offset.z();
     }
 }
+
+// draw_cylinder
 void genCylinder(QVector<float> &vec,float r,float z,QVector3D offset){
     int n = 100;
-    QVector<QVector2D>path;
+    QVector<QVector2D> path;
     for(int i = 0; i < n; i++){
         path.append(QVector2D(r*cos(i*2*M_PI/n),r*sin(i*2*M_PI/n)));
     }
@@ -749,27 +878,70 @@ void genCylinder(QVector<float> &vec,float r,float z,QVector3D offset){
 
 }
 
+// draw_arbitrary
+void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path,float z,QVector3D offset){
+    //    int n = 100;
+    // 重心
+    //    float all_x = 0, all_y = 0;
+    //    for (int i = 0; i < head_path.size(); i+=2)
+    //    {
+    //        all_x += head_path[i].x();
+    //        all_y += head_path[i].y();
+    //    }
+    //    std::cout<<"all_x/head_path.size(): "<<all_x/head_path.size()<<" all_y/head_path.size(): "<<all_y/head_path.size()<<std::endl;
 
-void genCylinder(QVector<float> &vec,QVector<QVector2D>path,float z,QVector3D offset){
-    int n = 100;
-    QVector3D centerTop(0,0,z);
-    QVector3D centerBottom(0,0,0);
+    //    QVector3D centerTop(all_x/head_path.size(), all_y/head_path.size(), z);
+    //    QVector3D centerBottom(all_x/head_path.size(), all_y/head_path.size(), 0);
+
+    float maxX = head_path[0].x(), minX = head_path[0].x(), maxY = head_path[0].y(), minY = head_path[0].y();
+    for(auto it = head_path.begin(); it != head_path.end(); it++)
+    {
+        if(it ->x() > maxX)
+            maxX = it->x();
+
+        if(it ->x() < minX)
+            minX = it->x();
+
+        if(it ->y() > maxY)
+            maxY = it->y();
+
+        if(it ->y() < minY)
+            minY = it->y();
+    }
+
+    std::cout<<"maxX: "<<maxX<<" minX:"<<minX<<" maxY: "<<maxY<<" minY: "<<minY<<std::endl;
+
+    QVector2D center((maxX + minX)/2, (maxY + minY)/2);
+
+    std::cout<<"center.x: "<<center.x()<<" center.y: "<<center.y()<<std::endl;
+
+    QVector3D centerTop(center.x(), center.y(), z);
+    QVector3D centerBottom(center.x(), center.y(), 0);
+
     int initSize = vec.size();
-    for(int i = 0; i < path.size(); i++){
-        int i_1 = (i + 1)%path.size();
-        QVector3D p0(path[i].x(),path[i].y(),z);
-        QVector3D p1(path[i_1].x(),path[i+1].y(),z);
+
+    for(int i = 0; i < head_path.size(); i++){
+        int i_1 = (i + 1)%head_path.size();
+
+        QVector3D p0(head_path[i].x(),head_path[i].y(),z);
+        QVector3D p1(head_path[i_1].x(),head_path[i_1].y(),z);
+
         genTriangle(vec,p0,p1,centerTop);//top
+
         p1.setZ(0);
         genRectangleZ(vec,p0,p1);       //竖条
+
         p0.setZ(0);
         genTriangle(vec,p1,p0,centerBottom);//bottom
+
     }
+
     for(int i = initSize; i < vec.size(); i += 6){
         vec[i] += offset.x();
         vec[i+1] += offset.y();
         vec[i+2] += offset.z();
     }
+
 }
 
 void GLWidget::draw_arbitrary()
@@ -778,6 +950,7 @@ void GLWidget::draw_arbitrary()
     float  all_x = 0, all_y = 0;
 
     std::cout<< "draw_coorstack[0].size(): "<<draw_coorstack[0].size()<<std::endl;
+
     // 画上面的部分
     for (int i = 0; i < draw_coorstack[0].size(); i+=2) {
 
@@ -965,43 +1138,43 @@ void GLWidget::draw_arbitrary_line()
 
     std::cout<<"repeat_vector size: "<<repeat_vector.size()<<std::endl;
 
-//    do
-//    {
+    //    do
+    //    {
 
-        QVector2D first;
-        //画中间区域
-        for (int i = 0; i < draw_coorstack[1].size(); i+=2)
+    QVector2D first;
+    //画中间区域
+    for (int i = 0; i < draw_coorstack[1].size(); i+=2)
+    {
+
+        float x = draw_coorstack[1][i];
+        float y = draw_coorstack[1][i+1];
+
+        if(i==0)
         {
+            first.setX(x);
+            first.setY(y);
 
-            float x = draw_coorstack[1][i];
-            float y = draw_coorstack[1][i+1];
-
-            if(i==0)
-            {
-                first.setX(x);
-                first.setY(y);
-
-                std::cout<<"x: "<<x<<std::endl;
-                std::cout<<"y: "<<y<<std::endl;
-            }
-
-            cylinder_vector.push_back(x);
-            cylinder_vector.push_back(first.y());
-            // 当 i = 0 时，z = 0;
-            // 当 i != 0 时，z = y - first.y(), 实际上是平移其他点
-            cylinder_vector.push_back(y - first.y());
-
-            if(i!=0 && i!=draw_coorstack[1].size() - 2)
-            {
-                cylinder_vector.push_back(x);
-                cylinder_vector.push_back(first.y());
-                cylinder_vector.push_back(y - first.y());
-            }
+            std::cout<<"x: "<<x<<std::endl;
+            std::cout<<"y: "<<y<<std::endl;
         }
 
-        flag+=1;
+        cylinder_vector.push_back(x);
+        cylinder_vector.push_back(first.y());
+        // 当 i = 0 时，z = 0;
+        // 当 i != 0 时，z = y - first.y(), 实际上是平移其他点
+        cylinder_vector.push_back(y - first.y());
 
-//    }while(flag<repeat_vector.size());
+        if(i!=0 && i!=draw_coorstack[1].size() - 2)
+        {
+            cylinder_vector.push_back(x);
+            cylinder_vector.push_back(first.y());
+            cylinder_vector.push_back(y - first.y());
+        }
+    }
+
+    flag+=1;
+
+    //    }while(flag<repeat_vector.size());
 
 }
 
