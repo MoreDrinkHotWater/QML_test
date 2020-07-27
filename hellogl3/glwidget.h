@@ -83,15 +83,8 @@ public:
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;
 
-    bool appendingFlag;
-
     void loader_data();
 
-    void draw_cylinder();
-
-    void draw_arbitrary();
-
-    void draw_arbitrary_line();
 public slots:
     void setXRotation(int angle);
     void setYRotation(int angle);
@@ -118,6 +111,22 @@ private:
 
     void allocate_vector();
 
+    // 计算多边形的面积
+    float calculateArea(QVector<QVector2D> &vec);
+
+    // 三角化面片
+    void genTriangle(QVector<float> &vec,QVector3D p0,QVector3D p1,QVector3D p2);
+    void genRectangleZ(QVector<float> &vec,QVector3D p0,QVector3D p1);
+
+    // 计算倾斜度
+    void findMinMax(QVector<QVector2D> head_path, QVector2D &min,QVector2D &max);
+    float mapEllipseToCicle(QVector<QVector2D> &head_path);
+
+    // 画出模型
+    void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVector<QVector2D> line_path, float height,QVector3D offset);
+    void genCylinder(QVector<float> &vec,float r,float z,QVector3D offset);
+    void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path,float z,QVector3D offset);
+
     bool m_core;
     int m_xRot;
     int m_yRot;
@@ -136,34 +145,23 @@ private:
     // 允许OpenGL着色程序被链接和使用。
     QOpenGLShaderProgram *m_program;
 
-    // add by lixuelong
+    // load_data
+    bool flag;
+
     QVector<GLfloat> temp;
 
     QVector<GLfloat> temp_onlyVertex;
 
-    GLfloat radius,height;
-
-    QVector<GLfloat> test_cylinder_vector;
-
     // draw cylinder
-    QVector<GLfloat> cylinder_vector;
+    bool appendingFlag;
 
-    bool flag;
-
-    bool draw_model_flag;
-
-    QVector<float> draw_vector;
+    GLfloat radius,height;
 
     QStack<QVector<float>> draw_stack;
 
     QStack<QVector<float>> draw_coorstack;
 
-    // 延迟
-    QTimer _qTimer;
-
-    void timeout();
-
-    float _step;
+    QVector<GLfloat> cylinder_vector;
 
     int m_projMatrixLoc;
     int m_mvMatrixLoc;
@@ -176,10 +174,15 @@ private:
 
     float m_cameraZ;
 
+    // 识别矩形
     RecognizeCube *recognizeCube;
     bool recognize_cube;
 
+    // 识别椭圆
     Recognizecylinder *recognizecylinder;
+
+    // 偏移值
+    float off_var;
 };
 
 #endif
