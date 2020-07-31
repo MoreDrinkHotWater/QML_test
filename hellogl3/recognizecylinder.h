@@ -40,11 +40,16 @@ public:
     // 记录类型
     QString str_1, str_2;
 
-    // 相互关系: 平行，相连(夹角是不是90度？)
+    // 相互关系: 平行，相连, 相离，垂直,等长
+    bool parallel(QVector<float> _vec1, QVector<float> _vec2);
+    bool equilong(QVector<float> _vec1, QVector<float> _vec2);
 
-    bool parallel(QVector<float> vec1, QVector<float> vec2);
     bool join(QString str_1, QString str_2);
     bool separation(QString str_1, QString str_2);
+    bool verticality(QString str_1, QString str_2);
+
+    // 记录关系的表结构
+    QVector<QVector<QString>> vec;
 
 };
 

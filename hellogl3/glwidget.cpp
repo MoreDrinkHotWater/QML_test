@@ -732,11 +732,11 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
 
     off_var += 1;
 
-    //     genCylinder(cylinder_vector, radius, height, offset);
+    genCylinder(cylinder_vector, radius, height, offset);
 
     //     genCylinder(cylinder_vector, head_vector, height, offset);
 
-    genCylinder(cylinder_vector, head_vector, line_vector, height, offset);
+    //    genCylinder(cylinder_vector, head_vector, line_vector, height, offset);
 
     allocate_vector();
 

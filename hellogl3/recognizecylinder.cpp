@@ -32,12 +32,41 @@ float Recognizecylinder::variance (QVector<float> vector){
 
 bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coorstack)
 {
+
+//    QVector<QString> init = QVector<QString>{"0","1","2","3","类型"};
+//    vec.push_back(init);
+
     // 组合问题
-    for(int i = 0; i < draw_coorstack.size() - 1; i++)
+    for(int i = 0; i < draw_coorstack.size(); i++)
     {
         bool is_cylinder = recognize_cylinder(draw_coorstack[i]);
         bool is_curveLine = recognize_curveLine(draw_coorstack[i]);
         bool is_straightLine = recognize_straightLine(draw_coorstack[i]);
+
+        QVector<QString> row_vec(draw_coorstack.size());
+
+        if(i == draw_coorstack.size() - 1)
+        {
+            QVector<QString> temp_vec(draw_coorstack.size() + 1);
+
+            if(is_cylinder)
+            {
+
+                temp_vec[temp_vec.size()-1].push_back("椭圆");
+                vec.push_back(temp_vec);
+            }
+            else if(is_curveLine)
+            {
+                temp_vec[temp_vec.size()-1].push_back("曲线");
+                vec.push_back(temp_vec);
+            }
+            else
+            {
+                temp_vec[temp_vec.size()-1].push_back("直线");
+                vec.push_back(temp_vec);
+            }
+            continue;
+        }
 
         for(int j = i+1 ; j < draw_coorstack.size(); j++)
         {
@@ -45,6 +74,7 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
             if(is_cylinder)
             {
                 std::cout<<"第"<<i<<"条线段是: 椭圆"<<std::endl;
+
                 if(recognize_straightLine(draw_coorstack[j]))
                 {
                     std::cout<<"第"<<j<<"条线段是: 直线"<<std::endl;
@@ -53,13 +83,27 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                     // 关系？ 相连？ 垂直？
                     if(join(str_1, str_2))
                     {
-                        std::cout<<"the cylinder join with line"<<std::endl;
+                        row_vec[j].push_back("join");
+                        std::cout<<"the cylinder join with straightLine"<<std::endl;
+                        // 垂直
+                        if(verticality(str_1, str_2))
+                        {
+                            row_vec[j].clear();
+                            row_vec[j].push_back("join and vertical");
+                            std::cout<<"the cylinder vertical with straightLine"<<std::endl;
+                        }
+                        else
+                        {
+                            std::cout<<"the cylinder vertical without straightLine"<<std::endl;
+                        }
                     }
                     else
                     {
-                        std::cout<<"the cylinder join without line"<<std::endl;
+                        row_vec[j].push_back("separation");
+                        std::cout<<"the cylinder join without straightLine"<<std::endl;
                     }
                 }
+
                 else
                 {
                     if(recognize_curveLine(draw_coorstack[j]))
@@ -69,12 +113,19 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                     str_2 = "curveLine";
                     if(separation(str_1,str_2))
                     {
+                        row_vec[j].push_back("separation");
                         std::cout<<"the cylinder separate with curveLine"<<std::endl;
                     }
                     else
                     {
+                        row_vec[j].push_back("join");
                         std::cout<<"the cylinder separate without curveLine"<<std::endl;
                     }
+                }
+                if(j == draw_coorstack.size()-1)
+                {
+                    row_vec.push_back("椭圆");
+                    vec.push_back(row_vec);
                 }
             }
             // 直线
@@ -85,18 +136,61 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                 {
                     std::cout<<"第"<<j<<"条线段是: 椭圆"<<std::endl;
                     // 关系？
+                    // 关系？ 相连？ 垂直？
+                    str_1 = "cylinder";
+                    str_2 = "straightLine";
+                    if(join(str_1, str_2))
+                    {
+                        std::cout<<"the cylinder join with straightLine"<<std::endl;
+
+                        row_vec[j].push_back("join");
+
+                        // 垂直
+                        if(verticality(str_1, str_2))
+                        {
+                            row_vec[j].clear();
+                            row_vec[j].push_back("join and vertical");
+                            std::cout<<"the cylinder vertical with straightLine"<<std::endl;
+                        }
+                        else
+                        {
+                            std::cout<<"the cylinder vertical without straightLine"<<std::endl;
+                        }
+                    }
+                    else
+                    {
+                        row_vec[j].push_back("separation");
+                        std::cout<<"the cylinder join without straightLine"<<std::endl;
+                    }
                 }
                 else if(recognize_straightLine(draw_coorstack[j]))
                 {
                     std::cout<<"第"<<j<<"条线段是: 直线"<<std::endl;
+                    str_1 = "straightLine";
+                    str_2 = "straightLine";
                     if(parallel(draw_coorstack[i],draw_coorstack[j]))
                     {
                         std::cout<<"the line1 parallel line2"<<std::endl;
+
+                        row_vec[j].push_back("parallel");
+
+                        if(equilong(draw_coorstack[i],draw_coorstack[j]))
+                        {
+                            row_vec[j].clear();
+                            row_vec[j].push_back("parallel and equal");
+                            std::cout<<"the line1.length equal to line2.length"<<std::endl;
+                        }
+                        else
+                        {
+                            std::cout<<"the line1.length unequal to line2.length"<<std::endl;
+                        }
                     }
                     else
                     {
+                        row_vec[j].push_back("isnot parallel");
                         std::cout<<"the line1 不平行 line2"<<std::endl;
                     }
+
                 }
                 else
                 {
@@ -107,13 +201,22 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                     // 关系？ 相连？
                     if(join(str_1, str_2))
                     {
+                        row_vec[j].push_back("join");
                         std::cout<<"the straightLine join with curveLine"<<std::endl;
                     }
                     else
                     {
+                        row_vec[j].push_back("separation");
                         std::cout<<"the straightLine join without curveLine"<<std::endl;
                     }
                 }
+
+                if(j == draw_coorstack.size()-1)
+                {
+                    row_vec.push_back("直线");
+                    vec.push_back(row_vec);
+                }
+
             }
             else if(is_curveLine)
             {
@@ -122,19 +225,63 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                 {
                     std::cout<<"第"<<j<<"条线段是: 椭圆"<<std::endl;
                     // 关系？
-
+                    str_1 = "cylinder";
+                    str_2 = "curveLine";
+                    if(separation(str_1,str_2))
+                    {
+                        row_vec[j].push_back("separation");
+                        std::cout<<"the cylinder separate with curveLine"<<std::endl;
+                    }
+                    else
+                    {
+                        row_vec[j].push_back("join");
+                        std::cout<<"the cylinder separate without curveLine"<<std::endl;
+                    }
                 }
                 else
                 {
                     if(recognize_straightLine(draw_coorstack[j]))
                         std::cout<<"第"<<j<<"条线段是: 直线"<<std::endl;
                     // 关系？
+                    str_1 = "straightLine";
+                    str_2 = "curveLine";
+                    // 关系？ 相连？
+                    if(join(str_1, str_2))
+                    {
+                        row_vec[j].push_back("join");
+                        std::cout<<"the straightLine join with curveLine"<<std::endl;
+                    }
+                    else
+                    {
+                        row_vec[j].push_back("separation");
+                        std::cout<<"the straightLine join without curveLine"<<std::endl;
+                    }
+                }
+
+                if(j == draw_coorstack.size()-1)
+                {
+                    row_vec.push_back("曲线");
+                    vec.push_back(row_vec);
                 }
             }
             else
             {
                 std::cout<<"=============================="<<std::endl;
             }
+        }
+    }
+
+    for(int i = 0; i < vec.size(); i++)
+    {
+        std::cout<<"row_vec["<<i<<"] ";
+        for(int j = 0; j < vec[i].size(); j++)
+        {
+            if(vec[i][j].isEmpty())
+                std::cout<<"[     ]     ";
+            else
+                std::cout<<vec[i][j].toStdString()<<"     ";
+            if(j == vec[i].size() - 1)
+                std::cout<<""<<std::endl;
         }
     }
 
@@ -176,10 +323,6 @@ bool Recognizecylinder::recognize_cylinder(QVector<float> vec)
     float circle_height = (maxY - minY) / 2;
 
     //    std::cout<<"circle_width: "<<circle_width<<" circle_height:"<<circle_height<<std::endl;
-
-    // 记录椭圆的左右结点
-    cylinder_left = QVector2D(minX, (maxY + minY) / 2);
-    cylinder_right = QVector2D(maxX, (maxY + minY) / 2);
 
     // 1.判断椭圆！（若为椭圆，找出长、短半轴的长度。为了方便我们默认长半轴为半径）
     QVector<float> step_vector;
@@ -237,14 +380,12 @@ bool Recognizecylinder::recognize_cylinder(QVector<float> vec)
                 BD =  sqrt(pow(OriginPoints_vector[3].y()  - OriginPoints_vector[1].y(),2) + pow(OriginPoints_vector[3].x() * step - OriginPoints_vector[1].x() * step,2));
             }
 
-
             if(AB*CD + BC*AD == AC *BD)
                 //            if(abs((AB*CD + BC*AD) - AC *BD) < 0.001)
             {
                 //                                std::cout<<"find the step"<<std::endl;
                 return false;
             }
-
             return true;
         };
 
@@ -319,6 +460,10 @@ bool Recognizecylinder::recognize_cylinder(QVector<float> vec)
             // 默认长半轴为半径
             radius = (maxX-minX)/2;
 
+            // 记录椭圆的左右结点
+            cylinder_left = QVector2D(minX, (maxY + minY) / 2);
+            cylinder_right = QVector2D(maxX, (maxY + minY) / 2);
+
             return true;
         }
         else
@@ -326,7 +471,6 @@ bool Recognizecylinder::recognize_cylinder(QVector<float> vec)
             return false;
         }
     }
-
 }
 
 bool Recognizecylinder::recognize_straightLine(QVector<float> vec)
@@ -342,19 +486,23 @@ bool Recognizecylinder::recognize_straightLine(QVector<float> vec)
         ycoor_vector.push_back(vec[var+1]);
         line_vector.push_back(temp);
     }
-
-    // 记录直线首尾的结点
-    straightLine_first = line_vector[0];
-    straightLine_end = line_vector[line_vector.size()-1];
-
     // 计算方差。
     if(variance(xcoor_vector) < 0.1)
     {
+
+        // 记录直线首尾的结点
+        straightLine_first = line_vector[0];
+        straightLine_end = line_vector[line_vector.size()-1];
+
         return  true;
     }
     // 计算斜率的方差。
-    else if(calculate_k(line_vector) < 0.3)
+    else if(calculate_k(line_vector) < 0.2)
     {
+
+        // 记录直线首尾的结点
+        straightLine_first = line_vector[0];
+        straightLine_end = line_vector[line_vector.size()-1];
         return  true;
     }
     else
@@ -362,34 +510,6 @@ bool Recognizecylinder::recognize_straightLine(QVector<float> vec)
         //        std::cout<<"不是直线！"<<std::endl;
         return false;
     }
-
-    //    // 向量
-    //    float min_max_x = cylinder_right.x() - cylinder_left.x();
-    //    float min_max_y = cylinder_right.y() - cylinder_left.y();
-
-    //    float min_lline_x = line_first.x() - cylinder_left.x();
-    //    float min_lline_y = line_first.y() - cylinder_left.y();
-
-    //    float point_multi = min_max_x * min_lline_x + min_max_y * min_lline_y;
-
-    //    //        std::cout<<"point_multi: "<<point_multi<<std::endl;
-
-    //    // 以 75度 为标准
-    //    if(point_multi < 0.25882)
-    //    {
-    //        std::cout<<"the line is left!"<<std::endl;
-
-    //        height = min_lline_y;
-
-    //        std::cout<<"height: "<<height<<std::endl;
-
-    //        return true;
-    //    }
-    //    else
-    //    {
-    //        return  false;
-    //    }
-
 }
 
 bool Recognizecylinder::recognize_curveLine(QVector<float> vec)
@@ -400,10 +520,6 @@ bool Recognizecylinder::recognize_curveLine(QVector<float> vec)
         QVector2D temp(vec[i],vec[i+1]);
         head_circle.push_back(temp);
     }
-
-    // 记录直线首尾的结点
-    curveLine_first = head_circle[0];
-    curveLine_end = head_circle[head_circle.size()-1];
 
     float maxX = head_circle[0].x(), minX = head_circle[0].x(), maxY = head_circle[0].y(), minY = head_circle[0].y();
 
@@ -549,10 +665,14 @@ bool Recognizecylinder::recognize_curveLine(QVector<float> vec)
         return false;
     else
     {
-        float length = sqrt(pow(curveLine_first.x() - curveLine_end.x(),2) + pow(curveLine_first.y() - curveLine_end.y(),2));
+        float length = sqrt(pow(head_circle[0].x() - head_circle[head_circle.size()-1].x(),2) + pow(head_circle[0].y() - head_circle[head_circle.size()-1].y(),2));
         // 是椭圆，但是不相连
         if(length > 0.1)
         {
+            // 记录直线首尾的结点
+            curveLine_first = head_circle[0];
+            curveLine_end = head_circle[head_circle.size()-1];
+
             return true;
         }
         else
@@ -668,6 +788,31 @@ bool Recognizecylinder::parallel(QVector<float> _vec1, QVector<float> _vec2)
 
 }
 
+// 判断是否等长
+bool Recognizecylinder::equilong(QVector<float> _vec1, QVector<float> _vec2)
+{
+    QVector<QVector2D> vec1,vec2;
+
+    for(int i = 0; i < _vec1.size(); i+=2)
+    {
+        QVector2D temp = QVector2D(_vec1[i],_vec1[i+1]);
+        vec1.push_back(temp);
+    }
+
+    for(int i = 0; i < _vec2.size(); i+=2)
+    {
+        QVector2D temp = QVector2D(_vec2[i],_vec2[i+1]);
+        vec2.push_back(temp);
+    }
+
+    float vec1_length = sqrt(pow(vec1[0].x() - vec1[vec1.size()-1].x(),2) + pow(vec1[0].y() - vec1[vec1.size()-1].y(),2));
+    float vec2_length = sqrt(pow(vec2[0].x() - vec2[vec2.size()-1].x(),2) + pow(vec2[0].y() - vec2[vec2.size()-1].y(),2));
+    if(abs(vec1_length - vec2_length) < 0.1)
+        return true;
+    else
+        return false;
+}
+
 // 判断相连
 bool Recognizecylinder::join(QString str_1, QString str_2)
 {
@@ -679,6 +824,20 @@ bool Recognizecylinder::join(QString str_1, QString str_2)
 
         float end_first = sqrt(pow(end_1.x() - first_2.x(),2) + pow(end_1.y() - first_2.y(),2));
         float end_end = sqrt(pow(end_1.x() - end_2.x(),2) + pow(end_1.y() - end_2.y(),2));
+
+        std::cout<<"cylinder_left: ("<<first_1.x()<<","<<first_1.y()<<") "<<std::endl;
+        std::cout<<"cylinder_right: ("<<end_1.x()<<","<<end_1.y()<<") "<<std::endl;
+        std::cout<<"straightLine_first: ("<<first_2.x()<<","<<first_2.y()<<") "<<std::endl;
+        std::cout<<"straightLine_end: ("<<end_2.x()<<","<<end_2.y()<<") "<<std::endl;
+
+        std::cout<<"first_first: "<<first_first<<std::endl;
+
+        std::cout<<"end_first: "<<end_first<<std::endl;
+
+        std::cout<<"first_end: "<<first_end<<std::endl;
+
+        std::cout<<"end_end: "<<end_end<<std::endl;
+
 
         if(abs(first_first-0)<0.2 || abs(first_end-0)<0.2 || abs(end_first-0)<0.2 || abs(end_end-0)<0.2)
             return true;
@@ -722,6 +881,76 @@ bool Recognizecylinder::separation(QString str_1, QString str_2)
     if(str_1 == "cylinder" && str_2 == "curveLine")
     {
         return jundge(cylinder_left, cylinder_right, curveLine_first, curveLine_end);
+    }
+    else
+        return false;
+}
+
+// 判断垂直
+bool Recognizecylinder::verticality(QString str_1, QString str_2)
+{
+    auto jundge = [](QVector2D first_1,QVector2D end_1,QVector2D first_2,QVector2D end_2,float &height){
+        // 向量
+        float end_1_first_1_x = end_1.x() - first_1.x();
+        float end_1_first_1_y = end_1.y() - first_1.y();
+
+        float first_1_end_1_x = first_1.x() - end_1.x();
+        float first_1_end_1_y = first_1.y() - end_1.y();
+        // 向量
+        float first_2_first_1_x = first_2.x() - first_1.x();
+        float first_2_first_1_y = first_2.y() - first_1.y();
+
+        float end_2_first_1_x = end_2.x() - first_1.x();
+        float end_2_first_1_y = end_2.y() - first_1.y();
+
+        // 以 75度 为标准
+        if((end_1_first_1_x * first_2_first_1_x + end_1_first_1_y * first_2_first_1_y) < 0.25882)
+        {
+            std::cout<<"the line is left!"<<std::endl;
+
+            height = first_2_first_1_y;
+
+            std::cout<<"height: "<<height<<std::endl;
+
+            return true;
+        }
+        else if((end_1_first_1_x * end_2_first_1_x + end_1_first_1_y * end_2_first_1_y) < 0.25882)
+        {
+            std::cout<<"the line is left!"<<std::endl;
+
+            height = end_2_first_1_y;
+
+            std::cout<<"height: "<<height<<std::endl;
+
+            return true;
+        }
+        else if((first_1_end_1_x * first_2_first_1_x + first_1_end_1_y * first_2_first_1_y) < 0.25882)
+        {
+            std::cout<<"the line is right!"<<std::endl;
+
+            height = first_2_first_1_y;
+
+            std::cout<<"height: "<<height<<std::endl;
+
+            return true;
+        }
+        else if((first_1_end_1_x * first_1_end_1_y + end_2_first_1_x * end_2_first_1_y) < 0.25882)
+        {
+            std::cout<<"the line is right!"<<std::endl;
+
+            height = end_2_first_1_y;
+
+            std::cout<<"height: "<<height<<std::endl;
+
+            return true;
+        }
+        else
+            return  false;
+    };
+
+    if(str_1 == "cylinder" && str_2 == "straightLine")
+    {
+        return jundge(cylinder_left, cylinder_right, straightLine_first, straightLine_end,height);
     }
     else
         return false;
