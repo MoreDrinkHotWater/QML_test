@@ -693,54 +693,63 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
     {
         this->radius = recognizecylinder->radius;
         this->height = recognizecylinder->height;
-    }
 
-    // head_vector
-    QVector<QVector2D> head_vector;
-    for (int var = 0; var < draw_coorstack[0].size(); var+=2) {
+        int cylinder_index = 0, line_index = 0;
 
-        QVector2D temp(draw_coorstack[0][var],draw_coorstack[0][var+1]);
-
-        head_vector.push_back(temp);
-    }
-
-    // 计算多边形面积 -> 确定是顺时针还是逆时针。
-    // 顺时针面积>0 逆时针面积<0
-    // 统一为逆时针方向
-    if(calculateArea(head_vector) > 0)
-
-    {
-
-        QVector<QVector2D> temp_vec;
-        for(int var = head_vector.size()-1; var >=0 ; var--)
+        for(int i = 0; i < recognizecylinder->type_vec.size(); i++)
         {
-            temp_vec.push_back(head_vector[var]);
+            if(recognizecylinder->type_vec[i] == "椭圆")
+                cylinder_index = i;
+            else if(recognizecylinder->type_vec[i] == "直线")
+                line_index = i;
         }
-        head_vector = temp_vec;
+
+        // head_vector
+        QVector<QVector2D> head_vector;
+        for (int var = 0; var < draw_coorstack[cylinder_index].size(); var+=2) {
+
+            QVector2D temp(draw_coorstack[cylinder_index][var],draw_coorstack[cylinder_index][var+1]);
+
+            head_vector.push_back(temp);
+        }
+
+        // 计算多边形面积 -> 确定是顺时针还是逆时针。
+        // 顺时针面积>0 逆时针面积<0
+        // 统一为逆时针方向
+        if(calculateArea(head_vector) > 0)
+        {
+            QVector<QVector2D> temp_vec;
+            for(int var = head_vector.size()-1; var >=0 ; var--)
+            {
+                temp_vec.push_back(head_vector[var]);
+            }
+            head_vector = temp_vec;
+        }
+
+        // line_vector
+        QVector<QVector2D> line_vector;
+        for (int var = 0; var < draw_coorstack[line_index].size(); var+=2) {
+
+            QVector2D temp(draw_coorstack[line_index][var],draw_coorstack[line_index][var+1]);
+
+            line_vector.push_back(temp);
+        }
+
+        QVector3D offset(off_var,off_var,off_var);
+
+        off_var += 1;
+
+        genCylinder(cylinder_vector, radius, height, offset);
+
+        //     genCylinder(cylinder_vector, head_vector, height, offset);
+
+        //    genCylinder(cylinder_vector, head_vector, line_vector, height, offset);
+
+        allocate_vector();
+
+        update();
     }
 
-    // line_vector
-    QVector<QVector2D> line_vector;
-    for (int var = 0; var < draw_coorstack[1].size(); var+=2) {
-
-        QVector2D temp(draw_coorstack[1][var],draw_coorstack[1][var+1]);
-
-        line_vector.push_back(temp);
-    }
-
-    QVector3D offset(off_var,off_var,off_var);
-
-    off_var += 1;
-
-    genCylinder(cylinder_vector, radius, height, offset);
-
-    //     genCylinder(cylinder_vector, head_vector, height, offset);
-
-    //    genCylinder(cylinder_vector, head_vector, line_vector, height, offset);
-
-    allocate_vector();
-
-    update();
 }
 
 void GLWidget::genTriangle(QVector<float> &vec,QVector3D p0,QVector3D p1,QVector3D p2){

@@ -51,6 +51,9 @@ public:
     // 记录关系的表结构
     QVector<QVector<QString>> vec;
 
+    // 保存类型
+    QVector<QString> type_vec;
+
 };
 
 #endif // RECOGNIZECYLINDER_H

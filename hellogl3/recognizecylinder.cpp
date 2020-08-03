@@ -271,6 +271,8 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
         }
     }
 
+    int flag = 0;
+
     for(int i = 0; i < vec.size(); i++)
     {
         std::cout<<"row_vec["<<i<<"] ";
@@ -279,13 +281,64 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
             if(vec[i][j].isEmpty())
                 std::cout<<"[     ]     ";
             else
+            {
                 std::cout<<vec[i][j].toStdString()<<"     ";
+
+                if(vec[i][j] == "join and vertical")
+                {
+                    if((vec[i][vec[i].size()-1] == "椭圆" && vec[j][vec[i].size()-1] == "直线")
+                            || (vec[i][vec[i].size()-1] == "直线" && vec[j][vec[i].size()-1] == "椭圆"))
+                    {
+                        flag+=1;
+                    }
+                }
+                else if(vec[i][j] == "parallel and equal")
+                {
+                    if((vec[i][vec[i].size()-1] == "直线" && vec[j][vec[i].size()-1] == "直线")
+                            || (vec[i][vec[i].size()-1] == "直线" && vec[j][vec[i].size()-1] == "直线"))
+                    {
+                        flag+=1;
+                    }
+                }
+                else if(vec[i][j] == "join")
+                {
+                    if((vec[i][vec[i].size()-1] == "直线" && vec[j][vec[i].size()-1] == "曲线")
+                            || (vec[i][vec[i].size()-1] == "曲线" && vec[j][vec[i].size()-1] == "直线"))
+                    {
+                        flag+=1;
+                    }
+                }
+                else if(vec[i][j] == "separation")
+                {
+                    if((vec[i][vec[i].size()-1] == "椭圆" && vec[j][vec[i].size()-1] == "曲线")
+                            || (vec[i][vec[i].size()-1] == "曲线" && vec[j][vec[i].size()-1] == "椭圆"))
+                    {
+                        flag+=1;
+                    }
+                }
+            }
+
             if(j == vec[i].size() - 1)
+            {
+                // 换行
                 std::cout<<""<<std::endl;
+//                // 保存类型
+                type_vec.push_back(vec[i][j]);
+            }
         }
     }
 
-    return true;
+//    for(auto type: type_vec)
+//    {
+//        std::cout<<"type: "<<type.toStdString()<<std::endl;
+//    }
+
+    std::cout<<"flag: "<<flag<<std::endl;
+
+    if(flag == 6)
+        return true;
+    else
+        return false;
 }
 
 bool Recognizecylinder::recognize_cylinder(QVector<float> vec)
