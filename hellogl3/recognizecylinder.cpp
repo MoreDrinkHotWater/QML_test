@@ -1,4 +1,5 @@
 #include "recognizecylinder.h"
+#include "common.h"
 
 #include <iostream>
 #include <QVector2D>
@@ -14,28 +15,8 @@ Recognizecylinder::Recognizecylinder()
 
 }
 
-// 计算方差
-float Recognizecylinder::variance (QVector<float> vector){
-
-    double sum = std::accumulate(std::begin(vector) + 1, std::end(vector) - 1, 0.0);
-    double mean =  sum / vector.size(); //均值
-
-    double accum  = 0.0;
-    std::for_each (std::begin(vector), std::end(vector), [&](const double d) {
-        accum  += (d - mean)*(d - mean);
-    });
-
-    float stdev = sqrt(accum/(vector.size()-1)); //方差
-
-    return stdev;
-};
-
 bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coorstack)
 {
-
-//    QVector<QString> init = QVector<QString>{"0","1","2","3","类型"};
-//    vec.push_back(init);
-
     // 组合问题
     for(int i = 0; i < draw_coorstack.size(); i++)
     {
@@ -328,11 +309,6 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
         }
     }
 
-//    for(auto type: type_vec)
-//    {
-//        std::cout<<"type: "<<type.toStdString()<<std::endl;
-//    }
-
     std::cout<<"flag: "<<flag<<std::endl;
 
     if(flag == 6)
@@ -369,13 +345,9 @@ bool Recognizecylinder::recognize_cylinder(QVector<float> vec)
             minY = it->y();
     }
 
-    //    std::cout<<"maxX: "<<maxX<<" minX:"<<minX<<" maxY: "<<maxY<<" minY: "<<minY<<std::endl;
-
     // 记录长，短轴的距离
     float circle_width = (maxX - minX) / 2;
     float circle_height = (maxY - minY) / 2;
-
-    //    std::cout<<"circle_width: "<<circle_width<<" circle_height:"<<circle_height<<std::endl;
 
     // 1.判断椭圆！（若为椭圆，找出长、短半轴的长度。为了方便我们默认长半轴为半径）
     QVector<float> step_vector;
@@ -484,14 +456,6 @@ bool Recognizecylinder::recognize_cylinder(QVector<float> vec)
     // 匹配标准？
     std::sort(step_vector.begin(), step_vector.end());
 
-    //    for(int i = 0 ; i < step_vector.size(); i++)
-    //    {
-
-    //        std::cout<<"step_vector: "<< step_vector[i] <<std::endl;
-    //    }
-
-    //    std::cout<<"step_vector的方差: "<< variance(step_vector) <<std::endl;
-
     int flag = 0;
 
     for(int i = 0 ; i < step_vector.size(); i++)
@@ -540,7 +504,7 @@ bool Recognizecylinder::recognize_straightLine(QVector<float> vec)
         line_vector.push_back(temp);
     }
     // 计算方差。
-    if(variance(xcoor_vector) < 0.1)
+    if(common->variance(xcoor_vector) < 0.1)
     {
 
         // 记录直线首尾的结点
@@ -550,9 +514,8 @@ bool Recognizecylinder::recognize_straightLine(QVector<float> vec)
         return  true;
     }
     // 计算斜率的方差。
-    else if(calculate_k(line_vector) < 0.2)
+    else if(common->calculate_k(line_vector) < 0.2)
     {
-
         // 记录直线首尾的结点
         straightLine_first = line_vector[0];
         straightLine_end = line_vector[line_vector.size()-1];
@@ -560,7 +523,7 @@ bool Recognizecylinder::recognize_straightLine(QVector<float> vec)
     }
     else
     {
-        //        std::cout<<"不是直线！"<<std::endl;
+        // std::cout<<"不是直线！"<<std::endl;
         return false;
     }
 }
@@ -736,81 +699,6 @@ bool Recognizecylinder::recognize_curveLine(QVector<float> vec)
     }
 }
 
-float Recognizecylinder::calculate_k(QVector<QVector2D> vec)
-{
-    // 保存斜率的数组
-    QVector<float> k_vec;
-
-    int n = vec.size()-1;
-    std::random_device rd;  //Will be used to obtain a seed for the random number engine
-    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-    std::uniform_int_distribution<> dist_int(1, n);
-
-    // 计算 100 组斜率，比较方差
-    for(int i = 0; i < 100; i++)
-    {
-        int first_sub = dist_int(gen), end_sub = dist_int(gen);
-        QVector2D first(QVector2D(vec[first_sub].x(), vec[first_sub].y()));
-        QVector2D end(QVector2D(vec[end_sub].x(), vec[end_sub].y()));
-        float  k = (first.y()-end.y())/(first.x() - end.x());
-
-        //        std::cout<<"k: "<<k<<std::endl;
-
-        // 处理掉无效数据
-        if(!std::isnan(k) && !std::isinf(k))
-            k_vec.push_back(k);
-    }
-
-    //    std::cout<< "k_vec size: "<<k_vec.size()<<std::endl;
-
-    float vari = variance(k_vec);
-
-    //    std::cout<< "vari: "<<vari<<std::endl;
-
-    return vari;
-}
-
-float Recognizecylinder::calculate_meanK(QVector<QVector2D> vec, int &num)
-{
-    // 保存斜率的数组
-    QVector<float> k_vec;
-    float sum = 0;
-
-    int n = vec.size()-1;
-    std::random_device rd;  //Will be used to obtain a seed for the random number engine
-    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-    std::uniform_int_distribution<> dist_int(1, n);
-
-    // 计算 100 组斜率，比较方差
-    for(int i = 0; i < num; i++)
-    {
-        int first_sub = dist_int(gen), end_sub = dist_int(gen);
-        QVector2D first(QVector2D(vec[first_sub].x(), vec[first_sub].y()));
-        QVector2D end(QVector2D(vec[end_sub].x(), vec[end_sub].y()));
-        float  k = (first.y()-end.y())/(first.x() - end.x());
-
-        // 处理掉无效数据
-        if(!std::isnan(k) && !std::isinf(k))
-        {
-            //            std::cout<<"k: "<<k<<std::endl;
-
-            sum+=k;
-
-            k_vec.push_back(k);
-        }
-    }
-
-    float meank = sum/k_vec.size();
-
-    num = k_vec.size();
-
-    std::cout<<"k_vec.size: "<<k_vec.size()<<std::endl;
-
-    //    std::cout<<"meanK: "<<meank<<std::endl;
-
-    return meank;
-}
-
 // 判断平行
 bool Recognizecylinder::parallel(QVector<float> _vec1, QVector<float> _vec2)
 {
@@ -831,8 +719,8 @@ bool Recognizecylinder::parallel(QVector<float> _vec1, QVector<float> _vec2)
     int num_1 = 100;
     int num_2 = 100;
 
-    // 比较斜率
-    if(abs(calculate_meanK(vec1, num_1)-calculate_meanK(vec2, num_2)) < 0.3)
+    // 比较斜率的均值
+    if(abs(common->calculate_meanK(vec1, num_1) - common->calculate_meanK(vec2, num_2)) < 0.3)
         return true;
     else if(num_1 < 80 && num_2 < 80)
         return true;
@@ -961,7 +849,9 @@ bool Recognizecylinder::verticality(QString str_1, QString str_2)
         {
             std::cout<<"the line is left!"<<std::endl;
 
-            height = first_2_first_1_y;
+            height = end_2_first_1_y;
+//            height = first_2_first_1_y;
+
 
             std::cout<<"height: "<<height<<std::endl;
 
@@ -971,7 +861,8 @@ bool Recognizecylinder::verticality(QString str_1, QString str_2)
         {
             std::cout<<"the line is left!"<<std::endl;
 
-            height = end_2_first_1_y;
+            height = first_2_first_1_y;
+//            height = end_2_first_1_y;
 
             std::cout<<"height: "<<height<<std::endl;
 
@@ -981,7 +872,8 @@ bool Recognizecylinder::verticality(QString str_1, QString str_2)
         {
             std::cout<<"the line is right!"<<std::endl;
 
-            height = first_2_first_1_y;
+            height = end_2_first_1_y;
+            //            height = first_2_first_1_y;
 
             std::cout<<"height: "<<height<<std::endl;
 
@@ -991,7 +883,8 @@ bool Recognizecylinder::verticality(QString str_1, QString str_2)
         {
             std::cout<<"the line is right!"<<std::endl;
 
-            height = end_2_first_1_y;
+            height = first_2_first_1_y;
+            //            height = end_2_first_1_y;
 
             std::cout<<"height: "<<height<<std::endl;
 

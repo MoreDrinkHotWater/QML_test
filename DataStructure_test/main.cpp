@@ -1,6 +1,6 @@
 #include <iostream>
-#include "datastructure_test.h"
-#include "datastructure_test.cpp"
+#include "datastructure.h"
+#include "datastructure.cpp"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,6 +15,9 @@ int main()
     */
 
     //测试赋值构造函数
+
+    QStack<QVector<float>> root;
+
     CSTree<char> csTree1;
     std::cout<<"建立树，以##表示结束:"<<std::endl;
     csTree1.createCSTree();
@@ -32,6 +35,7 @@ int main()
     std::cout<<"树的度为："<<csTree.getDegreeCSTree()<<std::endl;
     std::cout<<"树的结点个数为："<<csTree.nodeCountCSTree()<<std::endl;
     std::cout<<"树的叶子结点为："<<csTree.LeavesCountCSTree()<<std::endl;
+
     char item='f';
     CSNode<char>* cur=nullptr;
     if (csTree.findCSNode(item,cur))

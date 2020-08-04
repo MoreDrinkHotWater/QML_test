@@ -4,6 +4,8 @@
 #include <QStack>
 #include <QVector2D>
 
+class Common;
+
 class Recognizecylinder
 {
 public:
@@ -14,18 +16,8 @@ public:
 
     QStack<QVector<float>> draw_coorstack;
 
-//    QStack<QVector<QVector2D>> coorstack;
-
     float radius;
     float height;
-
-    // 计算方差
-    float variance (QVector<float> vector);
-    // 计算斜率的方差
-    float calculate_k(QVector<QVector2D> vec);
-    // 计算斜率的均值
-    float calculate_meanK(QVector<QVector2D> vec, int &num);
-
 
     // 识别类型
     bool recognize_cylinder(QVector<float> vec);
@@ -53,6 +45,9 @@ public:
 
     // 保存类型
     QVector<QString> type_vec;
+
+private:
+    Common *common;
 
 };
 

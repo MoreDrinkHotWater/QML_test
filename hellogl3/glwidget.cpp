@@ -700,6 +700,7 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
         {
             if(recognizecylinder->type_vec[i] == "椭圆")
                 cylinder_index = i;
+            // 没有区分左右
             else if(recognizecylinder->type_vec[i] == "直线")
                 line_index = i;
         }
@@ -739,11 +740,11 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
 
         off_var += 1;
 
-        genCylinder(cylinder_vector, radius, height, offset);
+//        genCylinder(cylinder_vector, radius, height, offset);
 
-        //     genCylinder(cylinder_vector, head_vector, height, offset);
+        genCylinder(cylinder_vector, head_vector, height, offset);
 
-        //    genCylinder(cylinder_vector, head_vector, line_vector, height, offset);
+//        genCylinder(cylinder_vector, head_vector, line_vector, height, offset);
 
         allocate_vector();
 

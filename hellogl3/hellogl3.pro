@@ -17,7 +17,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     Canvas.cpp \
+    common.cpp \
+    datastructure.cpp \
     glwidget.cpp \
+    identification_type.cpp \
     logo.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -27,7 +30,10 @@ SOURCES += \
 
 HEADERS += \
     Canvas.h \
+    common.h \
+    datastructure.h \
     glwidget.h \
+    identification_type.h \
     logo.h \
     mainwindow.h \
     recognizecube.h \

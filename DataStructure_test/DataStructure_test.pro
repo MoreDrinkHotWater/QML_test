@@ -1,8 +1,8 @@
 HEADERS += \
-    datastructure_test.h
+    datastructure.h
 
 SOURCES += \
-    datastructure_test.cpp \
+    datastructure.cpp \
     main.cpp
 
 CONFIG+= console
