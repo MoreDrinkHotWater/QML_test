@@ -694,6 +694,9 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
         this->radius = recognizecylinder->radius;
         this->height = recognizecylinder->height;
 
+        std::cout<<"radius: "<<radius<<std::endl;
+        std::cout<<"height: "<<height<<std::endl;
+
         int cylinder_index = 0, line_index = 0;
 
         for(int i = 0; i < recognizecylinder->type_vec.size(); i++)

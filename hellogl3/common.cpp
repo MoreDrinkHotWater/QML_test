@@ -12,6 +12,11 @@ Common::Common()
 
 }
 
+Common *Common::getInstance(){
+    static Common _instance;
+    return &_instance;
+}
+
 // 计算方差
 float Common::variance (QVector<float> vector){
 

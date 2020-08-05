@@ -18,8 +18,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     Canvas.cpp \
     common.cpp \
-    datastructure.cpp \
     glwidget.cpp \
+    identification_relation.cpp \
     identification_type.cpp \
     logo.cpp \
     main.cpp \
@@ -31,8 +31,8 @@ SOURCES += \
 HEADERS += \
     Canvas.h \
     common.h \
-    datastructure.h \
     glwidget.h \
+    identification_relation.h \
     identification_type.h \
     logo.h \
     mainwindow.h \

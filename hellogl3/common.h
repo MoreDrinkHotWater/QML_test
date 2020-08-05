@@ -8,6 +8,11 @@ class Common
 {
 public:
     Common();
+
+    ~Common() = default;
+
+    static Common *getInstance();
+
     // 计算方差
     float variance (QVector<float> vector);
 
