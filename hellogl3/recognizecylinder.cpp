@@ -15,6 +15,78 @@ Recognizecylinder::Recognizecylinder()
 
 }
 
+void Recognizecylinder::find_cylinderNode(QVector<float> vec)
+{
+    QVector<QVector2D> head_circle;
+
+    for (int i = 0; i < vec.size(); i+=2) {
+        QVector2D temp(vec[i],vec[i+1]);
+        head_circle.push_back(temp);
+    }
+
+    std::cout<<"head_circle size: "<<head_circle.size()<<std::endl;
+
+    float maxX = head_circle[0].x(), minX = maxX, maxY = head_circle[0].y(), minY = maxY;
+
+    for(auto it = head_circle.begin(); it != head_circle.end(); it++)
+    {
+        if(it ->x() > maxX)
+            maxX = it->x();
+
+        if(it ->x() < minX)
+            minX = it->x();
+
+        if(it ->y() > maxY)
+            maxY = it->y();
+
+        if(it ->y() < minY)
+            minY = it->y();
+    }
+
+    // 记录椭圆的左右结点
+    cylinder_left = QVector2D(minX, (maxY + minY) / 2);
+    cylinder_right = QVector2D(maxX, (maxY + minY) / 2);
+
+    std::cout<<"cylinder_left.x: "<<cylinder_left.x()<<std::endl;
+    std::cout<<"cylinder_left.y: "<<cylinder_left.y()<<std::endl;
+}
+
+void Recognizecylinder::find_straightLineNode(QVector<float> vec)
+{
+    // line
+    QVector<QVector2D> line_vector;
+
+    for (int var = 0; var < vec.size(); var+=2) {
+        QVector2D temp(vec[var],vec[var+1]);
+        line_vector.push_back(temp);
+    }
+
+    // 记录直线首尾的结点
+    straightLine_first = line_vector[0];
+    straightLine_end = line_vector[line_vector.size()-1];
+
+    std::cout<<"straightLine_first.x: "<<straightLine_first.x()<<std::endl;
+    std::cout<<"straightLine_end.y: "<<straightLine_end.y()<<std::endl;
+
+}
+
+void Recognizecylinder::find_curveLineNode(QVector<float> vec)
+{
+    QVector<QVector2D> head_circle;
+
+    for (int i = 0; i < vec.size(); i+=2) {
+        QVector2D temp(vec[i],vec[i+1]);
+        head_circle.push_back(temp);
+    }
+
+    // 记录直线首尾的结点
+    curveLine_first = head_circle[0];
+    curveLine_end = head_circle[head_circle.size()-1];
+
+    std::cout<<"curveLine_first.x: "<<curveLine_first.x()<<std::endl;
+    std::cout<<"curveLine_end.y: "<<curveLine_end.y()<<std::endl;
+}
+
 bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coorstack)
 {
     // 组合问题
@@ -62,12 +134,12 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                     str_1 = "cylinder";
                     str_2 = "straightLine";
                     // 关系？ 相连？ 垂直？
-                    if(join(str_1, str_2))
+                    if(join(str_1, str_2, draw_coorstack[i], draw_coorstack[j]))
                     {
                         row_vec[j].push_back("join");
                         std::cout<<"the cylinder join with straightLine"<<std::endl;
                         // 垂直
-                        if(verticality(str_1, str_2))
+                        if(verticality(str_1, str_2, draw_coorstack[i], draw_coorstack[j]))
                         {
                             row_vec[j].clear();
                             row_vec[j].push_back("join and vertical");
@@ -92,7 +164,7 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                     // 关系？ 相离？
                     str_1 = "cylinder";
                     str_2 = "curveLine";
-                    if(separation(str_1,str_2))
+                    if(separation(str_1,str_2, draw_coorstack[i], draw_coorstack[j]))
                     {
                         row_vec[j].push_back("separation");
                         std::cout<<"the cylinder separate with curveLine"<<std::endl;
@@ -120,14 +192,14 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                     // 关系？ 相连？ 垂直？
                     str_1 = "cylinder";
                     str_2 = "straightLine";
-                    if(join(str_1, str_2))
+                    if(join(str_1, str_2, draw_coorstack[j], draw_coorstack[i]))
                     {
                         std::cout<<"the cylinder join with straightLine"<<std::endl;
 
                         row_vec[j].push_back("join");
 
                         // 垂直
-                        if(verticality(str_1, str_2))
+                        if(verticality(str_1, str_2, draw_coorstack[j], draw_coorstack[i]))
                         {
                             row_vec[j].clear();
                             row_vec[j].push_back("join and vertical");
@@ -180,7 +252,7 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                     str_1 = "straightLine";
                     str_2 = "curveLine";
                     // 关系？ 相连？
-                    if(join(str_1, str_2))
+                    if(join(str_1, str_2, draw_coorstack[i], draw_coorstack[j]))
                     {
                         row_vec[j].push_back("join");
                         std::cout<<"the straightLine join with curveLine"<<std::endl;
@@ -208,7 +280,7 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                     // 关系？
                     str_1 = "cylinder";
                     str_2 = "curveLine";
-                    if(separation(str_1,str_2))
+                    if(separation(str_1,str_2, draw_coorstack[j], draw_coorstack[i]))
                     {
                         row_vec[j].push_back("separation");
                         std::cout<<"the cylinder separate with curveLine"<<std::endl;
@@ -227,7 +299,7 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                     str_1 = "straightLine";
                     str_2 = "curveLine";
                     // 关系？ 相连？
-                    if(join(str_1, str_2))
+                    if(join(str_1, str_2,  draw_coorstack[j], draw_coorstack[i]))
                     {
                         row_vec[j].push_back("join");
                         std::cout<<"the straightLine join with curveLine"<<std::endl;
@@ -755,7 +827,7 @@ bool Recognizecylinder::equilong(QVector<float> _vec1, QVector<float> _vec2)
 }
 
 // 判断相连
-bool Recognizecylinder::join(QString str_1, QString str_2)
+bool Recognizecylinder::join(QString str_1, QString str_2, QVector<float> _vec1, QVector<float> _vec2)
 {
 
     auto jundge = [](QVector2D first_1,QVector2D end_1,QVector2D first_2,QVector2D end_2){
@@ -766,11 +838,6 @@ bool Recognizecylinder::join(QString str_1, QString str_2)
         float end_first = sqrt(pow(end_1.x() - first_2.x(),2) + pow(end_1.y() - first_2.y(),2));
         float end_end = sqrt(pow(end_1.x() - end_2.x(),2) + pow(end_1.y() - end_2.y(),2));
 
-        std::cout<<"cylinder_left: ("<<first_1.x()<<","<<first_1.y()<<") "<<std::endl;
-        std::cout<<"cylinder_right: ("<<end_1.x()<<","<<end_1.y()<<") "<<std::endl;
-        std::cout<<"straightLine_first: ("<<first_2.x()<<","<<first_2.y()<<") "<<std::endl;
-        std::cout<<"straightLine_end: ("<<end_2.x()<<","<<end_2.y()<<") "<<std::endl;
-
         std::cout<<"first_first: "<<first_first<<std::endl;
 
         std::cout<<"end_first: "<<end_first<<std::endl;
@@ -778,7 +845,6 @@ bool Recognizecylinder::join(QString str_1, QString str_2)
         std::cout<<"first_end: "<<first_end<<std::endl;
 
         std::cout<<"end_end: "<<end_end<<std::endl;
-
 
         if(abs(first_first-0)<0.2 || abs(first_end-0)<0.2 || abs(end_first-0)<0.2 || abs(end_end-0)<0.2)
             return true;
@@ -791,10 +857,19 @@ bool Recognizecylinder::join(QString str_1, QString str_2)
         // 1.椭圆的左边和直线的头相连，或者尾相连
         // 2.椭圆的右边和直线的头相连，或者尾相连
         // 一共四种情况
+
+        find_cylinderNode(_vec1);
+
+        find_straightLineNode(_vec2);
+
+
         return jundge(cylinder_left, cylinder_right, straightLine_first, straightLine_end);
     }
     else if(str_1 == "straightLine" && str_2 == "curveLine")
     {
+        find_straightLineNode(_vec1);
+        find_curveLineNode(_vec2);
+
         return jundge(straightLine_first, straightLine_end, curveLine_first, curveLine_end);
     }
     else
@@ -803,7 +878,7 @@ bool Recognizecylinder::join(QString str_1, QString str_2)
 }
 
 // 判断相离
-bool Recognizecylinder::separation(QString str_1, QString str_2)
+bool Recognizecylinder::separation(QString str_1, QString str_2, QVector<float> _vec1, QVector<float> _vec2)
 {
     auto jundge = [](QVector2D first_1,QVector2D end_1,QVector2D first_2,QVector2D end_2){
 
@@ -821,14 +896,16 @@ bool Recognizecylinder::separation(QString str_1, QString str_2)
 
     if(str_1 == "cylinder" && str_2 == "curveLine")
     {
-        return jundge(cylinder_left, cylinder_right, curveLine_first, curveLine_end);
+        find_cylinderNode(_vec1);
+        find_curveLineNode(_vec2);
+        return jundge(cylinder_left, cylinder_right, curveLine_first, curveLine_first);
     }
     else
         return false;
 }
 
 // 判断垂直
-bool Recognizecylinder::verticality(QString str_1, QString str_2)
+bool Recognizecylinder::verticality(QString str_1, QString str_2, QVector<float> _vec1, QVector<float> _vec2)
 {
     auto jundge = [](QVector2D first_1,QVector2D end_1,QVector2D first_2,QVector2D end_2,float &height){
         // 向量
@@ -850,7 +927,7 @@ bool Recognizecylinder::verticality(QString str_1, QString str_2)
             std::cout<<"the line is left!"<<std::endl;
 
             height = end_2_first_1_y;
-//            height = first_2_first_1_y;
+            //            height = first_2_first_1_y;
 
 
             std::cout<<"height: "<<height<<std::endl;
@@ -862,7 +939,7 @@ bool Recognizecylinder::verticality(QString str_1, QString str_2)
             std::cout<<"the line is left!"<<std::endl;
 
             height = first_2_first_1_y;
-//            height = end_2_first_1_y;
+            //            height = end_2_first_1_y;
 
             std::cout<<"height: "<<height<<std::endl;
 
@@ -896,9 +973,11 @@ bool Recognizecylinder::verticality(QString str_1, QString str_2)
 
     if(str_1 == "cylinder" && str_2 == "straightLine")
     {
-        return jundge(cylinder_left, cylinder_right, straightLine_first, straightLine_end,height);
+        find_cylinderNode(_vec1);
+        find_straightLineNode(_vec2);
+
+        return jundge(cylinder_left, cylinder_right, straightLine_first, straightLine_end, height);
     }
     else
         return false;
 }
-
