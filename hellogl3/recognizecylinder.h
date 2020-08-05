@@ -8,6 +8,8 @@ class Common;
 
 class Identification_relation;
 
+class Identification_type;
+
 class Recognizecylinder
 {
 public:
@@ -21,11 +23,6 @@ public:
     float radius;
     float height;
 
-    // 识别类型
-    bool recognize_cylinder(QVector<float> vec);
-    bool recognize_straightLine(QVector<float> vec);
-    bool recognize_curveLine(QVector<float> vec);
-
     // 记录结点的坐标值
     QVector2D cylinder_left,cylinder_right;
     QVector2D straightLine_first, straightLine_end;
@@ -33,7 +30,6 @@ public:
 
     // 记录类型
     QString str_1, str_2;
-
 
     // 记录关系的表结构
     QVector<QVector<QString>> vec;
@@ -44,6 +40,7 @@ public:
 private:
     Common *common;
     Identification_relation *identification_relation;
+    Identification_type *identification_type;
 
 };
 

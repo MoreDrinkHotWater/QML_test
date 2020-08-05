@@ -6,9 +6,14 @@
 #include <random>
 #include <algorithm>
 
+Identification_type *Identification_type::getInstance(){
+    static Identification_type _instance;
+    return &_instance;
+}
+
 Identification_type::Identification_type()
 {
-
+    common =  Common::getInstance();
 }
 
 bool Identification_type::recognize_cylinder(QVector<float> vec)
@@ -20,9 +25,9 @@ bool Identification_type::recognize_cylinder(QVector<float> vec)
         head_circle.push_back(temp);
     }
 
-    //    std::cout<<"head_circle size: "<<head_circle.size()<<std::endl;
+    //  std::cout<<"head_circle size: "<<head_circle.size()<<std::endl;
 
-    float maxX = head_circle[0].x(), minX = head_circle[0].x(), maxY = head_circle[0].y(), minY = head_circle[0].y();
+    float maxX = head_circle[0].x(), minX = maxX, maxY = head_circle[0].y(), minY = maxY;
 
     for(auto it = head_circle.begin(); it != head_circle.end(); it++)
     {
@@ -231,7 +236,7 @@ bool Identification_type::recognize_curveLine(QVector<float> vec)
         head_circle.push_back(temp);
     }
 
-    float maxX = head_circle[0].x(), minX = head_circle[0].x(), maxY = head_circle[0].y(), minY = head_circle[0].y();
+    float maxX = head_circle[0].x(), minX = maxX, maxY = head_circle[0].y(), minY = maxY;
 
     for(auto it = head_circle.begin(); it != head_circle.end(); it++)
     {

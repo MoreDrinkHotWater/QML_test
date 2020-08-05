@@ -7,6 +7,7 @@
 
 Identification_relation::Identification_relation()
 {
+
 }
 
 Identification_relation *Identification_relation::getInstance(){
@@ -14,7 +15,6 @@ Identification_relation *Identification_relation::getInstance(){
     return &_instance;
 }
 
-// 可优化,直接取
 void Identification_relation::find_cylinderNode(QVector<float> vec)
 {
     QVector<QVector2D> head_circle;
@@ -53,17 +53,9 @@ void Identification_relation::find_cylinderNode(QVector<float> vec)
 
 void Identification_relation::find_straightLineNode(QVector<float> vec)
 {
-    // line
-    QVector<QVector2D> line_vector;
-
-    for (int var = 0; var < vec.size(); var+=2) {
-        QVector2D temp(vec[var],vec[var+1]);
-        line_vector.push_back(temp);
-    }
-
     // 记录直线首尾的结点
-    straightLine_first = line_vector[0];
-    straightLine_end = line_vector[line_vector.size()-1];
+    straightLine_first = QVector2D(vec[0],vec[1]);
+    straightLine_end = QVector2D(vec[vec.size()-2],vec[vec.size()-1]);
 
     std::cout<<"straightLine_first.x: "<<straightLine_first.x()<<std::endl;
     std::cout<<"straightLine_end.y: "<<straightLine_end.y()<<std::endl;
@@ -72,16 +64,9 @@ void Identification_relation::find_straightLineNode(QVector<float> vec)
 
 void Identification_relation::find_curveLineNode(QVector<float> vec)
 {
-    QVector<QVector2D> head_circle;
-
-    for (int i = 0; i < vec.size(); i+=2) {
-        QVector2D temp(vec[i],vec[i+1]);
-        head_circle.push_back(temp);
-    }
-
     // 记录直线首尾的结点
-    curveLine_first = head_circle[0];
-    curveLine_end = head_circle[head_circle.size()-1];
+    curveLine_first = QVector2D(vec[0],vec[1]);
+    curveLine_end = QVector2D(vec[vec.size()-2],vec[vec.size()-1]);
 
     std::cout<<"curveLine_first.x: "<<curveLine_first.x()<<std::endl;
     std::cout<<"curveLine_end.y: "<<curveLine_end.y()<<std::endl;
@@ -155,13 +140,10 @@ bool Identification_relation::join(QString str_1, QString str_2, QVector<float> 
         float end_first = sqrt(pow(end_1.x() - first_2.x(),2) + pow(end_1.y() - first_2.y(),2));
         float end_end = sqrt(pow(end_1.x() - end_2.x(),2) + pow(end_1.y() - end_2.y(),2));
 
-        std::cout<<"first_first: "<<first_first<<std::endl;
-
-        std::cout<<"end_first: "<<end_first<<std::endl;
-
-        std::cout<<"first_end: "<<first_end<<std::endl;
-
-        std::cout<<"end_end: "<<end_end<<std::endl;
+//        std::cout<<"first_first: "<<first_first<<std::endl;
+//        std::cout<<"end_first: "<<end_first<<std::endl;
+//        std::cout<<"first_end: "<<first_end<<std::endl;
+//        std::cout<<"end_end: "<<end_end<<std::endl;
 
         if(abs(first_first-0)<0.2 || abs(first_end-0)<0.2 || abs(end_first-0)<0.2 || abs(end_end-0)<0.2)
             return true;
@@ -176,9 +158,7 @@ bool Identification_relation::join(QString str_1, QString str_2, QVector<float> 
         // 一共四种情况
 
         find_cylinderNode(_vec1);
-
         find_straightLineNode(_vec2);
-
 
         return jundge(cylinder_left, cylinder_right, straightLine_first, straightLine_end);
     }
@@ -245,8 +225,6 @@ bool Identification_relation::verticality(QString str_1, QString str_2, QVector<
 
             height = end_2_first_1_y;
             //            height = first_2_first_1_y;
-
-
             std::cout<<"height: "<<height<<std::endl;
 
             return true;
@@ -257,7 +235,6 @@ bool Identification_relation::verticality(QString str_1, QString str_2, QVector<
 
             height = first_2_first_1_y;
             //            height = end_2_first_1_y;
-
             std::cout<<"height: "<<height<<std::endl;
 
             return true;
@@ -268,7 +245,6 @@ bool Identification_relation::verticality(QString str_1, QString str_2, QVector<
 
             height = end_2_first_1_y;
             //            height = first_2_first_1_y;
-
             std::cout<<"height: "<<height<<std::endl;
 
             return true;
@@ -279,7 +255,6 @@ bool Identification_relation::verticality(QString str_1, QString str_2, QVector<
 
             height = first_2_first_1_y;
             //            height = end_2_first_1_y;
-
             std::cout<<"height: "<<height<<std::endl;
 
             return true;

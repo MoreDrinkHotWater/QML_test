@@ -8,6 +8,9 @@ class Identification_type
 {
 public:
     Identification_type();
+    ~Identification_type() = default;
+
+    static Identification_type *getInstance();
 
     // 识别类型
     bool recognize_cylinder(QVector<float> vec);
