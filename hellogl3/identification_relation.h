@@ -33,13 +33,11 @@ public:
 
 private:
     Common *common;
-
     // 记录结点的坐标值
     QVector2D cylinder_left,cylinder_right;
-
     QVector2D straightLine_first, straightLine_end;
-
     QVector2D curveLine_first, curveLine_end;
+
 };
 
 #endif // IDENTIFICATION_RELATION_H

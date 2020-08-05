@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
 #include "glwidget.h"
 
 MainWindow::MainWindow(QWidget *parent)

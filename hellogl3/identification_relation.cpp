@@ -24,8 +24,6 @@ void Identification_relation::find_cylinderNode(QVector<float> vec)
         head_circle.push_back(temp);
     }
 
-    std::cout<<"head_circle size: "<<head_circle.size()<<std::endl;
-
     float maxX = head_circle[0].x(), minX = maxX, maxY = head_circle[0].y(), minY = maxY;
 
     for(auto it = head_circle.begin(); it != head_circle.end(); it++)
@@ -140,11 +138,6 @@ bool Identification_relation::join(QString str_1, QString str_2, QVector<float> 
         float end_first = sqrt(pow(end_1.x() - first_2.x(),2) + pow(end_1.y() - first_2.y(),2));
         float end_end = sqrt(pow(end_1.x() - end_2.x(),2) + pow(end_1.y() - end_2.y(),2));
 
-//        std::cout<<"first_first: "<<first_first<<std::endl;
-//        std::cout<<"end_first: "<<end_first<<std::endl;
-//        std::cout<<"first_end: "<<first_end<<std::endl;
-//        std::cout<<"end_end: "<<end_end<<std::endl;
-
         if(abs(first_first-0)<0.2 || abs(first_end-0)<0.2 || abs(end_first-0)<0.2 || abs(end_end-0)<0.2)
             return true;
         else
@@ -162,10 +155,24 @@ bool Identification_relation::join(QString str_1, QString str_2, QVector<float> 
 
         return jundge(cylinder_left, cylinder_right, straightLine_first, straightLine_end);
     }
+    else if(str_1 == "straightLine" && str_2 == "cylinder")
+    {
+        find_straightLineNode(_vec1);
+        find_cylinderNode(_vec2);
+
+        return jundge(cylinder_left, cylinder_right, straightLine_first, straightLine_end);
+    }
     else if(str_1 == "straightLine" && str_2 == "curveLine")
     {
         find_straightLineNode(_vec1);
         find_curveLineNode(_vec2);
+
+        return jundge(straightLine_first, straightLine_end, curveLine_first, curveLine_end);
+    }
+    else if(str_1 == "curveLine" && str_2 == "curveLine")
+    {
+        find_curveLineNode(_vec1);
+        find_straightLineNode(_vec2);
 
         return jundge(straightLine_first, straightLine_end, curveLine_first, curveLine_end);
     }
@@ -195,6 +202,12 @@ bool Identification_relation::separation(QString str_1, QString str_2, QVector<f
     {
         find_cylinderNode(_vec1);
         find_curveLineNode(_vec2);
+        return jundge(cylinder_left, cylinder_right, curveLine_first, curveLine_first);
+    }
+    else if(str_1 == "curveLine" && str_2 == "cylinder")
+    {
+        find_curveLineNode(_vec1);
+        find_cylinderNode(_vec2);
         return jundge(cylinder_left, cylinder_right, curveLine_first, curveLine_first);
     }
     else
@@ -267,6 +280,13 @@ bool Identification_relation::verticality(QString str_1, QString str_2, QVector<
     {
         find_cylinderNode(_vec1);
         find_straightLineNode(_vec2);
+
+        return jundge(cylinder_left, cylinder_right, straightLine_first, straightLine_end, height);
+    }
+    else if(str_1 == "straightLine" && str_2 == "cylinder")
+    {
+        find_straightLineNode(_vec1);
+        find_cylinderNode(_vec2);
 
         return jundge(cylinder_left, cylinder_right, straightLine_first, straightLine_end, height);
     }

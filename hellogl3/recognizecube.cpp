@@ -3,7 +3,6 @@
 #include <iostream>
 #include <QOpenGLFunctions>
 #include <QVector2D>
-
 #include <random>
 
 // 构建数据， 并识别是否是 cube

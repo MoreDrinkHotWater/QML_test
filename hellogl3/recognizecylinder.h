@@ -23,11 +23,6 @@ public:
     float radius;
     float height;
 
-    // 记录结点的坐标值
-    QVector2D cylinder_left,cylinder_right;
-    QVector2D straightLine_first, straightLine_end;
-    QVector2D curveLine_first, curveLine_end;
-
     // 记录类型
     QString str_1, str_2;
 

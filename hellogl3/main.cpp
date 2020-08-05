@@ -1,9 +1,8 @@
 #include "mainwindow.h"
-
-#include "glwidget.h"
-#include <QApplication>
-
 #include "Canvas.h"
+#include "glwidget.h"
+
+#include <QApplication>
 
 
 int main(int argc, char *argv[])

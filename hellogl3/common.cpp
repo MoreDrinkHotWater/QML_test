@@ -1,11 +1,11 @@
 #include "common.h"
+
 #include <math.h>
 #include <iostream>
 #include <QVector2D>
 #include <QVector>
-
 #include <random>
-#include<algorithm>
+#include <algorithm>
 
 Common::Common()
 {

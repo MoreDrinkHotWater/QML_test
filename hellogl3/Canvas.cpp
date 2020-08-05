@@ -1,19 +1,16 @@
 #include "Canvas.h"
+#include "glwidget.h"
+
 #include <QDebug>
 #include <QPainter>
 #include <QPushButton>
 #include <iostream>
-
-#include "glwidget.h"
 
 Canvas::Canvas(QWidget *parent):
     QWidget(parent)
 {
     // keyPressEvent 函数没有响应键盘事件的解决方法
     setFocusPolicy(Qt::ClickFocus);
-
-
-
 }
 
 

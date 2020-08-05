@@ -16,15 +16,9 @@ public:
     bool recognize_cylinder(QVector<float> vec);
     bool recognize_straightLine(QVector<float> vec);
     bool recognize_curveLine(QVector<float> vec);
+    bool recognize_wavyLine(QVector<float> vec);
 
     float radius;
-
-    // 记录结点的坐标值
-    QVector2D cylinder_left,cylinder_right;
-
-    QVector2D straightLine_first, straightLine_end;
-
-    QVector2D curveLine_first, curveLine_end;
 
 private:
     Common *common;

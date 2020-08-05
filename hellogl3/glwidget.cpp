@@ -49,26 +49,22 @@
 ****************************************************************************/
 
 #include "glwidget.h"
+#include "recognizecube.h"
+#include "recognizecylinder.h"
+#include "mainwindow.h"
+
 #include <QMouseEvent>
 #include <QOpenGLShaderProgram>
 #include <QCoreApplication>
 #include <math.h>
-
 #include <random>
 #include<algorithm>
-
 #include <iostream>
-#include "mainwindow.h"
-
 #include <window.h>
-
 #include <fstream>
 #include <QMessageBox>
-
 #include <QTimer>
 
-#include "recognizecube.h"
-#include "recognizecylinder.h"
 
 bool GLWidget::m_transparent = false;
 
@@ -743,6 +739,7 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
 
         off_var += 1;
 
+        // 画椭圆
 //        genCylinder(cylinder_vector, radius, height, offset);
 
         genCylinder(cylinder_vector, head_vector, height, offset);

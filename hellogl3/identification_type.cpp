@@ -1,7 +1,7 @@
 #include "identification_type.h"
-#include <QVector>
 #include "common.h"
 
+#include <QVector>
 #include <math.h>
 #include <random>
 #include <algorithm>
@@ -176,10 +176,6 @@ bool Identification_type::recognize_cylinder(QVector<float> vec)
             // 默认长半轴为半径
             radius = (maxX-minX)/2;
 
-            // 记录椭圆的左右结点
-            cylinder_left = QVector2D(minX, (maxY + minY) / 2);
-            cylinder_right = QVector2D(maxX, (maxY + minY) / 2);
-
             return true;
         }
         else
@@ -205,19 +201,11 @@ bool Identification_type::recognize_straightLine(QVector<float> vec)
     // 计算方差。
     if(common->variance(xcoor_vector) < 0.1)
     {
-
-        // 记录直线首尾的结点
-        straightLine_first = line_vector[0];
-        straightLine_end = line_vector[line_vector.size()-1];
-
         return  true;
     }
     // 计算斜率的方差。
-    else if(common->calculate_k(line_vector) < 0.2)
+    else if(common->calculate_k(line_vector) < 0.1)
     {
-        // 记录直线首尾的结点
-        straightLine_first = line_vector[0];
-        straightLine_end = line_vector[line_vector.size()-1];
         return  true;
     }
     else
@@ -359,8 +347,6 @@ bool Identification_type::recognize_curveLine(QVector<float> vec)
 
         step_vector.push_back(step);
 
-        //        std::cout<<"the final step = "<<step<<std::endl;
-
     }
 
     // 匹配标准？
@@ -384,9 +370,6 @@ bool Identification_type::recognize_curveLine(QVector<float> vec)
         // 是椭圆，但是不相连
         if(length > 0.1)
         {
-            // 记录直线首尾的结点
-            curveLine_first = head_circle[0];
-            curveLine_end = head_circle[head_circle.size()-1];
 
             return true;
         }
@@ -395,5 +378,26 @@ bool Identification_type::recognize_curveLine(QVector<float> vec)
             return false;
         }
 
+    }
+}
+
+bool Identification_type::recognize_wavyLine(QVector<float> vec)
+{
+    // line
+    QVector<QVector2D> line_vector;
+
+    for (int var = 0; var < vec.size(); var+=2) {
+        QVector2D temp(vec[var],vec[var+1]);
+        line_vector.push_back(temp);
+    }
+
+    // 计算斜率的方差。
+    if(common->calculate_k(line_vector) > 0.5)
+    {
+        return  true;
+    }
+    else
+    {
+        return false;
     }
 }
