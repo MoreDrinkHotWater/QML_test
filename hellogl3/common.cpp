@@ -101,7 +101,7 @@ float Common::calculate_meanK(QVector<QVector2D> vec, int &num)
 
     num = k_vec.size();
 
-    std::cout<<"k_vec.size: "<<k_vec.size()<<std::endl;
+//    std::cout<<"k_vec.size: "<<k_vec.size()<<std::endl;
 
     //    std::cout<<"meanK: "<<meank<<std::endl;
 

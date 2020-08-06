@@ -33,7 +33,6 @@ public:
     QVector<QString> type_vec;
 
 private:
-    Common *common;
     Identification_relation *identification_relation;
     Identification_type *identification_type;
 

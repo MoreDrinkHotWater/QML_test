@@ -5,6 +5,8 @@
 #include <math.h>
 #include <random>
 #include <algorithm>
+#include <iostream>
+#include <QDebug>
 
 Identification_type *Identification_type::getInstance(){
     static Identification_type _instance;
@@ -54,9 +56,8 @@ bool Identification_type::recognize_cylinder(QVector<float> vec)
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
     std::uniform_int_distribution<> dist_int(1, head_circle.size()-1);
 
-    int num = 50;
     // 取50组测试数据
-    for (int i = 0; i < num; i++) {
+    for (int i = 0; i < 50; i++) {
 
         QVector<QVector2D> OriginPoints_vector;
         QVector<int> rand_vector;
@@ -148,8 +149,6 @@ bool Identification_type::recognize_cylinder(QVector<float> vec)
 
         step_vector.push_back(step);
 
-        //        std::cout<<"the final step = "<<step<<std::endl;
-
     }
 
     // 匹配标准？
@@ -190,38 +189,42 @@ bool Identification_type::recognize_straightLine(QVector<float> vec)
     // line
     QVector<QVector2D> line_vector;
 
-    QVector<float> xcoor_vector,ycoor_vector;
+    xcoor_vector.clear();
+    ycoor_vector.clear();
 
     for (int var = 0; var < vec.size(); var+=2) {
         QVector2D temp(vec[var],vec[var+1]);
         xcoor_vector.push_back(vec[var]);
         ycoor_vector.push_back(vec[var+1]);
+
         line_vector.push_back(temp);
     }
-    // 计算方差。
-    if(common->variance(xcoor_vector) < 0.1)
-    {
-        return  true;
-    }
-    // 计算斜率的方差。
-    else if(common->calculate_k(line_vector) < 0.1)
-    {
-        return  true;
-    }
+
+    int num = 100;
+
+    common->calculate_meanK(line_vector, num);
+
+    // 1. 计算斜率不存在的情况 && 计算方差 (垂直X轴)3. 计算斜率的方差
+    if( (num < 80 && common->variance(xcoor_vector) < 0.1) || (common->calculate_k(line_vector) < 0.1))
+        return true;
     else
-    {
-        // std::cout<<"不是直线！"<<std::endl;
         return false;
-    }
+
 }
 
 bool Identification_type::recognize_curveLine(QVector<float> vec)
 {
     QVector<QVector2D> head_circle;
 
+    xcoor_vector.clear();
+    ycoor_vector.clear();
+
     for (int i = 0; i < vec.size(); i+=2) {
         QVector2D temp(vec[i],vec[i+1]);
         head_circle.push_back(temp);
+
+        xcoor_vector.push_back(vec[i]);
+        ycoor_vector.push_back(vec[i+1]);
     }
 
     float maxX = head_circle[0].x(), minX = maxX, maxY = head_circle[0].y(), minY = maxY;
@@ -251,9 +254,8 @@ bool Identification_type::recognize_curveLine(QVector<float> vec)
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
     std::uniform_int_distribution<> dist_int(1, head_circle.size()-1);
 
-    int num = 50;
     // 取50组测试数据
-    for (int i = 0; i < num; i++) {
+    for (int i = 0; i < 50; i++) {
 
         QVector<QVector2D> OriginPoints_vector;
         QVector<int> rand_vector;
@@ -357,28 +359,23 @@ bool Identification_type::recognize_curveLine(QVector<float> vec)
     for(int i = 0 ; i < step_vector.size(); i++)
     {
         if(abs(step_vector[i]-5.00007) < 0.001)
-        {
-            flag+=1;
-        }
+            flag+=1;       
     }
 
+    // 无效的大于 35, 说明不满足椭圆的条件
     if(flag > 35)
         return false;
+    // 排除直线
+    else if(common->variance(ycoor_vector) > 0.1)
+        return false;
+    // 满足曲线
+    else if(common->variance(ycoor_vector) < 0.1
+            && common->variance(xcoor_vector) > 0.1
+            && sqrt(pow(head_circle[0].x() - head_circle[head_circle.size()-1].x(),2) + pow(head_circle[0].y() - head_circle[head_circle.size()-1].y(),2)) > 0.2)
+        return true;
     else
-    {
-        float length = sqrt(pow(head_circle[0].x() - head_circle[head_circle.size()-1].x(),2) + pow(head_circle[0].y() - head_circle[head_circle.size()-1].y(),2));
-        // 是椭圆，但是不相连
-        if(length > 0.1)
-        {
+        return false;
 
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-
-    }
 }
 
 bool Identification_type::recognize_wavyLine(QVector<float> vec)
@@ -386,18 +383,28 @@ bool Identification_type::recognize_wavyLine(QVector<float> vec)
     // line
     QVector<QVector2D> line_vector;
 
+    xcoor_vector.clear();
+    ycoor_vector.clear();
+
     for (int var = 0; var < vec.size(); var+=2) {
         QVector2D temp(vec[var],vec[var+1]);
         line_vector.push_back(temp);
+
+        xcoor_vector.push_back(vec[var]);
+        ycoor_vector.push_back(vec[var+1]);
+
     }
 
-    // 计算斜率的方差。
-    if(common->calculate_k(line_vector) > 0.5)
-    {
-        return  true;
-    }
-    else
-    {
+    int num = 100;
+
+    common->calculate_meanK(line_vector, num);
+
+    // 排除曲线
+    if(common->variance(ycoor_vector) < 0.1 && common->variance(xcoor_vector) > 0.1)
         return false;
-    }
+    // 1. 计算斜率不存在的情况(垂直X轴)  2.计算斜率的方差。为区分椭圆 判断首尾的距离
+    else if( num > 80 && common->calculate_k(line_vector) > 0.2 && sqrt(pow(line_vector[0].x() - line_vector[line_vector.size()-1].x(),2) + pow(line_vector[0].y() - line_vector[line_vector.size()-1].y(),2)) > 0.2)
+        return true;
+    else
+        return false;
 }

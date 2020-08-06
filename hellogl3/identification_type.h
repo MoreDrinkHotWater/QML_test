@@ -1,6 +1,7 @@
 #ifndef IDENTIFICATION_TYPE_H
 #define IDENTIFICATION_TYPE_H
 #include <QVector2D>
+#include <QVector>
 
 class Common;
 
@@ -19,6 +20,9 @@ public:
     bool recognize_wavyLine(QVector<float> vec);
 
     float radius;
+
+    // 临时需要用的变量
+    QVector<float> xcoor_vector,ycoor_vector;
 
 private:
     Common *common;

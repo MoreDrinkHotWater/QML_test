@@ -7,7 +7,7 @@
 
 Identification_relation::Identification_relation()
 {
-
+    common = Common::getInstance();
 }
 
 Identification_relation *Identification_relation::getInstance(){

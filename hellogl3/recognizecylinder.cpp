@@ -1,5 +1,4 @@
 #include "recognizecylinder.h"
-#include "common.h"
 #include "identification_relation.h"
 #include "identification_type.h"
 
@@ -15,12 +14,14 @@ Recognizecylinder::Recognizecylinder()
     identification_relation = Identification_relation::getInstance();
 
     identification_type = Identification_type::getInstance();
-
-    common = Common::getInstance();
 }
 
 bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coorstack)
 {
+    // 清除
+    vec.clear();
+    type_vec.clear();
+
     // 组合问题
     for(int i = 0; i < draw_coorstack.size(); i++)
     {
@@ -31,10 +32,17 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
         // 波浪线
         bool is_wavyLine = identification_type->recognize_wavyLine(draw_coorstack[i]);
 
+        std::cout<<"is_cylinder: "<<is_cylinder<<std::endl;
+        std::cout<<"is_straightLine: "<<is_straightLine<<std::endl;
+        std::cout<<"is_wavyLine: "<<is_wavyLine<<std::endl;
+        std::cout<<"is_curveLine: "<<is_curveLine<<std::endl;
+
+
         QVector<QString> row_vec(draw_coorstack.size());
 
         if(i == draw_coorstack.size() - 1)
         {
+
             QVector<QString> temp_vec(draw_coorstack.size() + 1);
 
             if(is_cylinder)
@@ -42,19 +50,19 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                 temp_vec[temp_vec.size()-1].push_back("椭圆");
                 vec.push_back(temp_vec);
             }
-            else if(is_curveLine)
-            {
-                temp_vec[temp_vec.size()-1].push_back("曲线");
-                vec.push_back(temp_vec);
-            }
             else if(is_straightLine)
             {
                 temp_vec[temp_vec.size()-1].push_back("直线");
                 vec.push_back(temp_vec);
             }
-            else
+            else if(is_wavyLine)
             {
                 temp_vec[temp_vec.size()-1].push_back("波浪线");
+                vec.push_back(temp_vec);
+            }
+            else
+            {
+                temp_vec[temp_vec.size()-1].push_back("曲线");
                 vec.push_back(temp_vec);
             }
             continue;
@@ -63,7 +71,7 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
         for(int j = i+1 ; j < draw_coorstack.size(); j++)
         {
 
-// =======================================================椭圆==============================================================================
+            // =======================================================椭圆===============================================================================================================
             if(is_cylinder)
             {
                 std::cout<<"第"<<i<<"条线段是: 椭圆"<<std::endl;
@@ -116,19 +124,21 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                 else
                 {
                     if(identification_type->recognize_curveLine(draw_coorstack[j]))
+                    {
                         std::cout<<"第"<<j<<"条线段是: 曲线"<<std::endl;
-                    // 关系？ 相离？
-                    str_1 = "cylinder";
-                    str_2 = "curveLine";
-                    if(identification_relation->separation(str_1,str_2,draw_coorstack[i], draw_coorstack[j]))
-                    {
-                        row_vec[j].push_back("separation");
-                        std::cout<<"the cylinder separate with curveLine"<<std::endl;
-                    }
-                    else
-                    {
-                        row_vec[j].push_back("join");
-                        std::cout<<"the cylinder separate without curveLine"<<std::endl;
+                        // 关系？ 相离？
+                        str_1 = "cylinder";
+                        str_2 = "curveLine";
+                        if(identification_relation->separation(str_1,str_2,draw_coorstack[i], draw_coorstack[j]))
+                        {
+                            row_vec[j].push_back("separation");
+                            std::cout<<"the cylinder separate with curveLine"<<std::endl;
+                        }
+                        else
+                        {
+                            row_vec[j].push_back("join");
+                            std::cout<<"the cylinder separate without curveLine"<<std::endl;
+                        }
                     }
                 }
 
@@ -139,7 +149,7 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                     vec.push_back(row_vec);
                 }
             }
-// ============================================================ 直线=========================================================================
+            // ============================================================ 直线==========================================================================================================
             else if(is_straightLine)
             {
                 std::cout<<"第"<<i<<"条线段是: 直线"<<std::endl;
@@ -226,19 +236,21 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                 else
                 {
                     if(identification_type->recognize_curveLine(draw_coorstack[j]))
+                    {
                         std::cout<<"第"<<j<<"条线段是: 曲线"<<std::endl;
-                    str_1 = "straightLine";
-                    str_2 = "curveLine";
-                    // 关系？ 相连？
-                    if(identification_relation->join(str_1, str_2, draw_coorstack[i], draw_coorstack[j]))
-                    {
-                        row_vec[j].push_back("join");
-                        std::cout<<"the straightLine join with curveLine"<<std::endl;
-                    }
-                    else
-                    {
-                        row_vec[j].push_back("separation");
-                        std::cout<<"the straightLine join without curveLine"<<std::endl;
+                        str_1 = "straightLine";
+                        str_2 = "curveLine";
+                        // 关系？ 相连？
+                        if(identification_relation->join(str_1, str_2, draw_coorstack[i], draw_coorstack[j]))
+                        {
+                            row_vec[j].push_back("join");
+                            std::cout<<"the straightLine join with curveLine"<<std::endl;
+                        }
+                        else
+                        {
+                            row_vec[j].push_back("separation");
+                            std::cout<<"the straightLine join without curveLine"<<std::endl;
+                        }
                     }
                 }
 
@@ -249,7 +261,7 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                 }
             }
 
-// ==========================================================波浪线==========================================================================
+            // ==========================================================波浪线==================================================================================================
             else if(is_wavyLine)
             {
                 std::cout<<"第"<<i<<"条线段是: 波浪线"<<std::endl;
@@ -268,6 +280,24 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                     {
                         row_vec[j].push_back("separation");
                         std::cout<<"the wavyLine join without cylinder"<<std::endl;
+                    }
+                }
+                else if(identification_type->recognize_straightLine(draw_coorstack[j]))
+                {
+                    std::cout<<"第"<<j<<"条线段是: 直线"<<std::endl;
+                    // 关系？ 相离？
+                    str_1 = "wavyLine";
+                    str_2 = "straightLine";
+                    // 关系？  相离？
+                    if(identification_relation->separation(str_1, str_2, draw_coorstack[i], draw_coorstack[j]))
+                    {
+                        row_vec[j].push_back("separation");
+                        std::cout<<"the straightLine separation with wavyLine"<<std::endl;
+                    }
+                    else
+                    {
+                        row_vec[j].push_back("join");
+                        std::cout<<"the straightLine separation without wavyLine"<<std::endl;
                     }
                 }
                 else if(identification_type->recognize_wavyLine(draw_coorstack[j]))
@@ -291,20 +321,22 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                 else
                 {
                     if(identification_type->recognize_curveLine(draw_coorstack[j]))
+                    {
                         std::cout<<"第"<<j<<"条线段是: 曲线"<<std::endl;
-                    // 关系？ 相连？
-                    str_1 = "wavyLine";
-                    str_2 = "curveLine";
+                        // 关系？ 相连？
+                        str_1 = "wavyLine";
+                        str_2 = "curveLine";
 
-                    if(identification_relation->join(str_1, str_2, draw_coorstack[i], draw_coorstack[j]))
-                    {
-                        row_vec[j].push_back("join");
-                        std::cout<<"the wavyLine join with curveLine"<<std::endl;
-                    }
-                    else
-                    {
-                        row_vec[j].push_back("separation");
-                        std::cout<<"the wavyLine join without curveLine"<<std::endl;
+                        if(identification_relation->join(str_1, str_2, draw_coorstack[i], draw_coorstack[j]))
+                        {
+                            row_vec[j].push_back("join");
+                            std::cout<<"the wavyLine join with curveLine"<<std::endl;
+                        }
+                        else
+                        {
+                            row_vec[j].push_back("separation");
+                            std::cout<<"the wavyLine join without curveLine"<<std::endl;
+                        }
                     }
                 }
                 if(j == draw_coorstack.size()-1)
@@ -314,7 +346,7 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                 }
 
             }
-// ==============================================================曲线=======================================================================
+            // ==============================================================曲线========================================================================================================
             else if(is_curveLine)
             {
                 std::cout<<"第"<<i<<"条线段是: 曲线"<<std::endl;
@@ -338,36 +370,38 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                 else if(identification_type->recognize_wavyLine(draw_coorstack[j]))
                 {
                     std::cout<<"第"<<j<<"条线段是: 波浪线"<<std::endl;
-                    str_1 = "wavyLine";
-                    str_2 = "curveLine";
+                    str_1 = "curveLine";
+                    str_2 = "wavyLine";
                     // 关系？ 相连？
                     if(identification_relation->join(str_1, str_2, draw_coorstack[i], draw_coorstack[j]))
                     {
                         row_vec[j].push_back("join");
-                        std::cout<<"the straightLine join with curveLine"<<std::endl;
+                        std::cout<<"the curveLine join with wavyLine"<<std::endl;
                     }
                     else
                     {
                         row_vec[j].push_back("separation");
-                        std::cout<<"the straightLine join without curveLine"<<std::endl;
+                        std::cout<<"the curveLine join without wavyLine"<<std::endl;
                     }
                 }
                 else
                 {
                     if(identification_type->recognize_straightLine(draw_coorstack[j]))
+                    {
                         std::cout<<"第"<<j<<"条线段是: 直线"<<std::endl;
-                    // 关系？ 相连？
-                    str_1 = "curveLine";
-                    str_2 = "straightLine";
-                    if(identification_relation->join(str_1, str_2, draw_coorstack[i], draw_coorstack[j]))
-                    {
-                        row_vec[j].push_back("join");
-                        std::cout<<"the straightLine join with curveLine"<<std::endl;
-                    }
-                    else
-                    {
-                        row_vec[j].push_back("separation");
-                        std::cout<<"the straightLine join without curveLine"<<std::endl;
+                        // 关系？ 相连？
+                        str_1 = "curveLine";
+                        str_2 = "straightLine";
+                        if(identification_relation->join(str_1, str_2, draw_coorstack[i], draw_coorstack[j]))
+                        {
+                            row_vec[j].push_back("join");
+                            std::cout<<"the curveLine join with straightLine"<<std::endl;
+                        }
+                        else
+                        {
+                            row_vec[j].push_back("separation");
+                            std::cout<<"the curveLine join without straightLine"<<std::endl;
+                        }
                     }
                 }
 
@@ -378,7 +412,7 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                 }
             }
 
-// ==========================================================其他===========================================================================
+            // ==========================================================其他====================================================================================================
             else
             {
                 std::cout<<"=============================="<<std::endl;
