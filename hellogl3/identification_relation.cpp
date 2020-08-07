@@ -8,6 +8,8 @@
 Identification_relation::Identification_relation()
 {
     common = Common::getInstance();
+    height_1 = 0;
+    height_2 = 0;
 }
 
 Identification_relation *Identification_relation::getInstance(){
@@ -193,8 +195,11 @@ bool Identification_relation::join(QString str_1, QString str_2, QVector<float> 
         find_cylinderNode(_vec1);
         find_wavyLineNode(_vec2);
 
-        // 给个高度值
-        height = sqrt(pow(wavyLine_first.x() - wavyLine_end.x(),2) + pow(wavyLine_first.y() - wavyLine_end.y(),2));
+        if(height_1 == 0)
+            // 给个高度值
+            height_1 = abs(wavyLine_first.y() - wavyLine_end.y());
+        else
+            height_2 = abs(wavyLine_first.y() - wavyLine_end.y());
 
         return jundge(cylinder_left, cylinder_right, wavyLine_first, wavyLine_end);
     }
@@ -286,7 +291,7 @@ bool Identification_relation::separation(QString str_1, QString str_2, QVector<f
 // 判断垂直
 bool Identification_relation::verticality(QString str_1, QString str_2, QVector<float> _vec1, QVector<float> _vec2)
 {
-    auto jundge = [](QVector2D first_1,QVector2D end_1,QVector2D first_2,QVector2D end_2,float &height){
+    auto jundge = [](QVector2D first_1,QVector2D end_1,QVector2D first_2,QVector2D end_2,float &height_1){
         // 向量
         float end_1_first_1_x = end_1.x() - first_1.x();
         float end_1_first_1_y = end_1.y() - first_1.y();
@@ -305,9 +310,9 @@ bool Identification_relation::verticality(QString str_1, QString str_2, QVector<
         {
             std::cout<<"the line is left!"<<std::endl;
 
-            height = end_2_first_1_y;
+            height_1 = end_2_first_1_y;
             //            height = first_2_first_1_y;
-            std::cout<<"height: "<<height<<std::endl;
+            std::cout<<"height_1: "<<height_1<<std::endl;
 
             return true;
         }
@@ -315,9 +320,9 @@ bool Identification_relation::verticality(QString str_1, QString str_2, QVector<
         {
             std::cout<<"the line is left!"<<std::endl;
 
-            height = first_2_first_1_y;
+            height_1 = first_2_first_1_y;
             //            height = end_2_first_1_y;
-            std::cout<<"height: "<<height<<std::endl;
+            std::cout<<"height_1: "<<height_1<<std::endl;
 
             return true;
         }
@@ -325,9 +330,9 @@ bool Identification_relation::verticality(QString str_1, QString str_2, QVector<
         {
             std::cout<<"the line is right!"<<std::endl;
 
-            height = end_2_first_1_y;
+            height_1 = end_2_first_1_y;
             //            height = first_2_first_1_y;
-            std::cout<<"height: "<<height<<std::endl;
+            std::cout<<"height_1: "<<height_1<<std::endl;
 
             return true;
         }
@@ -335,9 +340,9 @@ bool Identification_relation::verticality(QString str_1, QString str_2, QVector<
         {
             std::cout<<"the line is right!"<<std::endl;
 
-            height = first_2_first_1_y;
+            height_1 = first_2_first_1_y;
             //            height = end_2_first_1_y;
-            std::cout<<"height: "<<height<<std::endl;
+            std::cout<<"height: "<<height_1<<std::endl;
 
             return true;
         }
@@ -350,14 +355,14 @@ bool Identification_relation::verticality(QString str_1, QString str_2, QVector<
         find_cylinderNode(_vec1);
         find_straightLineNode(_vec2);
 
-        return jundge(cylinder_left, cylinder_right, straightLine_first, straightLine_end, height);
+        return jundge(cylinder_left, cylinder_right, straightLine_first, straightLine_end, height_1);
     }
     else if(str_1 == "straightLine" && str_2 == "cylinder")
     {
         find_straightLineNode(_vec1);
         find_cylinderNode(_vec2);
 
-        return jundge(cylinder_left, cylinder_right, straightLine_first, straightLine_end, height);
+        return jundge(cylinder_left, cylinder_right, straightLine_first, straightLine_end, height_1);
     }
     else
         return false;

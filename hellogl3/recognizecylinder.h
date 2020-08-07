@@ -21,7 +21,8 @@ public:
     QStack<QVector<float>> draw_coorstack;
 
     float radius;
-    float height;
+    float height_1;
+    float height_2;
 
     // 记录类型
     QString str_1, str_2;

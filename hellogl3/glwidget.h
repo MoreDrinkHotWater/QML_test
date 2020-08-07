@@ -120,12 +120,14 @@ private:
 
     // 计算倾斜度
     void findMinMax(QVector<QVector2D> head_path, QVector2D &min,QVector2D &max);
-    float mapEllipseToCicle(QVector<QVector2D> &head_path);
+    float mapEllipseToCircle(QVector<QVector2D> &head_path);
 
     // 画出模型
-    void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVector<QVector2D> line_path, float height,QVector3D offset);
+
     void genCylinder(QVector<float> &vec,float r,float z,QVector3D offset);
     void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path,float z,QVector3D offset);
+    void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVector<QVector2D> line_path, float height,QVector3D offset);
+    void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVector<QVector2D> line_path_1, QVector<QVector2D> line_path_2, float height_1, float height_2, QVector3D offset);
 
     bool m_core;
     int m_xRot;
@@ -155,7 +157,7 @@ private:
     // draw cylinder
     bool appendingFlag;
 
-    GLfloat radius,height;
+    GLfloat radius,height_1,height_2;
 
     QStack<QVector<float>> draw_stack;
 

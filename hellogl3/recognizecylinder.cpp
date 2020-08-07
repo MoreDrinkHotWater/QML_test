@@ -404,7 +404,6 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                         }
                     }
                 }
-
                 if(j == draw_coorstack.size()-1)
                 {
                     row_vec.push_back("曲线");
@@ -493,7 +492,8 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
 
     if(flag == 6)
     {
-        this -> height = identification_relation->height;
+        this -> height_1 = identification_relation->height_1;
+        this -> height_2 = identification_relation->height_2;
         this -> radius = identification_type->radius;
         return true;
     }

@@ -23,7 +23,8 @@ public:
 
     void find_wavyLineNode(QVector<float> vec);
 
-    float height;
+    float height_1;
+    float height_2;
 
     // 相互关系: 平行，相连, 相离，垂直,等长
     bool parallel(QVector<float> _vec1, QVector<float> _vec2);

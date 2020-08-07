@@ -399,6 +399,8 @@ bool Identification_type::recognize_wavyLine(QVector<float> vec)
 
     common->calculate_meanK(line_vector, num);
 
+//    std::cout<<"common->calculate_k(line_vector): "<<common->calculate_k(line_vector)<<std::endl;
+
     // 排除曲线
     if(common->variance(ycoor_vector) < 0.1 && common->variance(xcoor_vector) > 0.1)
         return false;
