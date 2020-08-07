@@ -751,9 +751,9 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
 
         update();
     }
-
 }
 
+// 三角化
 void GLWidget::genTriangle(QVector<float> &vec,QVector3D p0,QVector3D p1,QVector3D p2){
     QVector3D n = QVector3D::normal(p0,p1,p2);
     vec.append(p0.x());vec.append(p0.y());vec.append(p0.z());
@@ -799,21 +799,6 @@ float GLWidget::mapEllipseToCicle(QVector<QVector2D> &head_path){
         head_path[i].setY((head_path[i].y() - center.y())*ratio + center.y());
     }
     return 1/sqrt(1 - (1/ratio)*(1/ratio));
-
-    //    if((max.x() - min.x()) > (max.y() - min.y()))
-    //    {
-
-    //    }
-    //    else
-    //    {
-    //        float ratio = (max.y() - min.y())/(max.x() - min.x());
-    //        for(int i = 0; i < head_path.size(); i++){
-    //            // 拉伸x
-    //            head_path[i].setX((head_path[i].x() - center.x())*ratio + center.x());
-    //        }
-    //        return 1/sqrt(1 - ratio*ratio);
-    //    }
-
 }
 
 // draw_arbitrary_line
@@ -868,7 +853,7 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
         QVector3D p0(head_path[i].x(),head_path[i].y(), 0);
         QVector3D p1(head_path[i_1].x(),head_path[i_1].y(), 0);
 
-        genTriangle(vec,p0,p1,centerTop);//top
+        genTriangle(vec,p0,p1,centerTop); // top
 
         QVector3D temp1,temp3,temp2,temp4;
         float  temp_proportion,temp_proportion_1;

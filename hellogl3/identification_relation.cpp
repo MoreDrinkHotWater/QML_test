@@ -213,7 +213,7 @@ bool Identification_relation::join(QString str_1, QString str_2, QVector<float> 
 
         return jundge(curveLine_first, curveLine_end, wavyLine_first, wavyLine_end);
     }
-    else if(str_1 == "wavyLine" && str_2 == "cylinder")
+    else if(str_1 == "curveLine" && str_2 == "wavyLine")
     {
         find_wavyLineNode(_vec1);
         find_cylinderNode(_vec2);
