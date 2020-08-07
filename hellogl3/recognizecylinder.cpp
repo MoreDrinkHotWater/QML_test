@@ -309,7 +309,7 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                     if(identification_relation->separation(str_1,str_2,draw_coorstack[i],draw_coorstack[j]))
                     {
 
-                        row_vec[j].push_back("separate");
+                        row_vec[j].push_back("separation");
                         std::cout<<"the wavyLine separate with wavyLine"<<std::endl;
                     }
                     else
@@ -443,8 +443,7 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                 }
                 else if(vec[i][j] == "parallel and equal")
                 {
-                    if((vec[i][vec[i].size()-1] == "直线" && vec[j][vec[i].size()-1] == "直线")
-                            || (vec[i][vec[i].size()-1] == "直线" && vec[j][vec[i].size()-1] == "直线"))
+                    if(vec[i][vec[i].size()-1] == "直线" && vec[j][vec[i].size()-1] == "直线")
                     {
                         flag+=1;
                     }
@@ -455,10 +454,12 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                             || (vec[i][vec[i].size()-1] == "曲线" && vec[j][vec[i].size()-1] == "直线")
                             || (vec[i][vec[i].size()-1] == "椭圆" && vec[j][vec[i].size()-1] == "波浪线")
                             || (vec[i][vec[i].size()-1] == "波浪线" && vec[j][vec[i].size()-1] == "椭圆")
-                            || (vec[i][vec[i].size()-1] == "波浪线" && vec[j][vec[i].size()-1] == "椭圆")
                             || (vec[i][vec[i].size()-1] == "波浪线" && vec[j][vec[i].size()-1] == "曲线")
                             || (vec[i][vec[i].size()-1] == "曲线" && vec[j][vec[i].size()-1] == "波浪线"))
                     {
+//                        std::cout<<"vec[i][vec[i].size()-1]: "<<vec[i][vec[i].size()-1].toStdString()<<std::endl;
+//                        std::cout<<"vec[j][vec[i].size()-1]: "<<vec[j][vec[i].size()-1].toStdString()<<std::endl;
+
                         flag+=1;
                     }
                 }
@@ -468,10 +469,11 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                             || (vec[i][vec[i].size()-1] == "曲线" && vec[j][vec[i].size()-1] == "椭圆")
                             || (vec[i][vec[i].size()-1] == "直线" && vec[j][vec[i].size()-1] == "波浪线")
                             || (vec[i][vec[i].size()-1] == "波浪线" && vec[j][vec[i].size()-1] == "直线")
-                            || (vec[i][vec[i].size()-1] == "曲线" && vec[j][vec[i].size()-1] == "椭圆")
-                            || (vec[i][vec[i].size()-1] == "曲线" && vec[j][vec[i].size()-1] == "椭圆")
                             || (vec[i][vec[i].size()-1] == "波浪线" && vec[j][vec[i].size()-1] == "波浪线"))
                     {
+//                        std::cout<<"vec[i][vec[i].size()-1]: "<<vec[i][vec[i].size()-1].toStdString()<<std::endl;
+//                        std::cout<<"vec[j][vec[i].size()-1]: "<<vec[j][vec[i].size()-1].toStdString()<<std::endl;
+
                         flag+=1;
                     }
                 }

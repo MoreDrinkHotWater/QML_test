@@ -21,6 +21,8 @@ public:
 
     void find_curveLineNode(QVector<float> vec);
 
+    void find_wavyLineNode(QVector<float> vec);
+
     float height;
 
     // 相互关系: 平行，相连, 相离，垂直,等长
@@ -37,6 +39,7 @@ private:
     QVector2D cylinder_left,cylinder_right;
     QVector2D straightLine_first, straightLine_end;
     QVector2D curveLine_first, curveLine_end;
+    QVector2D wavyLine_first, wavyLine_end;
 
 };
 

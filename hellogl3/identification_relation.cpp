@@ -62,7 +62,7 @@ void Identification_relation::find_straightLineNode(QVector<float> vec)
 
 void Identification_relation::find_curveLineNode(QVector<float> vec)
 {
-    // 记录直线首尾的结点
+    // 记录曲线首尾的结点
     curveLine_first = QVector2D(vec[0],vec[1]);
     curveLine_end = QVector2D(vec[vec.size()-2],vec[vec.size()-1]);
 
@@ -70,6 +70,15 @@ void Identification_relation::find_curveLineNode(QVector<float> vec)
     std::cout<<"curveLine_end.y: "<<curveLine_end.y()<<std::endl;
 }
 
+void Identification_relation::find_wavyLineNode(QVector<float> vec)
+{
+    // 记录波浪线首尾的结点
+    wavyLine_first = QVector2D(vec[0],vec[1]);
+    wavyLine_end = QVector2D(vec[vec.size()-2],vec[vec.size()-1]);
+
+    std::cout<<"wavyLine_first.x: "<<wavyLine_first.x()<<std::endl;
+    std::cout<<"wavyLine_end.y: "<<wavyLine_end.y()<<std::endl;
+}
 
 // 判断平行
 bool Identification_relation::parallel(QVector<float> _vec1, QVector<float> _vec2)
@@ -144,6 +153,7 @@ bool Identification_relation::join(QString str_1, QString str_2, QVector<float> 
             return false;
     };
 
+    // 椭圆和直线
     if(str_1 == "cylinder" && str_2 == "straightLine")
     {
         // 1.椭圆的左边和直线的头相连，或者尾相连
@@ -162,6 +172,7 @@ bool Identification_relation::join(QString str_1, QString str_2, QVector<float> 
 
         return jundge(cylinder_left, cylinder_right, straightLine_first, straightLine_end);
     }
+    // 直线和曲线
     else if(str_1 == "straightLine" && str_2 == "curveLine")
     {
         find_straightLineNode(_vec1);
@@ -169,12 +180,45 @@ bool Identification_relation::join(QString str_1, QString str_2, QVector<float> 
 
         return jundge(straightLine_first, straightLine_end, curveLine_first, curveLine_end);
     }
-    else if(str_1 == "curveLine" && str_2 == "curveLine")
+    else if(str_1 == "curveLine" && str_2 == "straightLine")
     {
         find_curveLineNode(_vec1);
         find_straightLineNode(_vec2);
 
         return jundge(straightLine_first, straightLine_end, curveLine_first, curveLine_end);
+    }
+    // 椭圆和波浪线
+    else if(str_1 == "cylinder" && str_2 == "wavyLine")
+    {
+        find_cylinderNode(_vec1);
+        find_wavyLineNode(_vec2);
+
+        // 给个高度值
+        height = sqrt(pow(wavyLine_first.x() - wavyLine_end.x(),2) + pow(wavyLine_first.y() - wavyLine_end.y(),2));
+
+        return jundge(cylinder_left, cylinder_right, wavyLine_first, wavyLine_end);
+    }
+    else if(str_1 == "wavyLine" && str_2 == "cylinder")
+    {
+        find_wavyLineNode(_vec1);
+        find_cylinderNode(_vec2);
+
+        return jundge(cylinder_left, cylinder_right, wavyLine_first, wavyLine_end);
+    }
+    // 波浪线和曲线
+    else if(str_1 == "wavyLine" && str_2 == "curveLine")
+    {
+        find_wavyLineNode(_vec1);
+        find_curveLineNode(_vec2);
+
+        return jundge(curveLine_first, curveLine_end, wavyLine_first, wavyLine_end);
+    }
+    else if(str_1 == "wavyLine" && str_2 == "cylinder")
+    {
+        find_wavyLineNode(_vec1);
+        find_cylinderNode(_vec2);
+
+        return jundge(curveLine_first, curveLine_end, wavyLine_first, wavyLine_end);
     }
     else
         return false;
@@ -198,6 +242,7 @@ bool Identification_relation::separation(QString str_1, QString str_2, QVector<f
             return false;
     };
 
+    // 椭圆和曲线
     if(str_1 == "cylinder" && str_2 == "curveLine")
     {
         find_cylinderNode(_vec1);
@@ -209,6 +254,30 @@ bool Identification_relation::separation(QString str_1, QString str_2, QVector<f
         find_curveLineNode(_vec1);
         find_cylinderNode(_vec2);
         return jundge(cylinder_left, cylinder_right, curveLine_first, curveLine_first);
+    }
+    // 直线和波浪线
+    else if(str_1 == "straightLine" && str_2 == "wavyLine")
+    {
+        find_straightLineNode(_vec1);
+        find_wavyLineNode(_vec2);
+
+        return jundge(straightLine_first, straightLine_end, wavyLine_first, wavyLine_end);
+    }
+    else if(str_1 == "wavyLine" && str_2 == "straightLine")
+    {
+        find_wavyLineNode(_vec1);
+        find_straightLineNode(_vec2);
+
+        return jundge(straightLine_first, straightLine_end, wavyLine_first, wavyLine_end);
+    }
+    // 波浪线和波浪线
+    else if(str_1 == "wavyLine" && str_2 == "wavyLine")
+    {
+        find_wavyLineNode(_vec1);
+        QVector2D wavyLine_first_1 = wavyLine_first, wavyLine_end_1 = wavyLine_end;
+        find_wavyLineNode(_vec2);
+
+        return jundge(wavyLine_first_1, wavyLine_end_1, wavyLine_first, wavyLine_end);
     }
     else
         return false;
