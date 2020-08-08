@@ -750,14 +750,32 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
             head_vector = temp_vec;
         }
 
+        // 由于只有这个函数会多次调用,所以我们写成 lambda 函数,后续有需要在拿出去
+        // 统一竖直方向的顺序为: 从上到下
+        auto  vertical_order = [] (QVector<QVector2D> &line_vector){
+            if(line_vector.begin()->y() < line_vector.end()->y())
+            {
+                QVector<QVector2D> temp_vec;
+                for(int var = line_vector.size()-1; var >=0 ; var--)
+                {
+                    temp_vec.push_back(line_vector[var]);
+                }
+                line_vector = temp_vec;
+            }
+        };
+
+        if(!line_vector_1.isEmpty())
+            vertical_order(line_vector_1);
+
+        if(!line_vector_2.isEmpty())
+            vertical_order(line_vector_2);
+
         QVector3D offset(off_var,off_var,off_var);
 
         off_var += 1;
 
         // 画椭圆
-//        genCylinder(cylinder_vector, radius, height, offset);
-
-        std::cout<<"line_vector_1 size: "<<line_vector_1.size()<<std::endl;
+        //        genCylinder(cylinder_vector, radius, height, offset);
 
         if(line_vector_1.isEmpty() && line_vector_2.isEmpty())
             genCylinder(cylinder_vector, head_vector, height_1, offset);
@@ -835,10 +853,6 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
 
     std::cout<<"center.x: "<<center.x()<<" center.y: "<<center.y()<<std::endl;
 
-    std::cout<<"height_1/line_path_1: "<<height_1/line_path_1.size()<<std::endl;
-
-    std::cout<<"height_2/line_path_2: "<<height_2/line_path_2.size()<<std::endl;
-
     QVector3D centerTop(center.x(), center.y(), 0);
 
     int initSize = vec.size();
@@ -851,9 +865,107 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
         QVector3D p1(head_path[i_1].x(),head_path[i_1].y(), 0);
 
         genTriangle(vec,p0,p1,centerTop); // top
-
-
     }
+
+    // 缩放变换
+    auto Scale = [](QVector<QVector2D> &line_vector,float Scale_Ratio){
+        QVector<QVector2D> temp_vector;
+        for (int i = 0; i < line_vector.size(); i++) {
+            QVector2D temp = QVector2D(line_vector[i].x(), line_vector[i].y() * Scale_Ratio);
+            temp_vector.push_back(temp);
+        }
+        line_vector = temp_vector;
+    };
+
+    // 平移变换
+    auto  Translate = [](QVector<QVector2D> &line_vector,float Translate_Ratio){
+        QVector<QVector2D> temp_vector;
+        for (int i = 0; i < line_vector.size(); i++) {
+            QVector2D temp = QVector2D(line_vector[i].x(), line_vector[i].y() + Translate_Ratio);
+            temp_vector.push_back(temp);
+        }
+        line_vector = temp_vector;
+    };
+
+    float Scale_Ratio, Translate_Ratio;
+    // 记录最终的高度值,后面计算划分比例需要用到
+    float height;
+    QString str;
+    // 参照高的线段进行缩放变换
+    if(height_1 > height_2)
+    {
+        // 缩放 line_2
+        float Scale_Ratio = height_1/height_2;
+        Scale(line_path_2, Scale_Ratio);
+        height = height_1;
+    }
+    else
+    {
+        // 缩放 line_1
+        Scale_Ratio = height_2/height_1;
+        Scale(line_path_1, Scale_Ratio);
+        height = height_2;
+        str = "line_1";
+    }
+
+    if(abs((line_path_2[line_path_2.size()-1].y()-line_path_2[0].y()) - (line_path_1[line_path_1.size()-1].y()-line_path_1[0].y())) < 0.001)
+    {
+        std::cout<<"拉伸成功!"<<std::endl;
+    }
+
+    if(str == "line_1")
+    {
+        Translate_Ratio = line_path_2[0].y() - line_path_1[0].y();
+        Translate(line_path_1, Translate_Ratio);
+    }
+    else
+    {
+        Translate_Ratio = line_path_1[0].y() - line_path_2[0].y();
+        Translate(line_path_2, Translate_Ratio);
+    }
+
+    if( abs(line_path_1[0].y() - line_path_2[0].y()) < 0.001 && abs(line_path_1[line_path_1.size()-1].y() - line_path_2[line_path_2.size()-1].y()) < 0.001 )
+    {
+        std::cout<<"平移成功!"<<std::endl;
+    }
+
+    // 等分为 100 份
+    float Divide_Ratio = height / 100;
+
+    std::cout<<"Translate_Ratio: "<<Translate_Ratio<<std::endl;
+    std::cout<<"Divide_Ratio: "<<Divide_Ratio<<std::endl;
+
+    if(abs(line_path_1.end()->y() - line_path_1[0].y() + (99 * Divide_Ratio)) < 0.001)
+    {
+       std::cout<<"Divide success! "<<std::endl;
+    }
+
+    QVector<QVector2D> line1_vec, line2_vec, center_vec;
+
+    for(int i = 0; i < 100; i++)
+    {
+
+        for(auto point:line_path_1)
+        {
+            if(abs(point.y() - (line_path_1[0].y() + Divide_Ratio * i)) < 0.001)
+            {
+                line1_vec.push_back(QVector2D(point.x(), point.y()));
+                break;
+            }
+        }
+
+        for(auto point:line_path_2)
+        {
+            if(abs(point.y() - (line_path_2[0].y() + Divide_Ratio * i)) < 0.001)
+            {
+                line2_vec.push_back(QVector2D(point.x(), point.y()));
+                break;
+            }
+        }
+    }
+
+    std::cout<<"line1_vec.size: "<<line1_vec.size()<<std::endl;
+    std::cout<<"line2_vec.size: "<<line2_vec.size()<<std::endl;
 
     for(int i = initSize; i < vec.size(); i += 6){
         vec[i] += offset.x();
@@ -861,6 +973,50 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
         vec[i+2] += offset.z();
     }
 
+
+
+#if 0
+    // 将两边波浪线的高度补成一样!
+    QVector2D line1_first = line_path_1[0],line1_end = line_path_1[line_path_1.size()-1];
+    QVector2D line2_first = line_path_2[0],line2_end = line_path_2[line_path_2.size()-1];
+
+    // 随机数
+    std::random_device rd;  //Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+    std::uniform_real_distribution<float> dist_float();
+
+    // 比例
+    float Ratio_1 = height_1/line_path_1.size(),Ratio_2= height_2/line_path_2.size();
+    // 高度差
+    float  diff_first, diff_end;
+    // 需要补的点个数 = 高度差 / 比例
+    int num_first,num_end;
+    if(line1_first.y() < line2_first.y())
+    {
+        diff_first = line2_first.y() - line1_first.y();
+        num_first = diff_first/Ratio_1;
+        // 补line1的头
+    }
+    else
+    {
+        diff_first = line1_first.y() - line2_first.y();
+        num_first = diff_first/Ratio_2;
+        // 补line2的头
+    }
+
+    if(line1_end.y() > line2_end.y())
+    {
+        diff_end = line1_end.y() - line2_end.y();
+        num_end = diff_end / Ratio_1;
+        // 补line1的尾
+    }
+    else
+    {
+        diff_end = line2_end.y() - line1_end.y();
+        num_end = diff_end / Ratio_2;
+        // 补line2的尾
+    }
+#endif
 }
 
 // draw_arbitrary_line
