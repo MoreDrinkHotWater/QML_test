@@ -844,20 +844,15 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
 {
     std::cout<<"====================start====================="<<std::endl;
 
-    QVector2D min,max;
-    findMinMax(head_path, min,max);
-    QVector2D center((max.x() + min.x())/2, (max.y() + min.y())/2);
-
     // 高度比
     float heightRatio = mapEllipseToCircle(head_path);
 
+    QVector2D min,max;
+    findMinMax(head_path, min,max);
+
+    QVector2D center((max.x() + min.x())/2, (max.y() + min.y())/2);
+
     std::cout<<"center.x: "<<center.x()<<" center.y: "<<center.y()<<std::endl;
-
-    QVector3D centerTop(center.x(), center.y(), 0);
-
-    QVector3D centerBottom;
-
-    QVector<QVector2D> head_path_bottom;
 
     int initSize = vec.size();
 
@@ -926,46 +921,50 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
         std::cout<<"平移成功!"<<std::endl;
     }
 
+    std::cout<<"line_path_1[0].x: "<<line_path_1[0].x()<<std::endl;
     std::cout<<"line_path_1[0].y: "<<line_path_1[0].y()<<std::endl;
+    std::cout<<"line_path_2[0].x: "<<line_path_2[0].x()<<std::endl;
     std::cout<<"line_path_2[0].y: "<<line_path_2[0].y()<<std::endl;
 
+    std::cout<<"line_path_1[line_path_1.size()-1].x: "<<line_path_1[line_path_1.size()-1].x()<<std::endl;
     std::cout<<"line_path_1[line_path_1.size()-1].y: "<<line_path_1[line_path_1.size()-1].y()<<std::endl;
+    std::cout<<"line_path_2[line_path_2.size()-1].x: "<<line_path_2[line_path_2.size()-1].x()<<std::endl;
     std::cout<<"line_path_2[line_path_2.size()-1].y: "<<line_path_2[line_path_2.size()-1].y()<<std::endl;
 
-    //    int Divide_size = qMax(line_path_1.size(),line_path_2.size());
+//    int Divide_size = qMax(line_path_1.size(),line_path_2.size());
+    int Divide_size = 100;
 
     // 等分
-    float Divide_Ratio = height / 100;
+    float Divide_Ratio = height / Divide_size;
 
     std::cout<<"Translate_Ratio: "<<Translate_Ratio<<std::endl;
     std::cout<<"Divide_Ratio: "<<Divide_Ratio<<std::endl;
 
-    if(abs(line_path_1.end()->y() - line_path_1[0].y() + (99 * Divide_Ratio)) < 0.001)
+    if(abs(line_path_1.end()->y() - line_path_1[0].y() + ((Divide_size - 1) * Divide_Ratio)) < 0.01)
     {
         std::cout<<"Divide success! "<<std::endl;
     }
 
-
     QVector<QVector2D> line1_vec, line2_vec, center_vec;
 
-    for(int i = 0; i < 100; i++)
+    for(int i = 0; i < Divide_size; i++)
     {
 
-        for(auto point:line_path_1)
+        for(int j = 0; j < line_path_1.size(); j++)
         {
-            if(abs(point.y() - (line_path_1[0].y() - Divide_Ratio * i)) < 0.01)
+            if(abs(line_path_1[j].y() - (line_path_1[0].y() - Divide_Ratio * i)) < 0.01)
             {
-                line1_vec.push_back(QVector2D(point.x(), point.y()));
-                break;
+                line1_vec.push_back(QVector2D(line_path_1[j].x(), line_path_1[j].y()));
+                //                break;
             }
         }
 
-        for(auto point:line_path_2)
+        for(int j = 0; j < line_path_2.size(); j++)
         {
-            if(abs(point.y() - (line_path_2[0].y() - Divide_Ratio * i)) < 0.01)
+            if(abs(line_path_2[j].y() - (line_path_2[0].y() - Divide_Ratio * i)) < 0.01)
             {
-                line2_vec.push_back(QVector2D(point.x(), point.y()));
-                break;
+                line2_vec.push_back(QVector2D(line_path_2[j].x(), line_path_2[j].y()));
+                //                break;
             }
         }
     }
@@ -983,32 +982,64 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
 
     std::cout<<"center_vec.size: "<<center_vec.size()<<std::endl;
 
+    int flag_1 = 0, flag_2 = 0;
+
+    float proportion = center.x() - min.x();
+
+    QVector3D centerTop(center.x(), center.y(), 0);
+
+    QVector3D centerBottom;
+
+    QVector<QVector2D> head_path_bottom;
+
     for(int i = 0; i < head_path.size(); i++){
 
         int i_1 = (i + 1)%head_path.size();
 
-        QVector3D p0(head_path[i].x(),head_path[i].y(), 0);
-        QVector3D p1(head_path[i_1].x(),head_path[i_1].y(), 0);
-
-        genTriangle(vec,p0,p1,centerTop); // top
-
         QVector3D temp1,temp3,temp2,temp4;
         float  temp_proportion,temp_proportion_1;
 
-        float proportion = center.x() - min.x();
-
-        for(int j = 0; j < size - 1; j++){
-
-            if(head_path[i].x() > center_vec[j].x())
+        for(int j = 0; j < size - 1; j++)
+        {
+            if(abs(head_path[i].x() - min.x()) < 0.1  || (head_path[i].x() == center_vec[j].x() && abs(head_path[i].y() - max.y()) < 0.1))
             {
                 temp_proportion =  abs(center_vec[j].x() - line1_vec[j].x()) / proportion;
                 temp_proportion_1 =  abs(center_vec[j+1].x() - line1_vec[j+1].x()) / proportion;
+
+                flag_1+=1;
             }
-            else
+            else if(abs(head_path[i].x() - max.x()) < 0.1 || (head_path[i].x() == center_vec[j].x() && abs(head_path[i].y() - min.y()) < 0.1))
             {
                 temp_proportion =  abs(center_vec[j].x() - line2_vec[j].x()) / proportion;
                 temp_proportion_1 =  abs(center_vec[j+1].x() - line2_vec[j+1].x()) / proportion;
+
+                flag_2+=1;
             }
+            else
+            {
+                temp_proportion =  (abs(line1_vec[j].x() - line2_vec[j].x()) / 2) / proportion;
+                temp_proportion_1 =  (abs(line1_vec[j+1].x() - line2_vec[j+1].x()) / 2) / proportion;
+            }
+
+            if(j == 0)
+            {
+                QVector3D p0((head_path[i].x() - center_vec[j].x()) * temp_proportion + center_vec[j].x(), (head_path[i].y() - center_vec[j].y()) * temp_proportion + center_vec[j].y(), 0);
+                QVector3D p1((head_path[i_1].x() - center_vec[j].x()) * temp_proportion + center_vec[j].x(), (head_path[i_1].y() - center_vec[j].y()) * temp_proportion + center_vec[j].y(), 0);
+
+                genTriangle(vec,p0,p1,centerTop); // top
+            }
+
+            //            if(head_path[i].x() < center_vec[j].x())
+            //            {
+            //                temp_proportion =  abs(center_vec[j].x() - line1_vec[j].x()) / proportion;
+            //                temp_proportion_1 =  abs(center_vec[j+1].x() - line1_vec[j+1].x()) / proportion;
+
+            //            }
+            //            else
+            //            {
+            //                temp_proportion =  abs(center_vec[j].x() - line2_vec[j].x()) / proportion;
+            //                temp_proportion_1 =  abs(center_vec[j+1].x() - line2_vec[j+1].x()) / proportion;
+            //            }
 
             float z = (j) * (height / size) * heightRatio;
             temp1 = QVector3D((head_path[i].x() - center_vec[j].x()) * temp_proportion + center_vec[j].x(), (head_path[i].y() - center_vec[j].y()) * temp_proportion + center_vec[j].y(), z);
@@ -1052,6 +1083,9 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
         genTriangle(vec,temp4,temp2,centerBottom); //bottom
 
     }
+
+    std::cout<<"flag_1: "<<flag_1<<std::endl;
+    std::cout<<"flag_2: "<<flag_2<<std::endl;
 
     for(int i = initSize; i < vec.size(); i += 6){
         vec[i] += offset.x();
@@ -1106,14 +1140,14 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
 
 // draw_arbitrary_line
 void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVector<QVector2D> line_path, float height,QVector3D offset){
+    // 高度比
+    float heightRatio = mapEllipseToCircle(head_path);
+
     // 中心
     QVector2D min,max;
     findMinMax(head_path, min,max);
 
     QVector2D center((max.x() + min.x())/2, (max.y() + min.y())/2);
-
-    // 高度比
-    float heightRatio = mapEllipseToCircle(head_path);
 
     float proportion = center.x() - min.x();
 
