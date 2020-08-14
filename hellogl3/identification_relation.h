@@ -23,6 +23,8 @@ public:
 
     void find_wavyLineNode(QVector<float> vec);
 
+    void find_cornerNode(QVector<float> vec);
+
     float height_1;
     float height_2;
 
@@ -38,9 +40,12 @@ private:
     Common *common;
     // 记录结点的坐标值
     QVector2D cylinder_left,cylinder_right;
+    QVector2D cylinder_lower_left,cylinder_upper_right;
+
     QVector2D straightLine_first, straightLine_end;
     QVector2D curveLine_first, curveLine_end;
     QVector2D wavyLine_first, wavyLine_end;
+    QVector2D corner_first, corner_end;
 
 };
 

@@ -24,6 +24,7 @@ SOURCES += \
     logo.cpp \
     main.cpp \
     mainwindow.cpp \
+    recognizecorner.cpp \
     recognizecube.cpp \
     recognizecylinder.cpp \
     window.cpp
@@ -36,6 +37,7 @@ HEADERS += \
     identification_type.h \
     logo.h \
     mainwindow.h \
+    recognizecorner.h \
     recognizecube.h \
     recognizecylinder.h \
     window.h

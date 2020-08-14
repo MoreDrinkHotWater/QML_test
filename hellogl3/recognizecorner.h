@@ -1,5 +1,5 @@
-#ifndef RECOGNIZECYLINDER_H
-#define RECOGNIZECYLINDER_H
+#ifndef RECONGNIZECORNER_H
+#define RECONGNIZECORNER_H
 
 #include <QStack>
 
@@ -7,18 +7,16 @@ class Identification_relation;
 
 class Identification_type;
 
-class Recognizecylinder
+class Recognizecorner
 {
 public:
-    Recognizecylinder();
+    Recognizecorner();
 
-    bool recognize_cylinder_shape(QStack<QVector<float>> draw_coorstack);
+    bool recognize_corner_shape(QStack<QVector<float>> draw_coorstack);
 
     QStack<QVector<float>> draw_coorstack;
 
     float radius;
-    float height_1;
-    float height_2;
 
     // 记录类型
     QString str_1, str_2;
@@ -30,9 +28,10 @@ public:
     QVector<QString> type_vec;
 
 private:
-    Identification_relation *identification_relation;
-    Identification_type *identification_type;
 
+    Identification_relation *identification_relation;
+
+    Identification_type *identification_type;
 };
 
-#endif // RECOGNIZECYLINDER_H
+#endif // RECONGNIZECORNER_H

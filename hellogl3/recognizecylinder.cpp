@@ -37,7 +37,7 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
         std::cout<<"is_wavyLine: "<<is_wavyLine<<std::endl;
         std::cout<<"is_curveLine: "<<is_curveLine<<std::endl;
 
-
+        // 保存类型和关系的数组
         QVector<QString> row_vec(draw_coorstack.size());
 
         if(i == draw_coorstack.size() - 1)

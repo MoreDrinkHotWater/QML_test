@@ -172,8 +172,35 @@ bool Identification_type::recognize_cylinder(QVector<float> vec)
         // 是椭圆，而且相连
         if(length < 0.1)
         {
-            // 默认长半轴为半径
-            radius = (maxX-minX)/2;
+
+            QVector2D circle_left = QVector2D(minX,(minX+maxX)/2);
+
+            QVector2D circle_right = QVector2D(maxX,(minX+maxX)/2);
+
+            int flag = 0;
+            for(int i = 0; i < head_circle.size()-1; i++)
+            {
+
+                if(((circle_left.x() == head_circle[i].x()) && (circle_left.y() == head_circle[i].y()))
+                        || ((circle_right.x() == head_circle[i].x()) && (circle_right.y() == head_circle[i].y())))
+
+                {
+                    flag+=1;
+                }
+            }
+
+            std::cout<<"============flag: "<<flag<<std::endl;
+
+            if(flag == 2)
+            {
+                // 默认长半轴为半径 (椭圆近似平行于X轴)
+                radius = (maxX-minX)/2;
+            }
+            else
+            {
+                // 椭圆具有倾斜角度
+                radius = sqrt(pow(maxY-minY,2) + pow(maxX-minX,2))/2;
+            }
 
             return true;
         }
@@ -410,3 +437,23 @@ bool Identification_type::recognize_wavyLine(QVector<float> vec)
     else
         return false;
 }
+
+bool Identification_type::recognize_corner(QVector<float> vec)
+{
+    // line
+    QVector<QVector2D> line_vector;
+
+    for (int var = 0; var < vec.size(); var+=2) {
+        QVector2D temp(vec[var],vec[var+1]);
+        line_vector.push_back(temp);
+    }
+
+
+    /* 二. 基于距离变换的方法
+
+    通过定位距离物体边界最远的一组点来确定物体的中心线，通常采用欧式距离，可以理解为一系列最大内切球的球心构成了物体的中心线，有代表性的是基于边界的距离变换和基于源点的距离变换*/
+
+
+    return true;
+}
+

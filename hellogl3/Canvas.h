@@ -6,6 +6,8 @@
 #include <QPaintEvent>
 #include <QStack>
 
+#include <QPainter>
+
 #include <QPushButton>
 
 
@@ -27,8 +29,6 @@ private:
     void drawPoint(QPainter &painter);
 
     void drawLines(QPainter &painter);
-
-
 
 public:
     QVector<float> draw_lines_vector;

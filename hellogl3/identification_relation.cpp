@@ -43,12 +43,21 @@ void Identification_relation::find_cylinderNode(QVector<float> vec)
             minY = it->y();
     }
 
+
+
     // 记录椭圆的左右结点
     cylinder_left = QVector2D(minX, (maxY + minY) / 2);
     cylinder_right = QVector2D(maxX, (maxY + minY) / 2);
 
-    std::cout<<"cylinder_left.x: "<<cylinder_left.x()<<std::endl;
-    std::cout<<"cylinder_left.y: "<<cylinder_left.y()<<std::endl;
+    cylinder_lower_left = QVector2D(minX, minY);
+    cylinder_upper_right = QVector2D(maxX, maxY);
+
+
+    std::cout<<"cylinder_lower_left.x: "<<cylinder_lower_left.x()<<std::endl;
+    std::cout<<"cylinder_lower_left.y: "<<cylinder_lower_left.y()<<std::endl;
+
+    std::cout<<"cylinder_upper_right.x: "<<cylinder_upper_right.x()<<std::endl;
+    std::cout<<"cylinder_upper_right.y: "<<cylinder_upper_right.y()<<std::endl;
 }
 
 void Identification_relation::find_straightLineNode(QVector<float> vec)
@@ -80,6 +89,19 @@ void Identification_relation::find_wavyLineNode(QVector<float> vec)
 
     std::cout<<"wavyLine_first.x: "<<wavyLine_first.x()<<std::endl;
     std::cout<<"wavyLine_end.y: "<<wavyLine_end.y()<<std::endl;
+}
+
+void Identification_relation::find_cornerNode(QVector<float> vec)
+{
+    // 记录琦角首尾的结点
+    corner_first = QVector2D(vec[0],vec[1]);
+    corner_end = QVector2D(vec[vec.size()-2],vec[vec.size()-1]);
+
+    std::cout<<"corner_first.x: "<<corner_first.x()<<std::endl;
+    std::cout<<"corner_first.y: "<<corner_first.y()<<std::endl;
+
+    std::cout<<"corner_end.x: "<<corner_end.x()<<std::endl;
+    std::cout<<"corner_end.y: "<<corner_end.y()<<std::endl;
 }
 
 // 判断平行
@@ -149,7 +171,15 @@ bool Identification_relation::join(QString str_1, QString str_2, QVector<float> 
         float end_first = sqrt(pow(end_1.x() - first_2.x(),2) + pow(end_1.y() - first_2.y(),2));
         float end_end = sqrt(pow(end_1.x() - end_2.x(),2) + pow(end_1.y() - end_2.y(),2));
 
-        if(abs(first_first-0)<0.2 || abs(first_end-0)<0.2 || abs(end_first-0)<0.2 || abs(end_end-0)<0.2)
+        std::cout<<"abs(first_first-0): "<<abs(first_first-0)<<std::endl;
+
+        std::cout<<"abs(end_end-0): "<<abs(end_end-0)<<std::endl;
+
+        std::cout<<"abs(first_end-0): "<<abs(first_end-0)<<std::endl;
+
+        std::cout<<"abs(end_first-0): "<<abs(end_first-0)<<std::endl;
+
+        if(abs(first_first-0)<0.3 || abs(first_end-0)<0.3 || abs(end_first-0)<0.3 || abs(end_end-0)<0.3)
             return true;
         else
             return false;
@@ -224,6 +254,21 @@ bool Identification_relation::join(QString str_1, QString str_2, QVector<float> 
         find_cylinderNode(_vec2);
 
         return jundge(curveLine_first, curveLine_end, wavyLine_first, wavyLine_end);
+    }
+    // 椭圆和琦角
+    else if(str_1 == "cylinder" && str_2 == "corner")
+    {
+        find_cylinderNode(_vec1);
+        find_cornerNode(_vec2);
+
+        return jundge(cylinder_lower_left, cylinder_upper_right, corner_first, corner_end);
+    }
+    else if(str_1 == "corner" && str_2 == "cylinder")
+    {
+        find_cornerNode(_vec1);
+        find_cylinderNode(_vec2);
+
+        return jundge(cylinder_lower_left, cylinder_upper_right, corner_first, corner_end);
     }
     else
         return false;

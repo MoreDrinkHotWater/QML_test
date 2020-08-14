@@ -51,6 +51,7 @@
 #include "glwidget.h"
 #include "recognizecube.h"
 #include "recognizecylinder.h"
+#include "recognizecorner.h"
 #include "mainwindow.h"
 
 #include <QMouseEvent>
@@ -81,6 +82,7 @@ GLWidget::GLWidget(QWidget *parent)
       recognizeCube(new RecognizeCube()),
       recognize_cube(false),
       recognizecylinder(new Recognizecylinder()),
+      recognizecorner(new Recognizecorner()),
       off_var(0)
 {
     m_core = QSurfaceFormat::defaultFormat().profile() == QSurfaceFormat::CoreProfile;
@@ -684,6 +686,7 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
 
     qDebug()<<"draw_coorstack size: "<< draw_coorstack.size();
 
+#if 0
     // 识别椭圆
     if(recognizecylinder->recognize_cylinder_shape(draw_coorstack))
     {
@@ -790,6 +793,16 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
 
         update();
     }
+
+#endif
+
+    // 识别琦角
+    if(recognizecorner->recognize_corner_shape(draw_coorstack))
+    {
+        this->radius = recognizecorner->radius;
+
+        std::cout<<"radius: "<<radius<<std::endl;
+    }
 }
 
 // 三角化
@@ -844,7 +857,7 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
 {
     std::cout<<"====================start====================="<<std::endl;
 
-    // 高度比
+    // 高度比 (左右线段的 Z 值偏移角度)
     float heightRatio = mapEllipseToCircle(head_path);
 
     QVector2D min,max;
@@ -931,7 +944,6 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
     std::cout<<"line_path_2[line_path_2.size()-1].x: "<<line_path_2[line_path_2.size()-1].x()<<std::endl;
     std::cout<<"line_path_2[line_path_2.size()-1].y: "<<line_path_2[line_path_2.size()-1].y()<<std::endl;
 
-//    int Divide_size = qMax(line_path_1.size(),line_path_2.size());
     int Divide_size = 100;
 
     // 等分
@@ -955,7 +967,7 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
             if(abs(line_path_1[j].y() - (line_path_1[0].y() - Divide_Ratio * i)) < 0.01)
             {
                 line1_vec.push_back(QVector2D(line_path_1[j].x(), line_path_1[j].y()));
-                //                break;
+                break;
             }
         }
 
@@ -964,7 +976,7 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
             if(abs(line_path_2[j].y() - (line_path_2[0].y() - Divide_Ratio * i)) < 0.01)
             {
                 line2_vec.push_back(QVector2D(line_path_2[j].x(), line_path_2[j].y()));
-                //                break;
+                break;
             }
         }
     }
@@ -984,6 +996,7 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
 
     int flag_1 = 0, flag_2 = 0;
 
+    // R0: 上椭圆的半径
     float proportion = center.x() - min.x();
 
     QVector3D centerTop(center.x(), center.y(), 0);
@@ -991,6 +1004,7 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
     QVector3D centerBottom;
 
     QVector<QVector2D> head_path_bottom;
+
 
     for(int i = 0; i < head_path.size(); i++){
 
@@ -1001,53 +1015,27 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
 
         for(int j = 0; j < size - 1; j++)
         {
-            if(abs(head_path[i].x() - min.x()) < 0.1  || (head_path[i].x() == center_vec[j].x() && abs(head_path[i].y() - max.y()) < 0.1))
-            {
-                temp_proportion =  abs(center_vec[j].x() - line1_vec[j].x()) / proportion;
-                temp_proportion_1 =  abs(center_vec[j+1].x() - line1_vec[j+1].x()) / proportion;
+            // R1: 要缩放的椭圆半径
+            // 缩放比例 R = R1/R0
+            temp_proportion =  abs(center_vec[j].x() - line1_vec[j].x()) / proportion;
+            temp_proportion_1 =  abs(center_vec[j+1].x() - line1_vec[j+1].x()) / proportion;
 
-                flag_1+=1;
-            }
-            else if(abs(head_path[i].x() - max.x()) < 0.1 || (head_path[i].x() == center_vec[j].x() && abs(head_path[i].y() - min.y()) < 0.1))
-            {
-                temp_proportion =  abs(center_vec[j].x() - line2_vec[j].x()) / proportion;
-                temp_proportion_1 =  abs(center_vec[j+1].x() - line2_vec[j+1].x()) / proportion;
-
-                flag_2+=1;
-            }
-            else
-            {
-                temp_proportion =  (abs(line1_vec[j].x() - line2_vec[j].x()) / 2) / proportion;
-                temp_proportion_1 =  (abs(line1_vec[j+1].x() - line2_vec[j+1].x()) / 2) / proportion;
-            }
-
+            //  x轴作一个平移操作, y和z轴保持不变.
             if(j == 0)
             {
-                QVector3D p0((head_path[i].x() - center_vec[j].x()) * temp_proportion + center_vec[j].x(), (head_path[i].y() - center_vec[j].y()) * temp_proportion + center_vec[j].y(), 0);
-                QVector3D p1((head_path[i_1].x() - center_vec[j].x()) * temp_proportion + center_vec[j].x(), (head_path[i_1].y() - center_vec[j].y()) * temp_proportion + center_vec[j].y(), 0);
+                QVector3D p0((head_path[i].x() - center_vec[j].x()) * temp_proportion, (head_path[i].y() - center_vec[j].y()) * temp_proportion + center_vec[j].y(), 0);
+                QVector3D p1((head_path[i_1].x() - center_vec[j].x()) * temp_proportion , (head_path[i_1].y() - center_vec[j].y()) * temp_proportion + center_vec[j].y(), 0);
 
                 genTriangle(vec,p0,p1,centerTop); // top
             }
 
-            //            if(head_path[i].x() < center_vec[j].x())
-            //            {
-            //                temp_proportion =  abs(center_vec[j].x() - line1_vec[j].x()) / proportion;
-            //                temp_proportion_1 =  abs(center_vec[j+1].x() - line1_vec[j+1].x()) / proportion;
-
-            //            }
-            //            else
-            //            {
-            //                temp_proportion =  abs(center_vec[j].x() - line2_vec[j].x()) / proportion;
-            //                temp_proportion_1 =  abs(center_vec[j+1].x() - line2_vec[j+1].x()) / proportion;
-            //            }
-
             float z = (j) * (height / size) * heightRatio;
-            temp1 = QVector3D((head_path[i].x() - center_vec[j].x()) * temp_proportion + center_vec[j].x(), (head_path[i].y() - center_vec[j].y()) * temp_proportion + center_vec[j].y(), z);
-            temp3 = QVector3D((head_path[i_1].x() - center_vec[j].x()) * temp_proportion + center_vec[j].x(), (head_path[i_1].y() - center_vec[j].y()) * temp_proportion + center_vec[j].y(), z);
+            temp1 = QVector3D((head_path[i].x() - center_vec[j].x()) * temp_proportion, (head_path[i].y() - center_vec[j].y()) * temp_proportion + center_vec[j].y(), z);
+            temp3 = QVector3D((head_path[i_1].x() - center_vec[j].x()) * temp_proportion, (head_path[i_1].y() - center_vec[j].y()) * temp_proportion + center_vec[j].y(), z);
 
             z = (j+1) * (height / size) * heightRatio;
-            temp2 = QVector3D((head_path[i].x() - center_vec[j+1].x()) * temp_proportion_1 + center_vec[j+1].x(), (head_path[i].y() - center_vec[j+1].y()) * temp_proportion_1 + center_vec[j+1].y(), z);
-            temp4 = QVector3D((head_path[i_1].x() - center_vec[j+1].x()) * temp_proportion_1 + center_vec[j+1].x(), (head_path[i_1].y() - center_vec[j+1].y()) * temp_proportion_1 + center_vec[j+1].y(), z);
+            temp2 = QVector3D((head_path[i].x() - center_vec[j+1].x()) * temp_proportion_1, (head_path[i].y() - center_vec[j+1].y()) * temp_proportion_1 + center_vec[j+1].y(), z);
+            temp4 = QVector3D((head_path[i_1].x() - center_vec[j+1].x()) * temp_proportion_1, (head_path[i_1].y() - center_vec[j+1].y()) * temp_proportion_1 + center_vec[j+1].y(), z);
 
             genTriangle(vec,temp3,temp1,temp4); //竖条
             genTriangle(vec,temp1,temp2,temp4);
@@ -1057,7 +1045,7 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
             {
                 for(int i = 0; i < head_path.size(); i++)
                 {
-                    QVector2D temp_vector((head_path[i].x() - center_vec[j+1].x()) * temp_proportion_1 + center_vec[j+1].x(), (head_path[i].y() - center_vec[j+1].y()) * temp_proportion_1 + center_vec[j+1].y());
+                    QVector2D temp_vector((head_path[i].x() - center_vec[j+1].x()) * temp_proportion_1 , (head_path[i].y() - center_vec[j+1].y()) * temp_proportion_1 + center_vec[j+1].y());
                     head_path_bottom.push_back(temp_vector);
                 }
 
@@ -1092,7 +1080,6 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
         vec[i+1] += offset.y();
         vec[i+2] += offset.z();
     }
-
 
 #if 0
     // 将两边波浪线的高度补成一样!
@@ -1166,10 +1153,10 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
 
         int i_1 = (i + 1)%head_path.size();
 
-        QVector3D p0(head_path[i].x(),head_path[i].y(), 0);
-        QVector3D p1(head_path[i_1].x(),head_path[i_1].y(), 0);
+//        QVector3D p0(head_path[i].x(),head_path[i].y(), 0);
+//        QVector3D p1(head_path[i_1].x(),head_path[i_1].y(), 0);
 
-        genTriangle(vec,p0,p1,centerTop); // top
+//        genTriangle(vec,p0,p1,centerTop); // top
 
         QVector3D temp1,temp3,temp2,temp4;
         float  temp_proportion,temp_proportion_1;
@@ -1177,6 +1164,7 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
         for(int j = 0; j < line_path.size() - 1; j++){
 
             // 我们最理想的情况是： line_path[0].x() == minX, 当用户画的不符合时，这里会有 bug
+            // 缩放比例
             temp_proportion =  (center.x() - line_path[j].x()) / proportion;
             temp_proportion_1 =  (center.x() - line_path[j+1].x()) / proportion;
 
@@ -1190,6 +1178,14 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
 
             genTriangle(vec,temp3,temp1,temp4); //竖条
             genTriangle(vec,temp1,temp2,temp4);
+
+            if(j == 0)
+            {
+                QVector3D p0((head_path[i].x() - center.x()) * temp_proportion + center.x(), (head_path[i].y() - center.y()) * temp_proportion + center.y(), 0);
+                QVector3D p1((head_path[i_1].x() - center.x()) * temp_proportion + center.x(), (head_path[i_1].y() - center.y()) * temp_proportion + center.y(), 0);
+
+                genTriangle(vec,p0,p1,centerTop); // top
+            }
 
             // 记录底的中心坐标
             if(j == line_path.size()-2)

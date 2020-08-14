@@ -1,4 +1,4 @@
-#include "Canvas.h"
+﻿#include "Canvas.h"
 #include "glwidget.h"
 
 #include <QDebug>
@@ -11,21 +11,47 @@ Canvas::Canvas(QWidget *parent):
 {
     // keyPressEvent 函数没有响应键盘事件的解决方法
     setFocusPolicy(Qt::ClickFocus);
+
 }
 
 
 void Canvas::paintEvent(QPaintEvent *event){
     //        qDebug() << "================================paintEvent" << draw_lines_vector.size();
+
     QPainter painter(this);
 
-    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHint(QPainter::Antialiasing,true);
     painter.fillRect(event->rect(), QBrush(Qt::blue));
+
 
     if(draw_lines_vector.size() >= 2)
         drawPoint(painter);
 
-
     drawLines(painter);
+
+
+//    QPainter p;
+//    QPixmap map(108*2, 192*2-100);
+//    map.fill(Qt::transparent);
+//    p.begin(&map);
+
+//    p.setPen(QPen(QColor("red")));
+
+//    if(draw_stack.size() > 0)
+//        {
+//            for (int i = 0; i < draw_stack.size(); i++) {
+//                QPointF points[draw_stack[i].size()];
+//                for (int j = 0; j < draw_stack[i].size(); j+=2) {
+//                    points->setX(draw_stack[i][j]);
+//                    points->setY(draw_stack[i][j+1]);
+//                }
+
+//                p.drawPolyline(points,draw_stack[i].size());
+//            }
+//        }
+
+//    p.end();
+//    map.save("/home/damon/Desktop/image/image.png", "PNG");
 
 }
 

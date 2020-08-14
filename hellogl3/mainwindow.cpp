@@ -2,6 +2,8 @@
 #include "ui_mainwindow.h"
 #include "glwidget.h"
 
+#include <QPainter>
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       ui(new Ui::MainWindow)
@@ -18,6 +20,7 @@ void MainWindow::on_pushButton_clicked()
 {
 
     ui->glwidget->glWidget->reviceStackDataSlot(ui->canvas->draw_stack);
+
 
     // 用于 test
 //    ui->canvas->draw_stack.clear();

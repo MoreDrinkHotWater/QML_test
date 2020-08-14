@@ -19,6 +19,8 @@ public:
     bool recognize_curveLine(QVector<float> vec);
     bool recognize_wavyLine(QVector<float> vec);
 
+    bool recognize_corner(QVector<float> vec);
+
     float radius;
 
     // 临时需要用的变量

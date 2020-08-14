@@ -67,6 +67,8 @@ class RecognizeCube;
 
 class Recognizecylinder;
 
+class Recognizecorner;
+
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
 class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
@@ -182,6 +184,8 @@ private:
 
     // 识别椭圆
     Recognizecylinder *recognizecylinder;
+
+    Recognizecorner *recognizecorner;
 
     // 偏移值
     float off_var;
