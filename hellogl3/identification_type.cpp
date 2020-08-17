@@ -171,27 +171,67 @@ bool Identification_type::recognize_cylinder(QVector<float> vec)
         float length = sqrt(pow(head_circle[0].x() - head_circle[head_circle.size()-1].x(),2) + pow(head_circle[0].y() - head_circle[head_circle.size()-1].y(),2));
         // 是椭圆，而且相连
         if(length < 0.1)
-        {
+        {   
+            // 随机取20个点
+            QVector<int> arb_vec;
+            for(int i = 0; i < 50; i++)
+            {
+                int arb = dist_int(gen);
+                arb_vec.push_back(arb);
+            }
 
-            QVector2D circle_left = QVector2D(minX,(minX+maxX)/2);
-
-            QVector2D circle_right = QVector2D(maxX,(minX+maxX)/2);
+            std::sort(arb_vec.begin(), arb_vec.end());
 
             int flag = 0;
-            for(int i = 0; i < head_circle.size()-1; i++)
+
+            for(int i = 0; i < arb_vec.size() - 1; i++)
             {
+                float x = 0, y = 0;
 
-                if(((circle_left.x() == head_circle[i].x()) && (circle_left.y() == head_circle[i].y()))
-                        || ((circle_right.x() == head_circle[i].x()) && (circle_right.y() == head_circle[i].y())))
+                int num = 0;
 
+                for(auto it : head_circle)
                 {
-                    flag+=1;
+                    if(it.x() == head_circle[arb_vec[i]].x())
+                    {
+                        num += 1;
+                    }
+                }
+                std::cout<<"i: "<<i<<std::endl;
+                std::cout<<"num: "<<num<<std::endl;
+
+                for(auto it : head_circle)
+                {
+                    if(it.x() == head_circle[arb_vec[i]].x())
+                    {
+
+                        if(x == 0 && y == 0)
+                        {
+                            x = it.x();
+                            y = it.y();
+                        }
+                        else
+                            if(abs(abs(y - (minY + maxY)/2) - abs(it.y() - (minY + maxY)/2)) < 0.001 && x == it.x())
+                            {
+                                std::cout<<"i: "<<i<<std::endl;
+
+                                std::cout<<"x: "<<x<<std::endl;
+                                std::cout<<"y: "<<y<<std::endl;
+
+                                std::cout<<"it->x: "<<it.x()<<std::endl;
+                                std::cout<<"it->y: "<<it.y()<<std::endl;
+
+                                flag += 1;
+                                x = 0;
+                                y = 0;
+                            }
+                    }
                 }
             }
 
             std::cout<<"============flag: "<<flag<<std::endl;
 
-            if(flag == 2)
+            if(flag >= 2)
             {
                 // 默认长半轴为半径 (椭圆近似平行于X轴)
                 radius = (maxX-minX)/2;

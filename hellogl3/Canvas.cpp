@@ -5,6 +5,7 @@
 #include <QPainter>
 #include <QPushButton>
 #include <iostream>
+#include <math.h>
 
 Canvas::Canvas(QWidget *parent):
     QWidget(parent)
@@ -29,6 +30,10 @@ void Canvas::paintEvent(QPaintEvent *event){
 
     drawLines(painter);
 
+    if(draw_stack.size() == 2)
+    {
+        draw_centerLine(painter);
+    }
 
 //    QPainter p;
 //    QPixmap map(108*2, 192*2-100);
@@ -140,7 +145,81 @@ void Canvas::drawLines(QPainter &painter)
     painter.drawLines(temp_vector);
 
     update();
+}
 
+void Canvas::draw_centerLine(QPainter &painter)
+{
+    painter.setPen(Qt::green);
+
+    QVector<QVector2D> head_circle, corner_line;
+    for (int i = 0; i < draw_stack[0].size() - 1; i+=2){
+
+        QVector2D point = QVector2D(draw_stack[0][i], draw_stack[0][i+1]);
+
+        head_circle.push_back(point);
+    }
+
+    float maxX = head_circle[0].x(),minX = maxX,  maxY = head_circle[0].y(), minY = maxY;
+    for(auto it = head_circle.begin(); it != head_circle.end(); it++)
+    {
+        maxX = qMax(maxX,it->x());
+        minX = qMin(minX,it->x());
+        maxY = qMax(maxY,it->y());
+        minY = qMin(minY,it->y());
+
+    }
+
+    QVector2D min = QVector2D(minX,minY);
+    QVector2D max = QVector2D(maxX,maxY);
+
+    QVector<QLine> temp_vector;
+
+    // 斜椭圆
+//    QLine temp_line(max.x(), min.y(), (min.x() + max.x())/2, (min.y() + max.y())/2);
+
+    // 平椭圆
+    QLine temp_line(max.x(), (min.y() + max.y())/2, (min.x() + max.x())/2, (min.y() + max.y())/2);
+
+    temp_vector.push_back(temp_line);
+
+    // 琦角的线
+    float tolal_length = 0;
+    for (int i = 0; i < draw_stack[1].size() - 1; i+=2){
+
+        QVector2D point = QVector2D(draw_stack[1][i], draw_stack[1][i+1]);
+
+        corner_line.push_back(point);
+    }
+
+    for (int i = 0; i < corner_line.size() ; i++) {
+        int i_1 = (i+1)%corner_line.size();
+        tolal_length += sqrt(pow(corner_line[i_1].x() - corner_line[i].x(),2) + pow(corner_line[i_1].y() - corner_line[i].y(),2));
+    }
+
+    float height = tolal_length / 2;
+
+    float step =  height / (corner_line.size()/2);
+
+    QPoint p1 = QPoint((min.x() + max.x())/2, (min.y() + max.y())/2);
+    QPoint p2 = QPoint(max.x(), (min.y() + max.y())/2);
+
+    // 向量 P1_p2
+    QPoint p1_p2 = QPoint(p2.x() - p1.x(), p2.y() - p1.y());
+
+    // 向量 P1_p2 的垂直向量
+    QPoint p1_p3 = QPoint(p2.y() - p1.y(), -(p2.x() - p1.x()));
+
+    QPoint p3 = QPoint((min.x() + max.x())/2 + (p2.y() - p1.y()), ((min.y() + max.y())/2 - (p2.x() - p1.x())) / step );
+
+    temp_vector.push_back(QLine(p1,p3));
+
+//    for (int i = 0; i < corner_line.size()/2; i++) {
+
+//    }
+
+    painter.drawLines(temp_vector);
+
+    update();
 }
 
 void Canvas::keyPressEvent(QKeyEvent *event)

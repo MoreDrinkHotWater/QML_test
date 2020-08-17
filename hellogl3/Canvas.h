@@ -30,6 +30,8 @@ private:
 
     void drawLines(QPainter &painter);
 
+    void draw_centerLine(QPainter &painter);
+
 public:
     QVector<float> draw_lines_vector;
 

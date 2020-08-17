@@ -26,31 +26,24 @@ void Identification_relation::find_cylinderNode(QVector<float> vec)
         head_circle.push_back(temp);
     }
 
-    float maxX = head_circle[0].x(), minX = maxX, maxY = head_circle[0].y(), minY = maxY;
-
+    float maxX = head_circle[0].x(),minX = maxX,  maxY = head_circle[0].y(), minY = maxY;
     for(auto it = head_circle.begin(); it != head_circle.end(); it++)
     {
-        if(it ->x() > maxX)
-            maxX = it->x();
+        maxX = qMax(maxX,it->x());
+        minX = qMin(minX,it->x());
+        maxY = qMax(maxY,it->y());
+        minY = qMin(minY,it->y());
 
-        if(it ->x() < minX)
-            minX = it->x();
-
-        if(it ->y() > maxY)
-            maxY = it->y();
-
-        if(it ->y() < minY)
-            minY = it->y();
     }
-
-
 
     // 记录椭圆的左右结点
     cylinder_left = QVector2D(minX, (maxY + minY) / 2);
     cylinder_right = QVector2D(maxX, (maxY + minY) / 2);
 
-    cylinder_lower_left = QVector2D(minX, minY);
-    cylinder_upper_right = QVector2D(maxX, maxY);
+
+    // 测试数据时,发现这里需要颠倒 maxY 和 minY才不会有问题
+    cylinder_lower_left = QVector2D(minX, maxY);
+    cylinder_upper_right = QVector2D(maxX, minY);
 
 
     std::cout<<"cylinder_lower_left.x: "<<cylinder_lower_left.x()<<std::endl;

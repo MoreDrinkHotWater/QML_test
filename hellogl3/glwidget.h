@@ -130,6 +130,7 @@ private:
     void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path,float z,QVector3D offset);
     void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVector<QVector2D> line_path, float height,QVector3D offset);
     void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVector<QVector2D> line_path_1, QVector<QVector2D> line_path_2, float height_1, float height_2, QVector3D offset);
+    void genCylinder(QVector<float> &vec,float r,QVector<QVector2D> head_path, QVector<QVector2D> line_path, QVector3D offset);
 
     bool m_core;
     int m_xRot;
