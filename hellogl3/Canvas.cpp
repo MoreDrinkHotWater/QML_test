@@ -15,7 +15,6 @@ Canvas::Canvas(QWidget *parent):
 
 }
 
-
 void Canvas::paintEvent(QPaintEvent *event){
     //        qDebug() << "================================paintEvent" << draw_lines_vector.size();
 
@@ -178,9 +177,9 @@ void Canvas::draw_centerLine(QPainter &painter)
 //    QLine temp_line(max.x(), min.y(), (min.x() + max.x())/2, (min.y() + max.y())/2);
 
     // 平椭圆
-    QLine temp_line(max.x(), (min.y() + max.y())/2, (min.x() + max.x())/2, (min.y() + max.y())/2);
+//    QLine temp_line(max.x(), (min.y() + max.y())/2, (min.x() + max.x())/2, (min.y() + max.y())/2);
 
-    temp_vector.push_back(temp_line);
+//    temp_vector.push_back(temp_line);
 
     // 琦角的线
     float tolal_length = 0;
@@ -191,31 +190,79 @@ void Canvas::draw_centerLine(QPainter &painter)
         corner_line.push_back(point);
     }
 
-    for (int i = 0; i < corner_line.size() ; i++) {
+    float corner_minX = corner_line[0].x(), corner_maxX = corner_minX;
+    for (int i = 0; i < corner_line.size(); i++) {
         int i_1 = (i+1)%corner_line.size();
+        corner_minX = qMin(corner_line[i].x(), corner_minX);
+        corner_maxX = qMax(corner_line[i].x(), corner_maxX);
         tolal_length += sqrt(pow(corner_line[i_1].x() - corner_line[i].x(),2) + pow(corner_line[i_1].y() - corner_line[i].y(),2));
     }
 
-    float height = tolal_length / 2;
+    float height = tolal_length/2;
+    // 竖直垂线的长度
+    float vertical_step =  height/(corner_line.size()/4);
 
-    float step =  height / (corner_line.size()/2);
+    // 平行垂线的长度
+    float parallel_step = corner_maxX - corner_minX;
 
-    QPoint p1 = QPoint((min.x() + max.x())/2, (min.y() + max.y())/2);
-    QPoint p2 = QPoint(max.x(), (min.y() + max.y())/2);
+    QPoint p1,p2,p3,p4,p1_p2,p3_p4;
 
-    // 向量 P1_p2
-    QPoint p1_p2 = QPoint(p2.x() - p1.x(), p2.y() - p1.y());
+    float p1_p2_length,p3_p4_length;
 
-    // 向量 P1_p2 的垂直向量
-    QPoint p1_p3 = QPoint(p2.y() - p1.y(), -(p2.x() - p1.x()));
+    // 经测试 corner_line.size()/2 的长度太长了
+    for (int i = 1; i < corner_line.size()/4; i++) {
 
-    QPoint p3 = QPoint((min.x() + max.x())/2 + (p2.y() - p1.y()), ((min.y() + max.y())/2 - (p2.x() - p1.x())) / step );
+        if(i == 1)
+        {
+            p1 = QPoint( min.x(), (min.y() + max.y())/2);
+            p2 = QPoint( max.x(), (min.y() + max.y())/2);
+            p1_p2_length = sqrt(pow(p2.x() - p1.x(), 2) + pow(p2.y() - p1.y(), 2))/2;
+            // 向量 P1_p2
+            p1_p2 = QPoint( p2.x() - p1.x(), p2.y() - p1.y());
+            temp_vector.push_back(QLine(p1,p2));
 
-    temp_vector.push_back(QLine(p1,p3));
+            continue;
+        }
 
-//    for (int i = 0; i < corner_line.size()/2; i++) {
+        // 向量 P1_p2 的垂直向量 除以 (p1_p2_length/vertical_step) 是为了保证竖直垂线的长度一致
+        p3_p4 = QPoint(-p1_p2.y()/(p1_p2_length/(vertical_step*i)), p1_p2.x()/(p1_p2_length/(vertical_step*i)));
+        p3 = QPoint((p1.x() + p2.x())/2, (p1.y() + p2.y())/2);
+        p4 = QPoint(p3_p4.x() + p3.x(), p3_p4.y() + p3.y());
+        temp_vector.push_back(QLine(p3,p4));
 
-//    }
+#if 1
+        p3_p4_length = sqrt(pow(p4.x() - p3.x(), 2) + pow(p4.y() - p3.y(), 2));
+        p3_p4 = QPoint( p4.x() - p3.x(), p4.y() - p3.y());
+
+        // 向量 p3_p4 的垂直向量
+        p1_p2 = QPoint(-p3_p4.y()/(p3_p4_length/parallel_step), p3_p4.x()/(p3_p4_length/parallel_step));
+#endif
+
+#if 1
+        // 求向量 p3_p4 与琦角的交点
+        for (int j = 0; j < corner_line.size(); j++) {
+            if(corner_line[j].y() == p4.y())
+            {
+//                std::cout<<"corner_line[j].x(): "<<corner_line[j].x()<<std::endl;
+
+                p1 = QPoint(corner_line[j].x(), corner_line[j].y());
+                p2 = QPoint(p1_p2.x() + p1.x(), p1_p2.y() + p1.y());
+
+                temp_vector.push_back(QLine(p1,p2));
+
+                break;
+            }
+        }
+
+#elif 0
+        p1 = p4;
+        p2 = QPoint(p1_p2.x() + p1.x(), p1_p2.y() + p1.y());
+        temp_vector.push_back(QLine(p1,p2));
+
+#endif
+
+//        std::cout<< "p2_p1.length: " << sqrt(pow(p2.x() - p1.x(),2) + pow(p2.y() - p1.y(),2)) <<std::endl;
+    }
 
     painter.drawLines(temp_vector);
 
