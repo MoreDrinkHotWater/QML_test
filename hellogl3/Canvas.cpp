@@ -173,15 +173,33 @@ void Canvas::draw_centerLine(QPainter &painter)
 
     QVector<QLine> temp_vector;
     QVector<QPoint> centerPoint_vector;
+    QVector<QPoint> temp_centerPoint_vector;
 
-    // 斜椭圆
-//    QLine temp_line(max.x(), min.y(), (min.x() + max.x())/2, (min.y() + max.y())/2);
+// 方法 0
+#if 0
+    for (int i = 0; i < draw_stack[1].size() - 1; i+=2){
 
-    // 平椭圆
-//    QLine temp_line(max.x(), (min.y() + max.y())/2, (min.x() + max.x())/2, (min.y() + max.y())/2);
+        QVector2D point = QVector2D(draw_stack[1][i], draw_stack[1][i+1]);
 
-//    temp_vector.push_back(temp_line);
+        corner_line.push_back(point);
+    }
 
+    QVector<QVector2D>::iterator it_head = corner_line.begin();
+    QVector<QVector2D>::iterator it_end = corner_line.end();
+
+    for(int i = 0; i < (corner_line.size() / 2); i++)
+    {
+        it_head += 1;
+        it_end -= 1;
+        QPoint center = QPoint((it_head->x() + it_end->x()) / 2, (it_head->y() + it_end->y()) /2);
+
+        temp_vector.push_back(QLine( QPoint(it_head->x(), it_head->y()), QPoint(it_end->x(), it_end->y())));
+
+        centerPoint_vector.push_back(center);
+    }
+
+// 方法 2
+#elif 1
     // 琦角的线
     float tolal_length = 0;
     for (int i = 0; i < draw_stack[1].size() - 1; i+=2){
@@ -209,7 +227,6 @@ void Canvas::draw_centerLine(QPainter &painter)
 
     float p1_p2_length,p3_p4_length;
 
-    // 经测试 corner_line.size()/2 的长度太长了
     for (int i = 1; i < corner_line.size()/2; i++) {
 
         if(i == 1)
@@ -231,15 +248,47 @@ void Canvas::draw_centerLine(QPainter &painter)
         //  把线段的中心点加入数组
         centerPoint_vector.push_back(p3);
 
+        temp_centerPoint_vector.push_back(p3);
+
+#if 0
+        if(temp_centerPoint_vector.size() == 1)
+        {
+            p4 = QPoint(p3_p4.x() + p3.x(), p3_p4.y() + p3.y());
+            temp_vector.push_back(QLine(p3,p4));
+
+             p3_p4_length = sqrt(pow(p4.x() - p3.x(), 2) + pow(p4.y() - p3.y(), 2));
+             // 新的向量 p3_p4
+             p3_p4 = QPoint( p4.x() - p3.x(), p4.y() - p3.y());
+        }
+
+        // 连接两条线段的中点作延长线
+        if(temp_centerPoint_vector.size() == 2)
+        {
+            p3 = centerPoint_vector[0];
+            p4 = centerPoint_vector[1];
+
+            p3_p4_length = sqrt(pow(p4.x() - p3.x(), 2) + pow(p4.y() - p3.y(), 2));
+
+            //  延长线向量
+            p3_p4 = 2 * p3_p4_length * QPoint(p4.x() - p3.x() , p4.y() - p3.y());
+
+            p3 = p4;
+
+            p4 = QPoint(p3_p4.x() + p3.x(), p3_p4.y() + p3.y());
+
+            temp_vector.push_back(QLine(p3,p4));
+
+            temp_centerPoint_vector.pop_back();
+        }
+#endif
+
         p4 = QPoint(p3_p4.x() + p3.x(), p3_p4.y() + p3.y());
         temp_vector.push_back(QLine(p3,p4));
 
         p3_p4_length = sqrt(pow(p4.x() - p3.x(), 2) + pow(p4.y() - p3.y(), 2));
-
         // 新的向量 p3_p4
         p3_p4 = QPoint( p4.x() - p3.x(), p4.y() - p3.y());
 
-#if 1
         QVector<QPoint> line_vec;
         // 求向量 p3_p4 与琦角的交点
         for (int j = 0; j < corner_line.size() - 1; j++) {
@@ -272,11 +321,9 @@ void Canvas::draw_centerLine(QPainter &painter)
             temp_vector.push_back(QLine(p1,p2));
 
         }
-
-#endif
-
     }
 
+#endif
     QVector<QLine> centerLine_vector;
     for(int i = 0; i < centerPoint_vector.size() - 1; i++)
     {
@@ -284,7 +331,7 @@ void Canvas::draw_centerLine(QPainter &painter)
         centerLine_vector.push_back(temp_line);
     }
 
-//    painter.drawLines(temp_vector);
+    painter.drawLines(temp_vector);
 
     painter.setPen(Qt::red);
 
