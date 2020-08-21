@@ -242,21 +242,38 @@ void Canvas::draw_centerLine(QPainter &painter)
             continue;
         }
 
-        // 向量 P1_p2 的垂直向量 除以 (p1_p2_length/vertical_step) 是为了保证竖直垂线的长度一致
-        p3_p4 = QPoint(-p1_p2.y()/(p1_p2_length/(vertical_step*i)), p1_p2.x()/(p1_p2_length/(vertical_step*i)));
-
-        std::cout<<"p3_p4: ("<<p3_p4.x()<<","<<p3_p4.y()<<")"<<std::endl;
+        // 直线 p1_p2 的直线方程:  y = Ax + By + C
+        float A = p2.y() - p1.y();
+        float B = p1.x() - p2.x();
+        float C = p2.x() * p1.y() - p1.x() * p2.y();
 
         p3 = QPoint((p1.x() + p2.x())/2, (p1.y() + p2.y())/2);
 
         std::cout<<"p3: ("<<p3.x()<<","<<p3.y()<<")"<<std::endl;
 
+        // 过点 p3 的 另一直线为 y = (B/A)*x + p3.y() - (B/A)*p3.x() 即: B*x - A*y +A*p3.y() - B*p3.x() = 0
+
+        QVector<QPoint> test_circle_vector;
+        for (int i = 0; i <= 360 ; i++) {
+            // i 是弧度，需要转成角度 t
+            float t = i * 2 * M_PI / 360;
+
+            // 改变圆心位置，只用给 x,y 加入固定的数值即可。
+            test_circle_vector.push_back(QPoint(p3.x() + vertical_step * cos(t), p3.y() + vertical_step * sin(t)));
+        }
+
+        for(auto it: test_circle_vector)
+        {
+            if( B*it.x() - A*it.y() + A * p3.y() - B*p3.x() == 0)
+            {
+                p4 = QPoint(it.x(), it.y());
+            }
+        }
+
         //  把线段的中心点加入数组
         centerPoint_vector.push_back(p3);
 
         temp_centerPoint_vector.push_back(p3);
-
-        p4 = QPoint(p3_p4.x() + p3.x(), p3_p4.y() + p3.y());
 
         std::cout<<"p4: ("<<p4.x()<<","<<p4.y()<<")"<<std::endl;
 
@@ -266,15 +283,15 @@ void Canvas::draw_centerLine(QPainter &painter)
 
         p3_p4 = QPoint( p4.x() - p3.x(), p4.y() - p3.y());
 
-#if 0
+#if 1
         // 连接两条线段的中点作延长线
         if(temp_centerPoint_vector.size() == 2)
         {
 
-            for(auto it : temp_centerPoint_vector)
-            {
-                std::cout<<"it: ("<<it.x()<<","<<it.y()<<")"<<std::endl;
-            }
+//            for(auto it : temp_centerPoint_vector)
+//            {
+//                std::cout<<"it: ("<<it.x()<<","<<it.y()<<")"<<std::endl;
+//            }
 
             p3 = temp_centerPoint_vector[0];
             p4 = temp_centerPoint_vector[1];
@@ -301,13 +318,13 @@ void Canvas::draw_centerLine(QPainter &painter)
         }
 
         // 已知一个直线方程  p3_p4: Ax + By + 1 = 0 ，求垂直于它的另一个直线方程
-        float B = (p3.x() * p4.x() - p3.x())/(p3.x() * p4.y() - p3.x() * p4.x() * p4.y());
+        B = (p3.x() * p4.x() - p3.x())/(p3.x() * p4.y() - p3.x() * p4.x() * p4.y());
 
-        float A = -(B * p3.y() +1)/p3.x();
+        A = -(B * p3.y() +1)/p3.x();
 
-        std::cout<< "A: " <<A<<std::endl;
+//        std::cout<< "A: " <<A<<std::endl;
 
-        std::cout<< "B: " <<B<<std::endl;
+//        std::cout<< "B: " <<B<<std::endl;
 
         QVector<QPoint> line_vec;
         // 求向量 p3_p4 与琦角的交点
@@ -321,7 +338,7 @@ void Canvas::draw_centerLine(QPainter &painter)
             }
         }
 
-#elif 1
+#elif 0
 
         QVector<QPoint> line_vec;
         // 求向量 p3_p4 与琦角的交点
@@ -355,8 +372,6 @@ void Canvas::draw_centerLine(QPainter &painter)
 
 #endif
     QVector<QLine> centerLine_vector;
-
-    std::cout<<"centerPoint_vector.size(): "<<centerPoint_vector.size()<<std::endl;
 
     for(int i = 0; i < centerPoint_vector.size() - 1; i++)
     {
