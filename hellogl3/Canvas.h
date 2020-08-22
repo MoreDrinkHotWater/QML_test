@@ -24,7 +24,7 @@ public:
 
 
 private:
-    QPoint m_lastPos;
+    QPointF m_lastPos;
 
     void drawPoint(QPainter &painter);
 
