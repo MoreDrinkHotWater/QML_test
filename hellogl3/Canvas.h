@@ -32,6 +32,12 @@ private:
 
     void draw_centerLine(QPainter &painter);
 
+    void draw_centerLine2(QPainter &painter);
+
+    void draw_centerLine3(QPainter &painter);
+
+    void draw_centerLine4(QPainter &painter);
+
 public:
     QVector<float> draw_lines_vector;
 

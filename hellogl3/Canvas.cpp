@@ -31,7 +31,18 @@ void Canvas::paintEvent(QPaintEvent *event){
 
     if(draw_stack.size() == 2)
     {
+#if 0
+        // 延长线拉
         draw_centerLine(painter);
+#elif 0
+        // 首尾按 1 为比例拉
+        draw_centerLine2(painter);
+#elif 0
+        // 平行线拉
+        draw_centerLine3(painter);
+#elif 1
+        draw_centerLine4(painter);
+#endif
     }
 
 //    QPainter p;
@@ -158,25 +169,283 @@ void Canvas::draw_centerLine(QPainter &painter)
         head_circle.push_back(point);
     }
 
-    float maxX = head_circle[0].x(),minX = maxX,  maxY = head_circle[0].y(), minY = maxY;
-    for(auto it = head_circle.begin(); it != head_circle.end(); it++)
-    {
-        maxX = qMax(maxX,it->x());
-        minX = qMin(minX,it->x());
-        maxY = qMax(maxY,it->y());
-        minY = qMin(minY,it->y());
-
-    }
-
-    QVector2D min = QVector2D(minX,minY);
-    QVector2D max = QVector2D(maxX,maxY);
-
     QVector<QLineF> temp_vector;
     QVector<QPointF> centerPoint_vector;
     QVector<QPointF> temp_centerPoint_vector;
 
-// 方法 0
-#if 0
+    // 琦角的线
+    float tolal_length = 0;
+    for (int i = 0; i < draw_stack[1].size() - 1; i+=2){
+
+        QVector2D point = QVector2D(draw_stack[1][i], draw_stack[1][i+1]);
+
+        corner_line.push_back(point);
+    }
+
+    for (int i = 0; i < corner_line.size(); i++) {
+        int i_1 = (i+1)%corner_line.size();
+        tolal_length += sqrt(pow(corner_line[i_1].x() - corner_line[i].x(),2) + pow(corner_line[i_1].y() - corner_line[i].y(),2));
+    }
+
+    // 竖直垂线的长度
+    float vertical_step = 8;
+
+    // 平行垂线的长度
+    float parallel_step = 1;
+
+    QPointF p1,p2,p3,p4,p5,p1_p2,p3_p4;
+
+    float p1_p2_length,p3_p4_length;
+
+    for (int i = 1; i < corner_line.size(); i++) {
+
+        if(i == 1)
+        {
+            p1 = QPointF( corner_line[0].x(), corner_line[0].y() );
+            p2 = QPointF( corner_line[corner_line.size() - 1].x(), corner_line[corner_line.size() - 1].y());
+
+            p1_p2_length = QVector2D(p2 - p1).length();
+
+            // 向量 P1_p2
+            p1_p2 = QPointF( p2 - p1);
+            temp_vector.push_back(QLineF(p1,p2));
+
+            continue;
+        }
+
+        // 直线 p1_p2 的直线方程:  0 = Ax + By + C
+        float A = p2.y() - p1.y();
+        float B = p1.x() - p2.x();
+        float C = p2.x() * p1.y() - p1.x() * p2.y();
+
+        p3 = QPointF(p1 + p2) / 2;
+
+        //  把线段的中心点加入数组
+        centerPoint_vector.push_back(p3);
+
+        temp_centerPoint_vector.push_back(p3);
+
+        if(0 == A * p3.x() + B * p3.y() + C)
+        {
+            std::cout<<"p3 success!"<<std::endl;
+        }
+
+        std::cout<<"p3: ("<<p3.x()<<","<<p3.y()<<")"<<std::endl;
+
+        // 过点 p3 的另一直线为 y = (B/A)*x + p3.y() - (B/A)*p3.x() 即: B*x - A*y +A*p3.y() - B*p3.x() = 0
+
+        QVector<QPointF> test_circle_vector;
+        for (int i = 0; i <= 360 ; i++) {
+            // i 是弧度，需要转成角度 t
+            float t = i * 2 * M_PI / 360;
+
+            // 改变圆心位置，只用给 x,y 加入固定的数值即可。
+            test_circle_vector.push_back(QPointF(p3.x() + vertical_step * cos(t), p3.y() + vertical_step * sin(t)));
+        }
+
+        for(auto it: test_circle_vector)
+        {
+            QVector2D v1 = QVector2D(p1 - p3);
+            QVector2D v2 = QVector2D(it - p3);
+            float cos_a_b =(v1.x()*v2.x() + v1.y()*v2.y())/(v1.length()*v2.length());
+
+            if(qAbs(cos_a_b) < 0.02)
+            {
+                p4 = QPointF(it.x(), it.y());
+                break;
+            }
+        }
+
+        std::cout<<"p4: ("<<p4.x()<<","<<p4.y()<<")"<<std::endl;
+
+        // 连接两条线段的中点作延长线
+        if(temp_centerPoint_vector.size() == 2)
+        {
+            p3 = temp_centerPoint_vector[0];
+            p4 = temp_centerPoint_vector[1];
+
+            std::cout<<"===================================="<<std::endl;
+            std::cout<<"p3: ("<<p3.x()<<","<<p3.y()<<")"<<std::endl;
+            std::cout<<"p4: ("<<p4.x()<<","<<p4.y()<<")"<<std::endl;
+
+            // 已知两点 p3, p4坐标,求两点连成的直线中的某一点坐标
+//            p3_p4 = QPointF(p4 - p3);
+//            p5 = p4 + 5*(QVector2D(p3_p4)/QVector2D(p3_p4).length()).toPointF();
+
+            int flag_last = 0;
+            // 修复最后一段延长线过长的问题
+            if(i == corner_line.size() - 1)
+            {
+                A = p4.y() - p3.y();
+                B = p3.x() - p4.x();
+                C = p4.x() * p3.y() - p3.x() * p4.y();
+
+                QPointF last_point;
+
+                if(A != 0 && B != 0 && C != 0)
+                {
+                    for (int j = 0; j < corner_line.size(); j++) {
+                         if(A * corner_line[j].x() + B * corner_line[j].y() + C == 0)
+                         {
+                            flag_last += 1;
+                            last_point = corner_line[j].toPoint();
+                         }
+                    }
+
+                    centerPoint_vector.push_back(last_point);
+
+                    p5 = 2 * p4 - p3;
+
+                    std::cout<<"p5: ("<<p5.x()<<","<<p5.y()<<")"<<std::endl;
+
+                    std::cout<<"A: "<<A<<std::endl;
+                    std::cout<<"B: "<<B<<std::endl;
+                    std::cout<<"C: "<<C<<std::endl;
+                    std::cout<<"flag_last: "<< flag_last <<std::endl;
+                }
+
+                continue;
+            }
+
+            p5 = 2 * p4 - p3;
+
+            std::cout<<"p5: ("<<p5.x()<<","<<p5.y()<<")"<<std::endl;
+
+            p3 = p4;
+
+            p4 = p5;
+
+            // 新的向量 p3_p4
+            p3_p4 =QPointF(p4 - p3);
+
+            p3_p4_length = QVector2D(p4 - p3).length();
+
+            std::cout<<"p4_p5_length: "<<p3_p4_length<<std::endl;
+
+            temp_vector.push_back(QLineF(p3,p4));
+
+            temp_centerPoint_vector.pop_front();
+        }
+
+        // 已知一个直线方程  p3_p4: Ax + By + C = 0 ，求垂直于它的另一个直线方程
+        QVector<QPointF> line_vec;
+
+        A = p4.y() - p3.y();
+        B = p3.x() - p4.x();
+
+        std::cout<<"A: "<<A<<std::endl;
+
+        std::cout<<"B: "<<B<<std::endl;
+
+        QVector<float> Var;
+
+        QVector<QVector2D> Point;
+
+        // 求向量 p3_p4 与琦角的交点
+        for (int j = 0; j < corner_line.size(); j++) {
+
+            float temp_var = B * corner_line[j].x() - A * corner_line[j].y() + A * p4.y() - B * p4.x();
+
+            Var.push_back(temp_var);
+
+            Point.push_back(corner_line[j]);
+        }
+
+        bool flag = false;
+
+        for(int i = 1; i < Var.size(); i++)
+        {
+
+//            std::cout<<"Var["<<i-1<<"]: "<<Var[i-1]<<std::endl;
+
+            float it_front = Var[i-1];
+            float it_next = Var[i];
+
+            if(it_front >= 0 && it_next < 0 )
+            {
+                line_vec.push_back(Point[i-1].toPointF());
+
+                std::cout<<"====================="<<Var[i-1]<<std::endl;
+
+                continue;
+            }
+
+            if(it_front < 0 && it_next >= 0)
+            {
+                line_vec.push_back(Point[i].toPointF());
+
+                std::cout<<"====================="<<Var[i]<<std::endl;
+
+                flag = true;
+
+                continue;
+            }
+        }
+
+        std::cout<<"line_vec.size: "<<line_vec.size()<<std::endl;
+
+        if(line_vec.size() == 1)
+        {
+            if(flag)
+                // 补尾巴
+                line_vec.push_back(Point[0].toPointF());
+            else
+                // 补头
+                line_vec.push_back(Point[corner_line.size() - 1].toPointF());
+        }
+
+
+        if(line_vec.size() == 2)
+        {
+            p1 = line_vec[0];
+            p2 = line_vec[1];
+
+            std::cout<<"p1: ("<<p1.x()<<","<<p1.y()<<")"<<std::endl;
+            std::cout<<"p2: ("<<p2.x()<<","<<p2.y()<<")"<<std::endl;
+
+            parallel_step = QVector2D(p2 - p1).length();
+
+            // 向量 p3_p4 的垂直向量 除以 (p3_p4_length/parallel_step) 是为了保证水平垂线的长度一致
+            p1_p2 = QPointF(p3_p4.y(), -p3_p4.x())/(p3_p4_length/parallel_step);
+
+            p1_p2_length = parallel_step;
+
+            temp_vector.push_back(QLineF(p1,p2));
+        }
+    }
+
+    QVector<QLineF> centerLine_vector;
+
+    for(int i = 0; i < centerPoint_vector.size() - 1; i++)
+    {
+        QLineF temp_line = QLineF(centerPoint_vector[i], centerPoint_vector[i+1]);
+        centerLine_vector.push_back(temp_line);
+    }
+
+    painter.drawLines(temp_vector);
+
+    painter.setPen(Qt::red);
+
+    painter.drawLines(centerLine_vector);
+
+    update();
+}
+
+void Canvas::draw_centerLine2(QPainter &painter)
+{
+    painter.setPen(Qt::green);
+
+    QVector<QVector2D> head_circle, corner_line;
+    for (int i = 0; i < draw_stack[0].size() - 1; i+=2){
+
+        QVector2D point = QVector2D(draw_stack[0][i], draw_stack[0][i+1]);
+
+        head_circle.push_back(point);
+    }
+
+    QVector<QLineF> temp_vector;
+    QVector<QPointF> centerPoint_vector;
+
     for (int i = 0; i < draw_stack[1].size() - 1; i+=2){
 
         QVector2D point = QVector2D(draw_stack[1][i], draw_stack[1][i+1]);
@@ -198,8 +467,39 @@ void Canvas::draw_centerLine(QPainter &painter)
         centerPoint_vector.push_back(center);
     }
 
-// 方法 2
-#elif 1
+    QVector<QLineF> centerLine_vector;
+
+    for(int i = 0; i < centerPoint_vector.size() - 1; i++)
+    {
+        QLineF temp_line = QLineF(centerPoint_vector[i], centerPoint_vector[i+1]);
+        centerLine_vector.push_back(temp_line);
+    }
+
+    painter.drawLines(temp_vector);
+
+    painter.setPen(Qt::red);
+
+    painter.drawLines(centerLine_vector);
+
+    update();
+}
+
+void Canvas::draw_centerLine3(QPainter &painter)
+{
+    painter.setPen(Qt::green);
+
+    QVector<QVector2D> head_circle, corner_line;
+    for (int i = 0; i < draw_stack[0].size() - 1; i+=2){
+
+        QVector2D point = QVector2D(draw_stack[0][i], draw_stack[0][i+1]);
+
+        head_circle.push_back(point);
+    }
+
+    QVector<QLineF> temp_vector;
+    QVector<QPointF> centerPoint_vector;
+    QVector<QPointF> temp_centerPoint_vector;
+
     // 琦角的线
     float tolal_length = 0;
     for (int i = 0; i < draw_stack[1].size() - 1; i+=2){
@@ -214,11 +514,8 @@ void Canvas::draw_centerLine(QPainter &painter)
         tolal_length += sqrt(pow(corner_line[i_1].x() - corner_line[i].x(),2) + pow(corner_line[i_1].y() - corner_line[i].y(),2));
     }
 
-    float height = tolal_length/2;
-
     // 竖直垂线的长度
-//    float vertical_step =  height/(corner_line.size()/2);
-    float vertical_step = 0.5;
+    float vertical_step = 8;
 
     // 平行垂线的长度
     float parallel_step = 1;
@@ -227,35 +524,40 @@ void Canvas::draw_centerLine(QPainter &painter)
 
     float p1_p2_length,p3_p4_length;
 
-    for (int i = 1; i < corner_line.size()/2; i++) {
+    for (int i = 1; i < corner_line.size(); i++) {
 
         if(i == 1)
         {
             p1 = QPointF( corner_line[0].x(), corner_line[0].y() );
             p2 = QPointF( corner_line[corner_line.size() - 1].x(), corner_line[corner_line.size() - 1].y());
 
-            p1_p2_length = sqrt(pow(p2.x() - p1.x(), 2) + pow(p2.y() - p1.y(), 2));
+            p1_p2_length = QVector2D(p2 - p1).length();
+
             // 向量 P1_p2
-            p1_p2 = QPointF( p2.x() - p1.x(), p2.y() - p1.y());
+            p1_p2 = QPointF( p2 - p1);
             temp_vector.push_back(QLineF(p1,p2));
 
             continue;
         }
-
-#if 0
 
         // 直线 p1_p2 的直线方程:  0 = Ax + By + C
         float A = p2.y() - p1.y();
         float B = p1.x() - p2.x();
         float C = p2.x() * p1.y() - p1.x() * p2.y();
 
-        p3 = QPointF((p1.x() + p2.x())/2, (p1.y() + p2.y())/2);
-        std::cout<<"p3: ("<<p3.x()<<","<<p3.y()<<")"<<std::endl;
+        p3 = QPointF(p1 + p2) / 2;
+
+        //  把线段的中心点加入数组
+        centerPoint_vector.push_back(p3);
+
+        temp_centerPoint_vector.push_back(p3);
 
         if(0 == A * p3.x() + B * p3.y() + C)
         {
             std::cout<<"p3 success!"<<std::endl;
         }
+
+        std::cout<<"p3: ("<<p3.x()<<","<<p3.y()<<")"<<std::endl;
 
         // 过点 p3 的另一直线为 y = (B/A)*x + p3.y() - (B/A)*p3.x() 即: B*x - A*y +A*p3.y() - B*p3.x() = 0
 
@@ -266,139 +568,112 @@ void Canvas::draw_centerLine(QPainter &painter)
 
             // 改变圆心位置，只用给 x,y 加入固定的数值即可。
             test_circle_vector.push_back(QPointF(p3.x() + vertical_step * cos(t), p3.y() + vertical_step * sin(t)));
-
-            temp_vector.push_back(QLineF(p3, QPointF(p3.x() + vertical_step * cos(t), p3.y() + vertical_step * sin(t))));
         }
-
-//        Bx - Ay +Ab - Ba = 0
 
         for(auto it: test_circle_vector)
         {
-//            std::cout<<"it: ("<<it.x()<<","<<it.y()<<")"<<std::endl;
+            QVector2D v1 = QVector2D(p1 - p3);
+            QVector2D v2 = QVector2D(it - p3);
+            float cos_a_b =(v1.x()*v2.x() + v1.y()*v2.y())/(v1.length()*v2.length());
 
-            // 斜率相等
-            // if( ((p3.y() - it.y()) / (p3.x() - it.x()))  == (B/A))
-
-            // 夹角
-            // if((p1.x() - p3.x()) * (it.x() - p3.x()) + (p1.y() - p3.y()) * (it.y() - p3.y()) < 0.01)
-
-            // 圆上的点满足直线方程
-            if(it.y() == (B/A)*it.x() + p3.y() - (B/A)*p3.x())
+            if(qAbs(cos_a_b) < 0.02)
             {
                 p4 = QPointF(it.x(), it.y());
+                break;
             }
         }
-
-#elif 1
-
-        // 向量 P1_p2 的垂直向量 除以 (p1_p2_length/vertical_step) 是为了保证竖直垂线的长度一致
-        p3_p4 = QPoint(-p1_p2.y()/(p1_p2_length/(vertical_step*i)), p1_p2.x()/(p1_p2_length/(vertical_step*i)));
-
-        if(p1_p2.x() * p3_p4.x() + p1_p2.y() * p3_p4.y() == 0)
-        {
-            std::cout<<"p3_p4 是 p1_p2 的垂直向量!"<<std::endl;
-        }
-
-        p3 = QPoint((p1.x() + p2.x())/2, (p1.y() + p2.y())/2);
-
-        std::cout<<"p3: ("<<p3.x()<<","<<p3.y()<<")"<<std::endl;
-
-        //  把线段的中心点加入数组
-        centerPoint_vector.push_back(p3);
-
-        temp_centerPoint_vector.push_back(p3);
-
-        p4 = QPoint(p3_p4.x() + p3.x(), p3_p4.y() + p3.y());
 
         std::cout<<"p4: ("<<p4.x()<<","<<p4.y()<<")"<<std::endl;
 
         temp_vector.push_back(QLineF(p3,p4));
 
-        // 新的向量 p3_p4
+        //新的向量 p3_p4
         p3_p4 = QPoint( p4.x() - p3.x(), p4.y() - p3.y());
 
-        p3_p4_length = sqrt(pow(p4.x() - p3.x(), 2) + pow(p4.y() - p3.y(), 2));
+        p3_p4_length = QVector2D(p4 - p3).length();
 
         std::cout<<"p3_p4_length: "<<p3_p4_length<<std::endl;
 
-#endif
-
-#if 0
-        // 连接两条线段的中点作延长线
-        if(temp_centerPoint_vector.size() == 2)
-        {
-
-            p3 = temp_centerPoint_vector[0];
-            p4 = temp_centerPoint_vector[1];
-
-            p3_p4_length = sqrt(pow(p4.x() - p3.x(), 2) + pow(p4.y() - p3.y(), 2));
-
-            // 已知两点 p3, p4坐标,求两点连成的直线中的某一点坐标
-
-            float x = 2 * p4.x() - p3.x();
-
-            float y = 2 * p4.y() - p3.y();
-
-            std::cout<<"p5: ("<<x<<","<<y<<")"<<std::endl;
-
-            p3 = p4;
-
-            p4 = QPointF(x,y);
-
-            p3_p4 = QPointF( p4.x() - p3.x(), p4.y() - p3.y());
-
-            temp_vector.push_back(QLineF(p3,p4));
-
-            temp_centerPoint_vector.pop_front();
-        }
-
-#elif 0
         // 已知一个直线方程  p3_p4: Ax + By + C = 0 ，求垂直于它的另一个直线方程
 
         QVector<QPointF> line_vec;
 
-        float A = p4.y() - p3.y();
-        float B = p3.x() - p4.x();
+        A = p4.y() - p3.y();
+        B = p3.x() - p4.x();
 
-//        std::cout<<"A: "<<A<<std::endl;
+        std::cout<<"A: "<<A<<std::endl;
 
-//        std::cout<<"B: "<<B<<std::endl;
+        std::cout<<"B: "<<B<<std::endl;
+
+        QVector<float> Var;
+
+        QVector<QVector2D> Point;
 
         // 求向量 p3_p4 与琦角的交点
-        for (int j = 0; j < corner_line.size() - 1; j++) {
+        for (int j = 0; j < corner_line.size(); j++) {
 
-            if(B * corner_line[j].x() - A * corner_line[j].y() + A * p4.y() - B * p4.x() == 0)
+            float temp_var = B * corner_line[j].x() - A * corner_line[j].y() + A * p4.y() - B * p4.x();
+
+            Var.push_back(temp_var);
+
+            Point.push_back(corner_line[j]);
+        }
+
+        bool flag = false;
+
+        for(int i = 1; i < Var.size(); i++)
+        {
+
+//            std::cout<<"Var["<<i-1<<"]: "<<Var[i-1]<<std::endl;
+
+            float it_front = Var[i-1];
+            float it_next = Var[i];
+
+            if(it_front >= 0 && it_next < 0 )
             {
-                line_vec.push_back(QPointF(corner_line[j].x(), corner_line[j].y()));
+                line_vec.push_back(Point[i-1].toPointF());
+
+                std::cout<<"====================="<<Var[i-1]<<std::endl;
+
+                continue;
+            }
+
+            if(it_front < 0 && it_next >= 0)
+            {
+                line_vec.push_back(Point[i].toPointF());
+
+                std::cout<<"====================="<<Var[i]<<std::endl;
+
+                flag = true;
+
+                continue;
             }
         }
 
+        std::cout<<"line_vec.size: "<<line_vec.size()<<std::endl;
 
-#elif 1
-
-        QVector<QPointF> line_vec;
-        // 求向量 p3_p4 与琦角的交点
-        for (int j = 0; j < corner_line.size() - 1; j++) {
-
-            if(p4.y() > corner_line[j].y()  && p4.y() < corner_line[j+1].y())
-            {
-                line_vec.push_back(QPointF(corner_line[j].x(), corner_line[j].y()));
-            }
-            if(p4.y() < corner_line[j].y()  && p4.y() > corner_line[j+1].y())
-            {
-                line_vec.push_back(QPointF(corner_line[j+1].x(), corner_line[j+1].y()));
-            }
+        if(line_vec.size() == 1)
+        {
+            if(flag)
+                // 补尾巴
+                line_vec.push_back(Point[0].toPointF());
+            else
+                // 补头
+                line_vec.push_back(Point[corner_line.size() - 1].toPointF());
         }
-#endif
+
         if(line_vec.size() == 2)
         {
             p1 = line_vec[0];
             p2 = line_vec[1];
 
-            parallel_step = sqrt(pow(p2.x() - p1.x(), 2) + pow(p2.y() - p1.y(),2));
+            std::cout<<"p1: ("<<p1.x()<<","<<p1.y()<<")"<<std::endl;
+            std::cout<<"p2: ("<<p2.x()<<","<<p2.y()<<")"<<std::endl;
+
+            parallel_step = QVector2D(p2 - p1).length();
 
             // 向量 p3_p4 的垂直向量 除以 (p3_p4_length/parallel_step) 是为了保证水平垂线的长度一致
-            p1_p2 = QPointF(p3_p4.y()/(p3_p4_length/parallel_step), -p3_p4.x()/(p3_p4_length/parallel_step));
+            p1_p2 = QPointF(p3_p4.y(), -p3_p4.x())/(p3_p4_length/parallel_step);
 
             p1_p2_length = parallel_step;
 
@@ -406,7 +681,98 @@ void Canvas::draw_centerLine(QPainter &painter)
         }
     }
 
-#endif
+    QVector<QLineF> centerLine_vector;
+
+    for(int i = 0; i < centerPoint_vector.size() - 1; i++)
+    {
+        QLineF temp_line = QLineF(centerPoint_vector[i], centerPoint_vector[i+1]);
+        centerLine_vector.push_back(temp_line);
+    }
+
+    painter.drawLines(temp_vector);
+
+    painter.setPen(Qt::red);
+
+    painter.drawLines(centerLine_vector);
+
+    update();
+}
+
+
+void Canvas::draw_centerLine4(QPainter &painter)
+{
+    painter.setPen(Qt::green);
+
+    QVector<QVector2D>  corner_line;
+
+    QVector<QLineF> temp_vector;
+    QVector<QPointF> centerPoint_vector;
+    QVector<QPointF> p1_vec,p2_vec,p3_vec;
+
+    // 琦角的线
+    float tolal_length = 0;
+    for (int i = 0; i < draw_stack[1].size() - 1; i+=2){
+
+        QVector2D point = QVector2D(draw_stack[1][i], draw_stack[1][i+1]);
+
+        corner_line.push_back(point);
+    }
+
+    for (int i = 0; i < corner_line.size(); i++) {
+        int i_1 = (i+1)%corner_line.size();
+        tolal_length += QVector2D(corner_line[i_1] - corner_line[i]).length();
+    }
+
+    QVector<QVector2D>::iterator it_first = corner_line.begin();
+    QVector<QVector2D>::iterator it_end = corner_line.end();
+
+    float first_step = 0;
+
+    std::cout<<"corner_line.size: "<<corner_line.size()<<std::endl;
+
+    for (int i = 0; i < corner_line.size() - 1; i++) {
+
+        if(i == 0)
+        {
+
+            QPointF p1 = QPointF(corner_line[0].x(), corner_line[0].y());
+
+            QPointF p2 = QPointF(corner_line[corner_line.size() - 1].x(), corner_line[corner_line.size() - 1].y());
+
+            p1_vec.push_back(p1);
+
+            p2_vec.push_back(p2);
+
+            p3_vec.push_back(QPointF(p1 + p2) / 2);
+
+            temp_vector.push_back(QLineF(p1,p2));
+
+            centerPoint_vector.push_back(QPointF(p1 + p2) / 2);
+
+            continue;
+        }
+
+        int i_1 = (i+1)%corner_line.size();
+
+        first_step += QVector2D(corner_line[i_1] - corner_line[i]).length();
+
+//        std::cout<<"first_step: "<<first_step<<std::endl;
+
+        if(i % 5 == 0)
+        {
+            p1_vec.push_back(QVector2D(corner_line[i]).toPointF());
+        }
+    }
+
+    std::cout<<"p1_vec.size: "<<p1_vec.size()<<std::endl;
+
+    for(int i = corner_line.size() - 1; i > 0; i-=5)
+    {
+        for (int j = 0; j < 10; j++) {
+
+        }
+    }
+
     QVector<QLineF> centerLine_vector;
 
     for(int i = 0; i < centerPoint_vector.size() - 1; i++)
