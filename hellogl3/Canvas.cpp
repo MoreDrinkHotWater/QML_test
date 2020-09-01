@@ -1,11 +1,11 @@
-﻿#include "Canvas.h"
-#include "glwidget.h"
-
-#include <QDebug>
+﻿#include <QDebug>
 #include <QPainter>
 #include <QPushButton>
 #include <iostream>
 #include <math.h>
+
+#include "Canvas.h"
+#include "glwidget.h"
 
 Canvas::Canvas(QWidget *parent):
     QWidget(parent)
@@ -40,7 +40,7 @@ void Canvas::paintEvent(QPaintEvent *event){
 #elif 0
         // 平行线拉
         draw_centerLine3(painter);
-#elif 1
+#elif 0
         draw_centerLine4(painter);
 #endif
     }
@@ -435,13 +435,7 @@ void Canvas::draw_centerLine2(QPainter &painter)
 {
     painter.setPen(Qt::green);
 
-    QVector<QVector2D> head_circle, corner_line;
-    for (int i = 0; i < draw_stack[0].size() - 1; i+=2){
-
-        QVector2D point = QVector2D(draw_stack[0][i], draw_stack[0][i+1]);
-
-        head_circle.push_back(point);
-    }
+    QVector<QVector2D> corner_line;
 
     QVector<QLineF> temp_vector;
     QVector<QPointF> centerPoint_vector;
@@ -453,19 +447,58 @@ void Canvas::draw_centerLine2(QPainter &painter)
         corner_line.push_back(point);
     }
 
-    QVector<QVector2D>::iterator it_head = corner_line.begin();
-    QVector<QVector2D>::iterator it_end = corner_line.end();
+    QPointF p1, p2;
+    QVector<QPointF> line_vec;
 
-    for(int i = 0; i < corner_line.size() / 2; i++)
-    {
-        it_head += 1;
-        it_end -= 1;
-        QPointF center = QPointF((it_head->x() + it_end->x()), (it_head->y() + it_end->y())) / 2;
+    std::cout<<"corner_line.size: "<<corner_line.size()<<std::endl;
 
-        temp_vector.push_back(QLineF( QPointF(it_head->x(), it_head->y()), QPointF(it_end->x(), it_end->y())));
+    for (int i = 0; i < corner_line.size(); i++) {
 
-        centerPoint_vector.push_back(center);
+        if(i == 0)
+        {
+
+            p1 = QPointF(corner_line[0].x(), corner_line[0].y());
+
+            p2 = QPointF(corner_line[corner_line.size() - 1].x(), corner_line[corner_line.size() - 1].y());
+
+            line_vec.push_back(p1);
+
+            temp_vector.push_back(QLineF(p1,p2));
+
+            centerPoint_vector.push_back(QPointF(p1 + p2) / 2);
+
+            continue;
+        }
+
+       if(i % 5 == 0)
+           line_vec.push_back(QVector2D(corner_line[i]).toPointF());
+
     }
+
+    std::cout<<"line_vec.size: "<<line_vec.size()<<std::endl;
+
+    QVector<QPointF>::iterator it_first = line_vec.begin();
+    QVector<QPointF>::iterator it_end = line_vec.end();
+
+    do{
+        auto first_next = it_first + 1;
+        auto end_next = it_end - 1;
+        float first_end_next = QVector2D(QPointF(it_first->x(),it_first->y()) - QPointF(end_next->x(),end_next->y())).length();
+        float first_next_end = QVector2D(QPointF(first_next->x(),first_next->y()) - QPointF(it_end->x(),it_end->y())).length();
+
+        if(first_end_next < first_next_end)
+            it_end -= 1;
+        else
+            it_first += 1;
+
+        p1 = QPointF(it_first->x(), it_first->y());
+        p2 = QPointF(it_end->x(), it_end->y());
+
+        temp_vector.push_back(QLineF(p1,p2));
+
+        centerPoint_vector.push_back(QPointF(p1 + p2) / 2);
+
+    }while(it_first != it_end);
 
     QVector<QLineF> centerLine_vector;
 
@@ -706,7 +739,7 @@ void Canvas::draw_centerLine4(QPainter &painter)
 
     QVector<QLineF> temp_vector;
     QVector<QPointF> centerPoint_vector;
-    QVector<QPointF> p1_vec;
+    QVector<QPointF> p1_vec,p2_vec;
 
     // 琦角的线
     float tolal_length = 0;
@@ -723,11 +756,13 @@ void Canvas::draw_centerLine4(QPainter &painter)
     }
 
     // meth
+
+    // 点
     QPointF p1, p2;
 
-//    std::cout<<"corner_line.size: "<<corner_line.size()<<std::endl;
+    std::cout<<"corner_line.size: "<<corner_line.size()<<std::endl;
 
-    for (int i = 0; i < corner_line.size(); i++) {
+    for (int i = 0; i < corner_line.size() / 2; i++) {
 
         if(i == 0)
         {
@@ -745,15 +780,33 @@ void Canvas::draw_centerLine4(QPainter &painter)
             continue;
         }
 
-        if(i % 5 == 0)
-        {
-            p1_vec.push_back(QVector2D(corner_line[i]).toPointF());
-        }
+       if(i % 5 == 0)
+           p1_vec.push_back(QVector2D(corner_line[i]).toPointF());
+
     }
 
-//    std::cout<<"p1_vec.size/2: "<<p1_vec.size()/2<<std::endl;
+    std::cout<<"p1_vec.size: "<<p1_vec.size()<<std::endl;
 
-    QVector<QVector<QPointF>> vec;
+    for (int i = corner_line.size()  - 1; i > corner_line.size() / 2; i-=5) {
+
+        p2_vec.push_back(QVector2D(corner_line[i]).toPointF());
+
+    }
+
+    std::cout<<"p2_vec.size: "<<p2_vec.size()<<std::endl;
+
+    // 线
+    QVector<QVector<QPointF>> front_vec,rear_vec;
+
+    for(int i = 0; i < corner_line.size() / 2; i+=5)
+    {
+        QVector<QPointF> temp_vec;
+        for(int j = 0; j < 10; j++)
+        {
+            temp_vec.push_back(QVector2D(corner_line[i + j]).toPointF());
+        }
+        front_vec.push_back(temp_vec);
+    }
 
     for(int j = corner_line.size() - 1; j > corner_line.size() / 2; j-=5)
     {
@@ -762,44 +815,66 @@ void Canvas::draw_centerLine4(QPainter &painter)
         {
             temp_vec.push_back(QVector2D(corner_line[j - i]).toPointF());
         }
-        vec.push_back(temp_vec);
+        rear_vec.push_back(temp_vec);
     }
 
-//    std::cout<<"vec.size: "<<vec.size()<<std::endl;
+//    std::cout<<"rear_vec.size: "<<rear_vec.size()<<std::endl;
 
-    QVector<QPointF>::iterator it_first = p1_vec.begin();
-    QVector<QVector<QPointF>>::iterator it_end = vec.begin();
+    QVector<QPointF>::iterator it_p1 = p1_vec.begin();
+    QVector<QPointF>::iterator it_p2 = p2_vec.begin();
 
-    // 求 P1 到 p2_vec 的最短长度
-    for(int i = 0; i < p1_vec.size()/2; i++)
+    QVector<QVector<QPointF>>::iterator it_first = front_vec.begin();
+    QVector<QVector<QPointF>>::iterator it_end = rear_vec.begin();
+
+    // 求最短长度
+    for(int i = 0; i < p1_vec.size(); i++)
     {
-        QPointF p1 = QPointF(it_first->x(), it_first->y());
+        QPointF p1 = QPointF(it_p1->x(), it_p1->y());
+        QPointF p2 = QPointF(it_p2->x(), it_p2->y());
+
+        QVector<QPointF> p1_vec;
         QVector<QPointF> p2_vec;
 
         if(i != 0)
         {
+            it_p1 += 1;
+            it_p2 += 1;
             it_first += 1;
             it_end += 1;
         }
 
-        p1 = QPointF(it_first->x(), it_first->y());
+        p1 = QPointF(it_p1->x(), it_p1->y());
+        p2 = QPointF(it_p2->x(), it_p2->y());
+
+        for(int j = 0; j < it_first->size(); j++)
+        {
+            p1_vec.push_back(it_first->data()[j]);
+        }
+
         for(int j = 0; j < it_end->size(); j++)
         {
             p2_vec.push_back(it_end->data()[j]);
         }
 
-        if(i == 0 || i == 1 || i == 2)
-        {
-            temp_vector.push_back(QLineF(p2_vec[0],p2_vec[p2_vec.size() - 1]));
-        }
-
-        QMap<float, QPointF> map;
+        QMap<float, QPointF> map_1;
+        QMap<float, QPointF> map_2;
         for(auto it: p2_vec)
         {
-            map.insert(QVector2D(QPointF(it) - p1).length(), QPointF(it));
+            map_2.insert(QVector2D(QPointF(it) - p1).length(), QPointF(it));
         }
 
-        p2 = map.first();
+//        p2 = map_2.first();
+
+//        temp_vector.push_back(QLineF(p1,p2));
+
+        for(auto it: p1_vec)
+        {
+            map_1.insert(QVector2D(QPointF(it) - p2).length(), QPointF(it));
+        }
+
+        p1 = map_1.first();
+
+        p2 = map_2.first();
 
         temp_vector.push_back(QLineF(p1,p2));
 
