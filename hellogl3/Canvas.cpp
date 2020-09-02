@@ -34,7 +34,7 @@ void Canvas::paintEvent(QPaintEvent *event){
 #if 0
         // 延长线拉
         draw_centerLine(painter);
-#elif 0
+#elif 1
         // 首尾按 1 为比例拉
         draw_centerLine2(painter);
 #elif 0
@@ -450,7 +450,7 @@ void Canvas::draw_centerLine2(QPainter &painter)
     QPointF p1, p2;
     QVector<QPointF> line_vec;
 
-    std::cout<<"corner_line.size: "<<corner_line.size()<<std::endl;
+//    std::cout<<"corner_line.size: "<<corner_line.size()<<std::endl;
 
     for (int i = 0; i < corner_line.size(); i++) {
 
@@ -475,7 +475,7 @@ void Canvas::draw_centerLine2(QPainter &painter)
 
     }
 
-    std::cout<<"line_vec.size: "<<line_vec.size()<<std::endl;
+//    std::cout<<"line_vec.size: "<<line_vec.size()<<std::endl;
 
     QVector<QPointF>::iterator it_first = line_vec.begin();
     QVector<QPointF>::iterator it_end = line_vec.end();
