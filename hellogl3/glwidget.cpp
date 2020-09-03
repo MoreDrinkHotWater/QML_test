@@ -1159,13 +1159,25 @@ void GLWidget::genCylinder(QVector<float> &vec, float r, QVector<QVector2D> head
             }
         }
 
-        angle = cos_a * 2 * M_PI / 360;
+        // 弧度转角度
+        angle =  180 * acos(cos_a) / M_PI;
+
+        std::random_device rd;  //Will be used to obtain a seed for the random number engine
+        std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+        std::uniform_real_distribution<float> dist_float(0.1,0.2);
+
+        // Bug: 当判断条件不满足, angle 会是 0
+        if(angle == 0)
+        {
+//            angle = dist_float(gen);
+        }
 
         std::cout<<"angle: "<<angle<<std::endl;
 
         // 半径
         float radis = QVector2D(p2 - p1).length() / 2;
 
+        // 绕 Y 轴 顺时针旋转
         QVector<QVector3D> new_circle;
         for (int j = 0; j < origin_circle.size() ; j++) {
 
