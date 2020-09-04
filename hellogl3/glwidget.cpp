@@ -794,7 +794,7 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
         update();
     }
 
-#endif
+#elif 1
 
     // 识别琦角
     if(recognizecorner->recognize_corner_shape(draw_coorstack))
@@ -855,6 +855,7 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
 
         update();
     }
+#endif
 }
 
 // 三角化
@@ -937,17 +938,18 @@ void GLWidget::genCylinder(QVector<float> &vec, float r, QVector<QVector2D> head
     // 保存中心线的数组
     QVector<QPointF> centerPoint_vector;
 
-    QPointF p1, p2, p3, p4;
+    QPointF p1, p2;
     QVector<QPointF> line_vec;
+    float temp_proportion;
 
     for (int i = 0; i < line_path.size(); i++) {
 
         if(i == 0)
         {
 
-            p1 = QPointF(line_path[0].x(), line_path[0].y());
+            p1 = QPointF(min.x(), center.y());
 
-            p2 = QPointF(line_path[line_path.size() - 1].x(), line_path[line_path.size() - 1].y());
+            p2 = QPointF(max.x(), center.y());
 
             line_vec.push_back(p1);
 
@@ -989,8 +991,11 @@ void GLWidget::genCylinder(QVector<float> &vec, float r, QVector<QVector2D> head
     // draw
     QVector<QVector3D> origin_circle;
 
-    for(int i = 0; i < 2; i++)
+    float z = centerPoint_vector[0].y();
+
+    for(int i = 0; i < shotest_path_vector.size(); i++)
     {
+        centerTop.setZ(z);
         int i_1 = (i + 1) % shotest_path_vector.size();
 
         std::cout<<"=========================================="<<std::endl;
@@ -999,133 +1004,76 @@ void GLWidget::genCylinder(QVector<float> &vec, float r, QVector<QVector2D> head
             for(int j = 0; j < head_path.size(); j++)
             {
                 int j_1 = (j + 1) % head_path.size();
-                QVector3D p0 = QVector3D(head_path[j].x(),head_path[j].y(),0);
-                QVector3D p1 = QVector3D(head_path[j_1].x(),head_path[j_1].y(),0);
+                QVector3D p0 = QVector3D(head_path[j].x() - centerTop.x() + centerPoint_vector[i].x(),head_path[j].y() - centerTop.y(),z);
+                QVector3D p1 = QVector3D(head_path[j_1].x() - centerTop.x() + centerPoint_vector[i].x(),head_path[j_1].y() - centerTop.y(),z);
 
                 origin_circle.push_back(p0);
-                genTriangle(vec,p0,p1,centerTop); //top
+                genTriangle(vec,p0,p1,QVector3D(centerPoint_vector[i].x(),0,z)); //top
             }
-
+            continue;
         }
 
         p1 = shotest_path_vector[i].p1();
 
         p2 = shotest_path_vector[i].p2();
 
-        p3 = shotest_path_vector[i_1].p1();
-
-        p4 = shotest_path_vector[i_1].p2();
-
-        float angle = 0, cos_a = 0;
-
         std::cout<<"p1: ("<<p1.x()<<","<<p1.y()<<")"<<std::endl;
+
         std::cout<<"p2: ("<<p2.x()<<","<<p2.y()<<")"<<std::endl;
 
-        std::cout<<"p3: ("<<p3.x()<<","<<p3.y()<<")"<<std::endl;
-        std::cout<<"p4: ("<<p4.x()<<","<<p4.y()<<")"<<std::endl;
+        float radis = QVector2D(p2 - p1).length() / 2;
+
+        std::cout<<"radis: "<<radis<<std::endl;
 
         QVector<QVector3D> new_circle;
 
-        // 尾尾相连
-        if(p2 == p4)
+        if(centerPoint_vector[i].y() != centerPoint_vector[i-1].y())
         {
-            QVector2D p2_p1 = QVector2D(p1 - p2);
 
-            QVector2D p4_p3 = QVector2D(p3 - p4);
+            for(int j = 0; j < head_path.size(); j++){
 
-            cos_a = (p2_p1.x() * p4_p3.x() + p2_p1.y() * p4_p3.y()) / (p2_p1.length() * p4_p3.length());
 
-            std::cout<<"cos_a: "<<cos_a<<std::endl;
+                temp_proportion =  radis / proportion;
 
-            // 弧度转角度
-            angle =  180 * acos(cos_a) / M_PI;
+                QVector3D p0((head_path[j].x() - centerTop.x()) * temp_proportion, (head_path[j].y() - centerTop.y()) * temp_proportion, 0);
 
-            std::cout<<"angle: "<<angle<<std::endl;
-
-            // 半径
-            float radis = QVector2D(p2 - p1).length() / 2;
-#if 1
-
-            // 绕 Y 轴 顺时针旋转
-            for (int j = 0; j < origin_circle.size() ; j++) {
-
-                float x = cos(angle) * origin_circle[j].x() - sin(angle) * origin_circle[j].z();
-
-                float y = origin_circle[j].y();
-
-                float z = sin(angle) * origin_circle[j].x() + cos(angle) * origin_circle[j].z();
-
-                new_circle.push_back(QVector3D(x, y, z));
+                new_circle.push_back(p0);
             }
-
-#elif 0
-            // 绕 Y 轴 逆时针旋转
-            for (int j = 0; j < origin_circle.size() ; j++) {
-
-                float x = cos(angle) * origin_circle[j].x() + sin(angle) * origin_circle[j].z();
-
-                float y = origin_circle[j].y();
-
-                float z = -sin(angle) * origin_circle[j].x() + cos(angle) * origin_circle[j].z();
-
-                new_circle.push_back(QVector3D(x, y, z));
-            }
-#endif
-
         }
-        // 首首相连
-        else if(p1 == p3)
-        {
-            QVector2D p1_p2 = QVector2D(p2 - p1);
-
-            QVector2D p3_p4 = QVector2D(p4 - p3);
-
-            cos_a = (p1_p2.x() * p3_p4.x() + p1_p2.y() * p3_p4.y()) / (p1_p2.length() * p3_p4.length());
-
-            std::cout<<"cos_a: "<<cos_a<<std::endl;
-
-            // 弧度转角度
-            angle =  180 * acos(cos_a) / M_PI;
-
-            std::cout<<"angle: "<<angle<<std::endl;
-
-            // 半径
-            float radis = QVector2D(p2 - p1).length() / 2;
-
-#if 0
-            // 绕 Y 轴 顺时针旋转
-            for (int j = 0; j < origin_circle.size() ; j++) {
-
-                float x = cos(angle) * origin_circle[j].x() - sin(angle) * origin_circle[j].z();
-
-                float y = origin_circle[j].y();
-
-                float z = sin(angle) * origin_circle[j].x() + cos(angle) * origin_circle[j].z();
-
-                new_circle.push_back(QVector3D(x, y, z));
-            }
-#elif 1
-            // 绕 Y 轴 逆时针旋转
-            for (int j = 0; j < origin_circle.size() ; j++) {
-
-                float x = cos(angle) * origin_circle[j].x() + sin(angle) * origin_circle[j].z();
-
-                float y = origin_circle[j].y();
-
-                float z = -sin(angle) * origin_circle[j].x() + cos(angle) * origin_circle[j].z();
-
-                new_circle.push_back(QVector3D(x, y, z));
-            }
-#endif
-        }
-        else
-        {
-            continue;
-        }
-
-        std::cout<<"origin_circle.size: "<<origin_circle.size()<<std::endl;
 
         std::cout<<"new_circle.size: "<<new_circle.size()<<std::endl;
+
+        // 求旋转角度
+        float angle;
+
+        float tan_angle = (p2.y() - p1.y()) / (p2.x() - p1.x());
+
+        float cos_angle = (p2.x() - p1.x()) / sqrt(pow(p2.x() - p1.x(), 2) + pow(p2.y() - p1.y(), 2));
+
+        float sin_angle = (p2.y() - p1.y()) / sqrt(pow(p2.x() - p1.x(), 2) + pow(p2.y() - p1.y(), 2));
+
+        std::cout << "cos_angle:" << cos_angle << "     " <<  sin_angle << std::endl;
+
+        QVector<QVector3D> rotate_new_circle;
+
+        // 逆时针旋转
+        float maxZ = -100000000;
+        for (int j = 0; j < new_circle.size() ; j++) {
+
+            float x = cos_angle * new_circle[j].x() +  centerPoint_vector[i].x();
+
+            float y = new_circle[j].y();
+
+            float z = sin_angle * new_circle[j].x() +  centerPoint_vector[i].y();
+            if(z < -100000000 || z > 100000000){
+                std::cout<< "z:" << z << " sin_angle:" << sin_angle << "  new_circle[j].x():" << new_circle[j].x() << " centerPoint_vector[i].y(): " << centerPoint_vector[i].y() << "  j:" << j;
+            }
+            maxZ = qMax(maxZ,z);
+            rotate_new_circle.push_back(QVector3D(x, y, z));
+        }
+         std::cout<<  "centerPoint_vector[i].y():" << centerPoint_vector[i].y() << std::endl;
+
+        std::cout<<"rotate_new_circle.size: "<<rotate_new_circle.size()<< "   "  << maxZ  <<  " " << new_circle.size()<< std::endl;
 
         // 拉竖条
         for (int i = 0; i < origin_circle.size(); i++) {
@@ -1133,8 +1081,8 @@ void GLWidget::genCylinder(QVector<float> &vec, float r, QVector<QVector2D> head
             QVector3D temp1 = QVector3D(origin_circle[i].x(), origin_circle[i].y(), origin_circle[i].z());
             QVector3D temp3 = QVector3D(origin_circle[i_1].x(), origin_circle[i_1].y(), origin_circle[i_1].z());
 
-            QVector3D temp2 = QVector3D(new_circle[i].x(), new_circle[i].y(), new_circle[i].z());
-            QVector3D temp4 = QVector3D(new_circle[i_1].x(), new_circle[i_1].y(), new_circle[i_1].z());
+            QVector3D temp2 = QVector3D(rotate_new_circle[i].x(), rotate_new_circle[i].y(), rotate_new_circle[i].z());
+            QVector3D temp4 = QVector3D(rotate_new_circle[i_1].x(), rotate_new_circle[i_1].y(), rotate_new_circle[i_1].z());
 
             genTriangle(vec,temp3,temp1,temp4);
             genTriangle(vec,temp1,temp2,temp4);
@@ -1142,7 +1090,7 @@ void GLWidget::genCylinder(QVector<float> &vec, float r, QVector<QVector2D> head
 
         origin_circle.clear();
 
-        origin_circle = new_circle;
+        origin_circle = rotate_new_circle;
 
 //        float new_minZ = new_circle[0].z(), new_maxZ = new_minZ, center_z;
 
