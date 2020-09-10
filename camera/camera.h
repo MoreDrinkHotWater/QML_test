@@ -109,7 +109,11 @@ private slots:
     void readyForCapture(bool ready);
     void imageSaved(int id, const QString &fileName);
 
+    void on_savePathButton_clicked();
+
     void on_modeComboBox_currentIndexChanged(const QString &arg1);
+
+    float compareImage(QImage &img1,QImage &img2,float scale,QPoint offset);
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
@@ -120,6 +124,7 @@ private:
     Ui::Camera *ui;
 
     QTimer* timer;
+    QString filePath;
 
     QScopedPointer<QCamera> m_camera;
     QScopedPointer<QCameraImageCapture> m_imageCapture;

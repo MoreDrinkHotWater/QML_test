@@ -159,8 +159,8 @@
       </property>
       <property name="geometry">
        <rect>
-        <x>9</x>
-        <y>9</y>
+        <x>10</x>
+        <y>40</y>
         <width>131</width>
         <height>24</height>
        </rect>
@@ -233,16 +233,35 @@
         <height>20</height>
        </rect>
       </property>
+      <property name="toolTip">
+       <string>请选择模式</string>
+      </property>
+      <property name="sizeAdjustPolicy">
+       <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
+      </property>
       <item>
        <property name="text">
-        <string>检异</string>
+        <string extracomment="实时监控">监控</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>监控</string>
+        <string extracomment="检查异常">检异</string>
        </property>
       </item>
+     </widget>
+     <widget class="QPushButton" name="savePathButton">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>131</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>保存路径</string>
+      </property>
      </widget>
     </widget>
     <widget class="QWidget" name="tab">

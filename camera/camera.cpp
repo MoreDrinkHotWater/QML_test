@@ -1,4 +1,4 @@
-/****************************************************************************
+﻿/****************************************************************************
 **
 ** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
@@ -64,7 +64,8 @@
 #include <QPalette>
 
 #include <QtWidgets>
-
+#include <qmath.h>
+#include <limits.h>
 Q_DECLARE_METATYPE(QCameraInfo)
 
 Camera::Camera() : ui(new Ui::Camera)
@@ -121,6 +122,9 @@ void Camera::setCamera(const QCameraInfo &cameraInfo)
     updateLockStatus(m_camera->lockStatus(), QCamera::UserRequest);
     updateRecorderState(m_mediaRecorder->state());
 
+    // signals：
+    // 1. readyForCaptureChanged： 相机准备捕获
+    // 2. imageCaptured: 预览显示给用户。
     connect(m_imageCapture.data(), &QCameraImageCapture::readyForCaptureChanged, this, &Camera::readyForCapture);
     connect(m_imageCapture.data(), &QCameraImageCapture::imageCaptured, this, &Camera::processCapturedImage);
     connect(m_imageCapture.data(), &QCameraImageCapture::imageSaved, this, &Camera::imageSaved);
@@ -311,8 +315,19 @@ void Camera::updateLockStatus(QCamera::LockStatus status, QCamera::LockChangeRea
 
 void Camera::takeImage()
 {
+    if(filePath.isEmpty())
+    {
+        QMessageBox::information(NULL, "Warring", "请您选择保存路径，再截图！");
+        return;
+    }
     m_isCapturingImage = true;
-    m_imageCapture->capture();
+    QDateTime current_date_time =QDateTime::currentDateTime();
+    QString current_date =current_date_time.toString("/yyyy_MM_dd_hh.mm.ss");
+    QString fileName = filePath + current_date;
+
+    std::cout<<"fileName: "<<fileName.toStdString()<<std::endl;
+
+    m_imageCapture->capture(fileName);
 }
 
 void Camera::displayCaptureError(int id, const QCameraImageCapture::Error error, const QString &errorString)
@@ -437,11 +452,28 @@ void Camera::closeEvent(QCloseEvent *event)
     }
 }
 
+void Camera::on_savePathButton_clicked()
+{
+    filePath = QFileDialog::getExistingDirectory(
+                this,
+                ("选择文件保存路径"),
+                "C:\\Users\\MoreDrinkHotWater\\Pictures",
+                QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+}
+
 void Camera::on_modeComboBox_currentIndexChanged(const QString &arg1)
 {
     if(arg1 == "监控")
     {
+
+
         std::cout<<"1"<<std::endl;
+
+        if(filePath.isEmpty())
+        {
+            QMessageBox::information(NULL, "Warring", "请您选择保存路径，再进行操作！");
+            return;
+        }
 
         takeImage();
 
@@ -450,8 +482,102 @@ void Camera::on_modeComboBox_currentIndexChanged(const QString &arg1)
 
     if(arg1 == "检异")
     {
-        timer->stop();
 
         std::cout<<"2"<<std::endl;
+
+        if(filePath.isEmpty())
+        {
+            QMessageBox::information(NULL, "Warring", "请您选择保存路径，再进行操作！");
+            return;
+        }
+
+        if(timer->isActive())
+            timer->stop();
+
+        // 记录基准图片
+        takeImage();
+
+        // 读取基准图片
+
+        // 对比基准图片和实时图片的灰度差异， 如果较大的话， 则保存图片
+
     }
+}
+
+float searchMinDiff(QImage &img1,QImage &img2,float scale = 1.0f,int searchStep = 2){
+    QImage im1 = (scale == 1.0f)?img1:img1.scaled(img1.width()*scale,img1.height()*scale);
+    QImage im2 = (scale == 1.0f)?img2:img2.scaled(img2.width()*scale,img2.height()*scale);
+    int w1 = im1.width(),w2 = im2.width();
+    int h1 = im1.height(),h2 = im2.height();
+    if(w1 == 0 || h1 == 0){
+        qDebug() << "empty Image";
+        return 0;
+    }
+
+    QPoint offset(0,0);
+    float minDiff = 1000000;
+    while(1){
+        int localMinDiff = 100000;
+        QPoint minOffset;
+        for(int m = -1; m <= 1; m++){
+            for(int n = -1; n <= 1; n++){
+                if(m == 0 || n == 0)
+                    continue;
+                float diff = 0;
+                QPoint offfset_ = offset + searchStep*QPoint(m,n);
+                for(int y = 0; y < h1; y++){
+                    for(int x = 0; x < w1; x++){
+                        int x1 = x + offfset_.x();
+                        int y1 = y + offfset_.y();
+                        if(x1 >= 0 && x1 < w2 && y1 >= 0 && y1 < h2){
+                            QRgb rgb = im1.pixel(x,y);
+                            int gray = qGray(rgb);
+                            QRgb rgb1 = im2.pixel(x1,y1);
+                            int gray1 = qGray(rgb1);
+                            diff += qAbs(gray - gray1)/255.0;
+                        }
+                    }
+                }
+                diff /= (w1*h1);
+                if(localMinDiff > diff){
+                    localMinDiff = diff;
+                    minOffset = offfset_;
+                }
+            }
+        }
+        if(localMinDiff < minDiff){
+            offset = minOffset;
+            minDiff = localMinDiff;
+        }else{
+            break;
+        }
+    }
+    return minDiff;
+
+}
+
+float Camera::compareImage(QImage &img1,QImage &img2,float scale = 1.0f,QPoint offset = QPoint(0,0)){
+    QImage im1 = (scale == 1.0f)?img1:img1.scaled(img1.width()*scale,img1.height()*scale);
+    QImage im2 = (scale == 1.0f)?img2:img2.scaled(img2.width()*scale,img2.height()*scale);
+    int w1 = im1.width(),w2 = im2.width();
+    int h1 = im1.height(),h2 = im2.height();
+    if(w1 == 0 || h1 == 0){
+        qDebug() << "empty Image";
+        return 0;
+    }
+    float diff = 0;
+    for(int y = 0; y < h1; y++){
+        for(int x = 0; x < w1; x++){
+            int x1 = x + offset.x();
+            int y1 = y + offset.y();
+            if(x1 >= 0 && x1 < w2 && y1 >= 0 && y1 < h2){
+                QRgb rgb = im1.pixel(x,y);
+                int gray = qGray(rgb);
+                QRgb rgb1 = im2.pixel(x1,y1);
+                int gray1 = qGray(rgb1);
+                diff += qAbs(gray - gray1)/255.0;
+            }
+        }
+    }
+    return diff/(w1*h1);
 }
