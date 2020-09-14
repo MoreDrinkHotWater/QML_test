@@ -57,6 +57,7 @@
 #include <QScopedPointer>
 
 #include <QMainWindow>
+#include <QAbstractVideoSurface>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Camera; }
@@ -115,6 +116,14 @@ private slots:
 
     float compareImage(QImage &img1,QImage &img2,float scale,QPoint offset);
 
+    void on_readAbnormityButton_clicked();
+
+    void on_rearButton_clicked();
+
+    void on_frontButton_clicked();
+
+    void on_horizontalSlider_sliderMoved(int position);
+
 protected:
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
@@ -125,6 +134,14 @@ private:
 
     QTimer* timer;
     QString filePath;
+    QStringList files;
+    int image_num;
+
+    QImage current_image;
+
+    QString base_image_str;
+
+    float searchMinDiff(const QImage &img1,const QImage &img2,float scale = 1.0f,int searchStep = 2);
 
     QScopedPointer<QCamera> m_camera;
     QScopedPointer<QCameraImageCapture> m_imageCapture;
@@ -137,5 +154,22 @@ private:
     bool m_isCapturingImage = false;
     bool m_applicationExiting = false;
 };
+
+class CameraFrameGrabber :public QAbstractVideoSurface
+{
+    Q_OBJECT
+public:
+    CameraFrameGrabber(QObject *parent = nullptr);
+
+    QList<QVideoFrame::PixelFormat> supportedPixelFormats(QAbstractVideoBuffer::HandleType handleType = QAbstractVideoBuffer::NoHandle) const override;
+    bool present(const QVideoFrame &frame) override;
+
+signals:
+    void frameAvailable(QImage frame);
+    void frameAvailable(QString string);
+
+public slots:
+};
+
 
 #endif

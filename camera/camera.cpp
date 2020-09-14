@@ -63,6 +63,8 @@
 #include <QMessageBox>
 #include <QPalette>
 
+#include <QAbstractVideoSurface>
+
 #include <QtWidgets>
 #include <qmath.h>
 #include <limits.h>
@@ -71,6 +73,10 @@ Q_DECLARE_METATYPE(QCameraInfo)
 Camera::Camera() : ui(new Ui::Camera)
 {
     ui->setupUi(this);
+
+    image_num = 0;
+    ui->ImagePreviewLabel->setStyleSheet("border: 2px solid red");
+    ui->ImagePreviewLabel->setScaledContents(true);
 
     //Camera devices:
 
@@ -124,7 +130,7 @@ void Camera::setCamera(const QCameraInfo &cameraInfo)
 
     // signals：
     // 1. readyForCaptureChanged： 相机准备捕获
-    // 2. imageCaptured: 预览显示给用户。
+    // 2. imageCaptured: 将用户截图在 label 上显示给用户。
     connect(m_imageCapture.data(), &QCameraImageCapture::readyForCaptureChanged, this, &Camera::readyForCapture);
     connect(m_imageCapture.data(), &QCameraImageCapture::imageCaptured, this, &Camera::processCapturedImage);
     connect(m_imageCapture.data(), &QCameraImageCapture::imageSaved, this, &Camera::imageSaved);
@@ -138,7 +144,20 @@ void Camera::setCamera(const QCameraInfo &cameraInfo)
     ui->captureWidget->setTabEnabled(1, (m_camera->isCaptureModeSupported(QCamera::CaptureVideo)));
 
     updateCaptureMode();
+
     m_camera->start();
+
+    if(!filePath.isEmpty())
+    {
+        std::cout<<"test!"<<std::endl;
+        // add
+        CameraFrameGrabber *_cameraFrameGrabber = new CameraFrameGrabber(this);
+        m_camera->setViewfinder(_cameraFrameGrabber);
+        connect(_cameraFrameGrabber, SIGNAL(frameAvailable(QString)), this, SLOT(on_modeComboBox_currentIndexChanged(QString)));
+
+        m_camera->start();
+    }
+
 }
 
 void Camera::keyPressEvent(QKeyEvent * event)
@@ -195,11 +214,14 @@ void Camera::processCapturedImage(int requestId, const QImage& img)
                                     Qt::KeepAspectRatio,
                                     Qt::SmoothTransformation);
 
+    // 在 label 上显示图片
     ui->lastImagePreviewLabel->setPixmap(QPixmap::fromImage(scaledImage));
 
-    // Display captured image for 4 seconds.
+//    ui->ImagePreviewLabel->setPixmap(QPixmap::fromImage(scaledImage));
+
+    // Display captured image for 1 seconds.
     displayCapturedImage();
-    QTimer::singleShot(4000, this, &Camera::displayViewfinder);
+    QTimer::singleShot(1000, this, &Camera::displayViewfinder);
 }
 
 void Camera::configureCaptureSettings()
@@ -320,12 +342,18 @@ void Camera::takeImage()
         QMessageBox::information(NULL, "Warring", "请您选择保存路径，再截图！");
         return;
     }
+
     m_isCapturingImage = true;
     QDateTime current_date_time =QDateTime::currentDateTime();
     QString current_date =current_date_time.toString("/yyyy_MM_dd_hh.mm.ss");
-    QString fileName = filePath + current_date;
+
+    QString fileName = filePath + current_date + ".jpg";
+
+    std::cout<<"filePath: "<<filePath.toStdString()<<std::endl;
 
     std::cout<<"fileName: "<<fileName.toStdString()<<std::endl;
+
+    base_image_str = fileName;
 
     m_imageCapture->capture(fileName);
 }
@@ -465,8 +493,6 @@ void Camera::on_modeComboBox_currentIndexChanged(const QString &arg1)
 {
     if(arg1 == "监控")
     {
-
-
         std::cout<<"1"<<std::endl;
 
         if(filePath.isEmpty())
@@ -482,7 +508,6 @@ void Camera::on_modeComboBox_currentIndexChanged(const QString &arg1)
 
     if(arg1 == "检异")
     {
-
         std::cout<<"2"<<std::endl;
 
         if(filePath.isEmpty())
@@ -495,16 +520,168 @@ void Camera::on_modeComboBox_currentIndexChanged(const QString &arg1)
             timer->stop();
 
         // 记录基准图片
-        takeImage();
+//        takeImage();
 
-        // 读取基准图片
+        std::cout<<"base_image_str: "<<base_image_str.toStdString()<<std::endl;
+
+        // 读取基准图片 
+        QPixmap base_image;
+
+        if(!base_image.load(base_image_str))
+        {
+            std::cout<<"==========load failed==========="<<std::endl;
+        }
+
+        ui->ImagePreviewLabel->setPixmap(base_image);
 
         // 对比基准图片和实时图片的灰度差异， 如果较大的话， 则保存图片
-
+        std::cout<<"diff: "<< searchMinDiff(base_image.toImage(), current_image)<<std::endl;
     }
 }
 
-float searchMinDiff(QImage &img1,QImage &img2,float scale = 1.0f,int searchStep = 2){
+CameraFrameGrabber::CameraFrameGrabber(QObject *parent) :
+    QAbstractVideoSurface(parent)
+{
+
+}
+
+QList<QVideoFrame::PixelFormat> CameraFrameGrabber::supportedPixelFormats(QAbstractVideoBuffer::HandleType handleType) const
+{
+    if (handleType == QAbstractVideoBuffer::NoHandle)
+    {
+        return QList<QVideoFrame::PixelFormat>()<< QVideoFrame::Format_RGB32<< QVideoFrame::Format_ARGB32<< QVideoFrame::Format_ARGB32_Premultiplied<< QVideoFrame::Format_RGB565<< QVideoFrame::Format_RGB555;
+           /*
+        return QList<QVideoFrame::PixelFormat>()
+                  <<QVideoFrame::Format_RGB32
+                  <<QVideoFrame::Format_YUV420P
+                  <<QVideoFrame::Format_YUYV
+                  <<QVideoFrame::Format_ARGB32
+                  <<QVideoFrame::Format_ARGB32_Premultiplied
+                  <<QVideoFrame::Format_RGB565
+                  <<QVideoFrame::Format_Jpeg
+                  <<QVideoFrame::Format_RGB555;*/
+       }
+       else
+       {
+          qDebug()<<"无效格式2."<<QList<QVideoFrame::PixelFormat>();
+          return  QList<QVideoFrame::PixelFormat>();
+       }
+}
+
+// 获得实时的帧
+bool CameraFrameGrabber::present(const QVideoFrame &frame)
+{
+    if (frame.isValid()) {
+        QVideoFrame cloneFrame(frame);
+        cloneFrame.map(QAbstractVideoBuffer::ReadOnly);
+
+        const QImage image(cloneFrame.bits(),
+                           cloneFrame.width(),
+                           cloneFrame.height(),
+                           QVideoFrame::imageFormatFromPixelFormat(cloneFrame.pixelFormat()));
+
+        std::cout<<"===================="<<std::endl;
+
+        emit frameAvailable("检异");
+
+        cloneFrame.unmap();
+        return true;
+    }
+    return false;
+}
+
+// 读取
+void Camera::on_readAbnormityButton_clicked()
+{
+
+    files = QFileDialog::getOpenFileNames(
+                this,
+                tr("Select one or more files to open"),
+                "C:\\Users\\MoreDrinkHotWater\\Pictures",
+                tr("Image files(*.bmp *.jpg *.pbm *.pgm *.png *.ppm *.xbm *.xpm);;All files (*.*)"));
+
+    if(files.isEmpty())
+    {
+        QMessageBox mesg;
+        mesg.warning(this,"警告","打开图片失败!");
+        return;
+    }
+
+    std::cout<<"files size: "<<files.size()<<std::endl;
+
+    ui->num1->setNum(1);
+
+    ui->num3->setNum(files.size());
+
+    ui->horizontalSlider->setMinimum(0);  // 最小值
+    ui->horizontalSlider->setMaximum(files.size() - 1);  // 最大值
+    ui->horizontalSlider->setSingleStep(1);  // 步长
+
+    std::cout<<"files[0]: "<<files[image_num].toStdString()<<std::endl;
+
+    QPixmap pix = files[image_num];
+
+    if(pix.isNull())
+    {
+        std::cout<<"=============the pix is null================"<<std::endl;
+    }
+
+    ui->ImagePreviewLabel->setPixmap(pix);
+
+}
+
+// 滑动条
+void Camera::on_horizontalSlider_sliderMoved(int position)
+{
+    ui->num1->setNum(position + 1);
+
+    QPixmap pix = files[position];
+
+    ui->ImagePreviewLabel->setPixmap(pix);
+}
+
+// 读取上一张
+void Camera::on_frontButton_clicked()
+{
+    if(image_num > 0)
+    {
+        image_num -= 1;
+
+        if(image_num == 0)
+            ui->num1->setNum(1);
+        else
+            ui->num1->setNum(image_num + 1);
+
+        QPixmap pix = files[image_num];
+        ui->ImagePreviewLabel->setPixmap(pix);
+
+        // 设置滑块
+        ui->horizontalSlider->setSliderPosition(image_num);
+
+        ui->horizontalSlider->setValue(image_num);
+    }
+}
+
+// 读取下一张
+void Camera::on_rearButton_clicked()
+{
+    if(image_num < files.size() - 1)
+    {
+        image_num += 1;
+
+        ui->num1->setNum(image_num + 1);
+
+        QPixmap pix = files[image_num];
+        ui->ImagePreviewLabel->setPixmap(pix);
+
+        // 设置滑块的位置
+        ui->horizontalSlider->setSliderPosition(image_num);
+
+        ui->horizontalSlider->setValue(image_num);
+    }
+}
+
+float Camera::searchMinDiff(const QImage &img1,const QImage &img2,float scale,int searchStep){
     QImage im1 = (scale == 1.0f)?img1:img1.scaled(img1.width()*scale,img1.height()*scale);
     QImage im2 = (scale == 1.0f)?img2:img2.scaled(img2.width()*scale,img2.height()*scale);
     int w1 = im1.width(),w2 = im2.width();
