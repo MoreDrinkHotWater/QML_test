@@ -78,6 +78,9 @@ Camera::Camera() : ui(new Ui::Camera)
     ui->ImagePreviewLabel->setStyleSheet("border: 2px solid red");
     ui->ImagePreviewLabel->setScaledContents(true);
 
+    ui->videosurface->setStyleSheet("border: 2px solid red");
+    ui->videosurface->setScaledContents(true);
+
     //Camera devices:
 
     QActionGroup *videoDevicesGroup = new QActionGroup(this);
@@ -145,19 +148,9 @@ void Camera::setCamera(const QCameraInfo &cameraInfo)
 
     updateCaptureMode();
 
+    // add
+
     m_camera->start();
-
-    if(!filePath.isEmpty())
-    {
-        std::cout<<"test!"<<std::endl;
-        // add
-        CameraFrameGrabber *_cameraFrameGrabber = new CameraFrameGrabber(this);
-        m_camera->setViewfinder(_cameraFrameGrabber);
-        connect(_cameraFrameGrabber, SIGNAL(frameAvailable(QString)), this, SLOT(on_modeComboBox_currentIndexChanged(QString)));
-
-        m_camera->start();
-    }
-
 }
 
 void Camera::keyPressEvent(QKeyEvent * event)
@@ -191,7 +184,6 @@ void Camera::keyReleaseEvent(QKeyEvent *event)
 {
     if (event->isAutoRepeat())
         return;
-
     switch (event->key()) {
     case Qt::Key_CameraFocus:
         m_camera->unlock();
@@ -216,8 +208,6 @@ void Camera::processCapturedImage(int requestId, const QImage& img)
 
     // 在 label 上显示图片
     ui->lastImagePreviewLabel->setPixmap(QPixmap::fromImage(scaledImage));
-
-//    ui->ImagePreviewLabel->setPixmap(QPixmap::fromImage(scaledImage));
 
     // Display captured image for 1 seconds.
     displayCapturedImage();
@@ -489,6 +479,45 @@ void Camera::on_savePathButton_clicked()
                 QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 }
 
+
+void Camera::Camear_handleFrame(QImage image)
+{
+    current_image = image.copy();
+
+    // 读取基准图片
+    QPixmap base_image;
+
+    if(!base_image.load(base_image_str))
+    {
+        std::cout<<"==========load failed==========="<<std::endl;
+    }
+
+    QMatrix leftmatrix;
+
+    // 顺时针旋转 180 度
+    current_image = current_image.transformed(leftmatrix.rotate(180),Qt::SmoothTransformation);
+
+    // 水平翻转
+    current_image =  current_image.mirrored(true, false);
+
+    // 对比基准图片和实时图片的灰度差异， 如果较大的话， 则保存图片
+    std::cout<<"diff: "<< searchMinDiff(base_image.toImage(), current_image)<<std::endl;
+
+    if(searchMinDiff(base_image.toImage(), current_image) == 0)
+    {
+        // 保存图片
+        QDateTime current_date_time =QDateTime::currentDateTime();
+        QString current_date =current_date_time.toString("/yyyy_MM_dd_hh.mm.ss");
+
+        QString fileName = filePath + current_date + ".jpg";
+
+        current_image.save(fileName);
+    }
+
+    ui->ImagePreviewLabel->setPixmap(QPixmap::fromImage(current_image));
+}
+
+// 模式
 void Camera::on_modeComboBox_currentIndexChanged(const QString &arg1)
 {
     if(arg1 == "监控")
@@ -508,8 +537,6 @@ void Camera::on_modeComboBox_currentIndexChanged(const QString &arg1)
 
     if(arg1 == "检异")
     {
-        std::cout<<"2"<<std::endl;
-
         if(filePath.isEmpty())
         {
             QMessageBox::information(NULL, "Warring", "请您选择保存路径，再进行操作！");
@@ -519,23 +546,15 @@ void Camera::on_modeComboBox_currentIndexChanged(const QString &arg1)
         if(timer->isActive())
             timer->stop();
 
+        CameraFrameGrabber *_cameraFrameGrabber = new CameraFrameGrabber(this);
+        // 设置取景器
+        m_camera->setViewfinder(_cameraFrameGrabber);
+        connect(_cameraFrameGrabber, SIGNAL(frameAvailable(QImage)), this, SLOT(Camear_handleFrame(QImage)));
+        connect(_cameraFrameGrabber, SIGNAL(frameAvailable(QString)), this, SLOT(on_modeComboBox_currentIndexChanged(QString)));
+        m_camera->start();
+
         // 记录基准图片
 //        takeImage();
-
-        std::cout<<"base_image_str: "<<base_image_str.toStdString()<<std::endl;
-
-        // 读取基准图片 
-        QPixmap base_image;
-
-        if(!base_image.load(base_image_str))
-        {
-            std::cout<<"==========load failed==========="<<std::endl;
-        }
-
-        ui->ImagePreviewLabel->setPixmap(base_image);
-
-        // 对比基准图片和实时图片的灰度差异， 如果较大的话， 则保存图片
-        std::cout<<"diff: "<< searchMinDiff(base_image.toImage(), current_image)<<std::endl;
     }
 }
 
@@ -580,8 +599,7 @@ bool CameraFrameGrabber::present(const QVideoFrame &frame)
                            cloneFrame.height(),
                            QVideoFrame::imageFormatFromPixelFormat(cloneFrame.pixelFormat()));
 
-        std::cout<<"===================="<<std::endl;
-
+        emit frameAvailable(image);
         emit frameAvailable("检异");
 
         cloneFrame.unmap();

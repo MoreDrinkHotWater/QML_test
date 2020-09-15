@@ -124,6 +124,8 @@ private slots:
 
     void on_horizontalSlider_sliderMoved(int position);
 
+    void Camear_handleFrame(QImage image);
+
 protected:
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
