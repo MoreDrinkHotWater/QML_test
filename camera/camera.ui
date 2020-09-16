@@ -170,11 +170,11 @@
       <x>503</x>
       <y>44</y>
       <width>156</width>
-      <height>286</height>
+      <height>241</height>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab_2">
      <attribute name="title">
@@ -200,44 +200,6 @@
         <normaloff>:/images/shutter.svg</normaloff>:/images/shutter.svg</iconset>
       </property>
      </widget>
-     <widget class="QLabel" name="label">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>200</y>
-        <width>132</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Exposure Compensation:</string>
-      </property>
-     </widget>
-     <widget class="QSlider" name="exposureCompensation">
-      <property name="geometry">
-       <rect>
-        <x>9</x>
-        <y>225</y>
-        <width>141</width>
-        <height>27</height>
-       </rect>
-      </property>
-      <property name="minimum">
-       <number>-4</number>
-      </property>
-      <property name="maximum">
-       <number>4</number>
-      </property>
-      <property name="pageStep">
-       <number>2</number>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="tickPosition">
-       <enum>QSlider::TicksAbove</enum>
-      </property>
-     </widget>
      <widget class="QLabel" name="mode">
       <property name="geometry">
        <rect>
@@ -251,32 +213,6 @@
        <string>模式</string>
       </property>
      </widget>
-     <widget class="QComboBox" name="modeComboBox">
-      <property name="geometry">
-       <rect>
-        <x>40</x>
-        <y>100</y>
-        <width>101</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="toolTip">
-       <string>请选择模式</string>
-      </property>
-      <property name="sizeAdjustPolicy">
-       <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
-      </property>
-      <item>
-       <property name="text">
-        <string extracomment="实时监控">监控</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string extracomment="检查异常">检异</string>
-       </property>
-      </item>
-     </widget>
      <widget class="QPushButton" name="savePathButton">
       <property name="geometry">
        <rect>
@@ -289,6 +225,41 @@
       <property name="text">
        <string>保存路径</string>
       </property>
+     </widget>
+     <widget class="QRadioButton" name="radioButton">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>100</y>
+        <width>51</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>监控</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+      <attribute name="buttonGroup">
+       <string notr="true">buttonGroup</string>
+      </attribute>
+     </widget>
+     <widget class="QRadioButton" name="radioButton_2">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>130</y>
+        <width>51</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>检异</string>
+      </property>
+      <attribute name="buttonGroup">
+       <string notr="true">buttonGroup</string>
+      </attribute>
      </widget>
     </widget>
     <widget class="QWidget" name="tab">
@@ -444,24 +415,17 @@
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>550</x>
-      <y>440</y>
+      <x>540</x>
+      <y>390</y>
       <width>81</width>
       <height>111</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QPushButton" name="readAbnormityButton">
+      <widget class="QPushButton" name="readButton">
        <property name="text">
-        <string>读取监控</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="readMonitorButton">
-       <property name="text">
-        <string>读取检异</string>
+        <string>读取</string>
        </property>
       </widget>
      </item>
@@ -473,6 +437,19 @@
       </widget>
      </item>
     </layout>
+   </widget>
+   <widget class="QPushButton" name="autoplayButton">
+    <property name="geometry">
+     <rect>
+      <x>540</x>
+      <y>510</y>
+      <width>79</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>自动播放</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -634,22 +611,6 @@
    </hints>
   </connection>
   <connection>
-   <sender>exposureCompensation</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>Camera</receiver>
-   <slot>setExposureCompensation(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>559</x>
-     <y>367</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>665</x>
-     <y>365</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>actionSettings</sender>
    <signal>triggered()</signal>
    <receiver>Camera</receiver>
@@ -711,4 +672,7 @@
   <slot>stopCamera()</slot>
   <slot>setExposureCompensation(int)</slot>
  </slots>
+ <buttongroups>
+  <buttongroup name="buttonGroup"/>
+ </buttongroups>
 </ui>

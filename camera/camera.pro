@@ -5,17 +5,23 @@ QT += multimedia multimediawidgets
 
 HEADERS = \
     camera.h \
+    choosedistancetime.h \
     imagesettings.h \
+    setdiff.h \
     videosettings.h
 
 SOURCES = \
+    choosedistancetime.cpp \
     main.cpp \
     camera.cpp \
     imagesettings.cpp \
+    setdiff.cpp \
     videosettings.cpp
 
 FORMS += \
     camera.ui \
+    choosedistancetime.ui \
+    setdiff.ui \
     videosettings.ui \
     imagesettings.ui
 

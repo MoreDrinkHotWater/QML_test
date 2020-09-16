@@ -52,6 +52,8 @@
 #include "ui_camera.h"
 #include "videosettings.h"
 #include "imagesettings.h"
+#include "choosedistancetime.h"
+#include "setdiff.h"
 
 #include <iostream>
 #include <QMediaService>
@@ -75,6 +77,9 @@ Camera::Camera() : ui(new Ui::Camera)
     ui->setupUi(this);
 
     image_num = 0;
+    distancetime = 0;
+    diff = 0;
+
     ui->ImagePreviewLabel->setStyleSheet("border: 2px solid red");
     ui->ImagePreviewLabel->setScaledContents(true);
 
@@ -122,8 +127,6 @@ void Camera::setCamera(const QCameraInfo &cameraInfo)
             this, &Camera::displayRecorderError);
 
     m_mediaRecorder->setMetaData(QMediaMetaData::Title, QVariant(QLatin1String("Test Title")));
-
-    connect(ui->exposureCompensation, &QAbstractSlider::valueChanged, this, &Camera::setExposureCompensation);
 
     m_camera->setViewfinder(ui->viewfinder);
 
@@ -334,7 +337,7 @@ void Camera::takeImage()
     }
 
     m_isCapturingImage = true;
-    QDateTime current_date_time =QDateTime::currentDateTime();
+    QDateTime current_date_time = QDateTime::currentDateTime();
     QString current_date =current_date_time.toString("/yyyy_MM_dd_hh.mm.ss");
 
     QString fileName = filePath + current_date + ".jpg";
@@ -342,6 +345,8 @@ void Camera::takeImage()
     std::cout<<"filePath: "<<filePath.toStdString()<<std::endl;
 
     std::cout<<"fileName: "<<fileName.toStdString()<<std::endl;
+
+    first_date_time = current_date_time;
 
     base_image_str = fileName;
 
@@ -364,6 +369,19 @@ void Camera::startCamera()
 void Camera::stopCamera()
 {
     m_camera->stop();
+
+    ui->radioButton->setCheckable(false);
+
+    ui->radioButton->setCheckable(true);
+
+    ui->radioButton_2->setCheckable(false);
+
+    ui->radioButton_2->setCheckable(true);
+
+    if(timer->isActive())
+        timer->stop();
+
+//    m_camera->setViewfinder(ui->viewfinder);
 }
 
 void Camera::updateCaptureMode()
@@ -479,7 +497,6 @@ void Camera::on_savePathButton_clicked()
                 QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 }
 
-
 void Camera::Camear_handleFrame(QImage image)
 {
     current_image = image.copy();
@@ -501,61 +518,107 @@ void Camera::Camear_handleFrame(QImage image)
     current_image =  current_image.mirrored(true, false);
 
     // 对比基准图片和实时图片的灰度差异， 如果较大的话， 则保存图片
-    std::cout<<"diff: "<< searchMinDiff(base_image.toImage(), current_image)<<std::endl;
+    float current_diff = searchMinDiff(last_image, current_image,0.2f,2);
+    std::cout<<"current_diff: "<< current_diff<<std::endl;
 
-    if(searchMinDiff(base_image.toImage(), current_image) == 0)
+    if(current_diff > diff)
     {
         // 保存图片
         QDateTime current_date_time =QDateTime::currentDateTime();
         QString current_date =current_date_time.toString("/yyyy_MM_dd_hh.mm.ss");
 
-        QString fileName = filePath + current_date + ".jpg";
+        // 计算时间差
+        QString time = QDateTime::fromMSecsSinceEpoch(QDateTime::currentDateTime().toMSecsSinceEpoch() - first_date_time.toMSecsSinceEpoch()).toUTC().toString("_hh.mm.ss");
+
+        QString fileName = filePath + current_date + time + ".jpg";
 
         current_image.save(fileName);
     }
 
+    last_image = current_image;
+
     ui->ImagePreviewLabel->setPixmap(QPixmap::fromImage(current_image));
 }
 
-// 模式
-void Camera::on_modeComboBox_currentIndexChanged(const QString &arg1)
+// 监控
+void Camera::on_radioButton_toggled(bool checked)
 {
-    if(arg1 == "监控")
+    if(filePath.isEmpty())
     {
-        std::cout<<"1"<<std::endl;
+        QMessageBox::information(NULL, "Warring", "请您选择保存路径，再进行操作！");
 
-        if(filePath.isEmpty())
+        if(checked)
         {
-            QMessageBox::information(NULL, "Warring", "请您选择保存路径，再进行操作！");
-            return;
+            // 重置 radioButton
+            ui->radioButton->setCheckable(false);
+
+            ui->radioButton->setCheckable(true);
         }
 
+        return;
+    }
+
+    // 显示子窗口
+    chooseDistanceTime *distanceTimeWidget = new chooseDistanceTime;
+    connect(distanceTimeWidget, &chooseDistanceTime::send_distanceTime, this, &Camera::receive_distanceTime);
+
+    distanceTimeWidget->show();
+}
+
+void Camera::receive_distanceTime(int distanceTime)
+{
+    this->distancetime = distanceTime;
+
+    std::cout<<"distanceTime: "<<distanceTime<<std::endl;
+
+    if(distancetime != 0)
+    {
         takeImage();
 
-        timer->start(10000);
+        timer->start(distancetime);
     }
+    else
+        std::cout<<"the distanceTime = 0!"<<std::endl;
+}
 
-    if(arg1 == "检异")
+// 检异
+void Camera::on_radioButton_2_toggled(bool checked)
+{
+    if(filePath.isEmpty())
     {
-        if(filePath.isEmpty())
+        QMessageBox::information(NULL, "Warring", "请您选择保存路径，再进行操作！");
+
+        if(checked)
         {
-            QMessageBox::information(NULL, "Warring", "请您选择保存路径，再进行操作！");
-            return;
+            ui->radioButton_2->setCheckable(false);
+
+            ui->radioButton_2->setCheckable(true);
         }
 
-        if(timer->isActive())
-            timer->stop();
-
-        CameraFrameGrabber *_cameraFrameGrabber = new CameraFrameGrabber(this);
-        // 设置取景器
-        m_camera->setViewfinder(_cameraFrameGrabber);
-        connect(_cameraFrameGrabber, SIGNAL(frameAvailable(QImage)), this, SLOT(Camear_handleFrame(QImage)));
-        connect(_cameraFrameGrabber, SIGNAL(frameAvailable(QString)), this, SLOT(on_modeComboBox_currentIndexChanged(QString)));
-        m_camera->start();
-
-        // 记录基准图片
-//        takeImage();
+        return;
     }
+
+    if(timer->isActive())
+        timer->stop();
+
+    // 显示子窗口
+    setDiff *setdiffWidget = new setDiff;
+    connect(setdiffWidget, &setDiff::send_Diff, this, &Camera::receive_diff);
+    setdiffWidget->show();
+}
+
+void Camera::receive_diff(float diff)
+{
+    this->diff = diff;
+
+    std::cout<<"diff: "<<diff<<std::endl;
+
+    CameraFrameGrabber *_cameraFrameGrabber = new CameraFrameGrabber(this);
+    // 设置取景器
+    m_camera->setViewfinder(_cameraFrameGrabber);
+    connect(_cameraFrameGrabber, SIGNAL(frameAvailable(QImage)), this, SLOT(Camear_handleFrame(QImage)));
+    connect(_cameraFrameGrabber, SIGNAL(frameAvailable()), this, SLOT(on_radioButton_2_clicked()));
+    m_camera->start();
 }
 
 CameraFrameGrabber::CameraFrameGrabber(QObject *parent) :
@@ -600,7 +663,7 @@ bool CameraFrameGrabber::present(const QVideoFrame &frame)
                            QVideoFrame::imageFormatFromPixelFormat(cloneFrame.pixelFormat()));
 
         emit frameAvailable(image);
-        emit frameAvailable("检异");
+        emit frameAvailable();
 
         cloneFrame.unmap();
         return true;
@@ -609,7 +672,7 @@ bool CameraFrameGrabber::present(const QVideoFrame &frame)
 }
 
 // 读取
-void Camera::on_readAbnormityButton_clicked()
+void Camera::on_readButton_clicked()
 {
 
     files = QFileDialog::getOpenFileNames(
@@ -637,6 +700,10 @@ void Camera::on_readAbnormityButton_clicked()
 
     std::cout<<"files[0]: "<<files[image_num].toStdString()<<std::endl;
 
+    // 显示图片信息
+    statusBar()->setStyleSheet("color:green");
+    statusBar()->showMessage(files[image_num]);
+
     QPixmap pix = files[image_num];
 
     if(pix.isNull())
@@ -655,6 +722,10 @@ void Camera::on_horizontalSlider_sliderMoved(int position)
 
     QPixmap pix = files[position];
 
+    // 显示图片信息
+    statusBar()->setStyleSheet("color:green");
+    statusBar()->showMessage(files[position]);
+
     ui->ImagePreviewLabel->setPixmap(pix);
 }
 
@@ -671,6 +742,11 @@ void Camera::on_frontButton_clicked()
             ui->num1->setNum(image_num + 1);
 
         QPixmap pix = files[image_num];
+
+        // 显示图片信息
+        statusBar()->setStyleSheet("color:green");
+        statusBar()->showMessage(files[image_num]);
+
         ui->ImagePreviewLabel->setPixmap(pix);
 
         // 设置滑块
@@ -690,6 +766,11 @@ void Camera::on_rearButton_clicked()
         ui->num1->setNum(image_num + 1);
 
         QPixmap pix = files[image_num];
+
+        // 显示图片信息
+        statusBar()->setStyleSheet("color:green");
+        statusBar()->showMessage(files[image_num]);
+
         ui->ImagePreviewLabel->setPixmap(pix);
 
         // 设置滑块的位置
@@ -699,11 +780,24 @@ void Camera::on_rearButton_clicked()
     }
 }
 
+// 自动播放
+void Camera::on_autoplayButton_clicked()
+{
+
+}
+
 float Camera::searchMinDiff(const QImage &img1,const QImage &img2,float scale,int searchStep){
+    if(img1.width() != img2.width() || img1.height() != img2.height())
+    {
+        qDebug() << "resolution diff:" << img1.width() << img2.width() << img1.height() << img2.height();
+        return 0;
+    }
     QImage im1 = (scale == 1.0f)?img1:img1.scaled(img1.width()*scale,img1.height()*scale);
     QImage im2 = (scale == 1.0f)?img2:img2.scaled(img2.width()*scale,img2.height()*scale);
     int w1 = im1.width(),w2 = im2.width();
     int h1 = im1.height(),h2 = im2.height();
+
+
     if(w1 == 0 || h1 == 0){
         qDebug() << "empty Image";
         return 0;
@@ -711,13 +805,14 @@ float Camera::searchMinDiff(const QImage &img1,const QImage &img2,float scale,in
 
     QPoint offset(0,0);
     float minDiff = 1000000;
+    QPoint minOffset(0,0);
     while(1){
-        int localMinDiff = 100000;
-        QPoint minOffset;
+        float localMinDiff = 100000;
+
         for(int m = -1; m <= 1; m++){
             for(int n = -1; n <= 1; n++){
-                if(m == 0 || n == 0)
-                    continue;
+//                if(m == 0 && n == 0)
+//                    continue;
                 float diff = 0;
                 QPoint offfset_ = offset + searchStep*QPoint(m,n);
                 for(int y = 0; y < h1; y++){
@@ -747,6 +842,7 @@ float Camera::searchMinDiff(const QImage &img1,const QImage &img2,float scale,in
             break;
         }
     }
+    qDebug() << "min offset:" << offset;
     return minDiff;
 
 }

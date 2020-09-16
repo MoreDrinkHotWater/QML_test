@@ -58,6 +58,7 @@
 
 #include <QMainWindow>
 #include <QAbstractVideoSurface>
+#include <QDateTime>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Camera; }
@@ -112,11 +113,7 @@ private slots:
 
     void on_savePathButton_clicked();
 
-    void on_modeComboBox_currentIndexChanged(const QString &arg1);
-
     float compareImage(QImage &img1,QImage &img2,float scale,QPoint offset);
-
-    void on_readAbnormityButton_clicked();
 
     void on_rearButton_clicked();
 
@@ -125,6 +122,20 @@ private slots:
     void on_horizontalSlider_sliderMoved(int position);
 
     void Camear_handleFrame(QImage image);
+
+    void on_radioButton_toggled(bool checked);
+
+    void on_radioButton_2_toggled(bool checked);
+
+    void receive_distanceTime(int distanceTime);
+
+    void receive_diff(float diff);
+
+    // 读取
+    void on_readButton_clicked();
+
+    // 自动播放
+    void on_autoplayButton_clicked();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
@@ -140,8 +151,17 @@ private:
     int image_num;
 
     QImage current_image;
-
+    QImage last_image;
     QString base_image_str;
+
+    // 第一次记录的时间
+    QDateTime first_date_time;
+
+    // 监控的间隔时间
+    int distancetime;
+
+    // 检异的差值
+    int diff;
 
     float searchMinDiff(const QImage &img1,const QImage &img2,float scale = 1.0f,int searchStep = 2);
 
@@ -168,7 +188,7 @@ public:
 
 signals:
     void frameAvailable(QImage frame);
-    void frameAvailable(QString string);
+    void frameAvailable();
 
 public slots:
 };
