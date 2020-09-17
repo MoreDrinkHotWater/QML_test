@@ -16,6 +16,7 @@ setDiff::~setDiff()
 void setDiff::on_OK_clicked()
 {
     float diff = ui->setDiffEdit->text().toFloat();
+
     emit send_Diff(diff);
 
     close();

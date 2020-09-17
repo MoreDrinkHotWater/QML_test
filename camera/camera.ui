@@ -415,7 +415,7 @@
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>540</x>
+      <x>550</x>
       <y>390</y>
       <width>81</width>
       <height>111</height>
@@ -441,14 +441,40 @@
    <widget class="QPushButton" name="autoplayButton">
     <property name="geometry">
      <rect>
-      <x>540</x>
-      <y>510</y>
+      <x>550</x>
+      <y>520</y>
       <width>79</width>
       <height>23</height>
      </rect>
     </property>
     <property name="text">
      <string>自动播放</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="stopPlayButton">
+    <property name="geometry">
+     <rect>
+      <x>550</x>
+      <y>570</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>暂停</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>510</x>
+      <y>460</y>
+      <width>41</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>没实现</string>
     </property>
    </widget>
   </widget>

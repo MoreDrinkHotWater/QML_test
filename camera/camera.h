@@ -131,11 +131,15 @@ private slots:
 
     void receive_diff(float diff);
 
+    void receive_speed(int speed);
+
     // 读取
     void on_readButton_clicked();
 
     // 自动播放
     void on_autoplayButton_clicked();
+
+    void on_stopPlayButton_clicked();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
@@ -146,6 +150,7 @@ private:
     Ui::Camera *ui;
 
     QTimer* timer;
+    QTimer *timer_speed;
     QString filePath;
     QStringList files;
     int image_num;
@@ -161,7 +166,10 @@ private:
     int distancetime;
 
     // 检异的差值
-    int diff;
+    float diff;
+
+    // 自动播放的速度
+    int speed;
 
     float searchMinDiff(const QImage &img1,const QImage &img2,float scale = 1.0f,int searchStep = 2);
 
@@ -188,7 +196,6 @@ public:
 
 signals:
     void frameAvailable(QImage frame);
-    void frameAvailable();
 
 public slots:
 };

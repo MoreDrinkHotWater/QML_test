@@ -4,6 +4,7 @@ TARGET = camera
 QT += multimedia multimediawidgets
 
 HEADERS = \
+    autoplayspeed.h \
     camera.h \
     choosedistancetime.h \
     imagesettings.h \
@@ -11,6 +12,7 @@ HEADERS = \
     videosettings.h
 
 SOURCES = \
+    autoplayspeed.cpp \
     choosedistancetime.cpp \
     main.cpp \
     camera.cpp \
@@ -19,6 +21,7 @@ SOURCES = \
     videosettings.cpp
 
 FORMS += \
+    autoplayspeed.ui \
     camera.ui \
     choosedistancetime.ui \
     setdiff.ui \

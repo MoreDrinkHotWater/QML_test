@@ -54,6 +54,7 @@
 #include "imagesettings.h"
 #include "choosedistancetime.h"
 #include "setdiff.h"
+#include "autoplayspeed.h"
 
 #include <iostream>
 #include <QMediaService>
@@ -106,6 +107,10 @@ Camera::Camera() : ui(new Ui::Camera)
 
     timer = new QTimer();
     connect(timer,&QTimer::timeout,this,&Camera::takeImage);
+
+    timer_speed = new QTimer();
+    connect(timer_speed,&QTimer::timeout,this,&Camera::on_rearButton_clicked);
+
 
     setCamera(QCameraInfo::defaultCamera());
 }
@@ -338,7 +343,7 @@ void Camera::takeImage()
 
     m_isCapturingImage = true;
     QDateTime current_date_time = QDateTime::currentDateTime();
-    QString current_date =current_date_time.toString("/yyyy_MM_dd_hh.mm.ss");
+    QString current_date =current_date_time.toString("/yyyy_MM_dd_hh.mm.ss.zzz");
 
     QString fileName = filePath + current_date + ".jpg";
 
@@ -525,7 +530,7 @@ void Camera::Camear_handleFrame(QImage image)
     {
         // 保存图片
         QDateTime current_date_time =QDateTime::currentDateTime();
-        QString current_date =current_date_time.toString("/yyyy_MM_dd_hh.mm.ss");
+        QString current_date =current_date_time.toString("/yyyy_MM_dd_hh.mm.ss.zzz");
 
         // 计算时间差
         QString time = QDateTime::fromMSecsSinceEpoch(QDateTime::currentDateTime().toMSecsSinceEpoch() - first_date_time.toMSecsSinceEpoch()).toUTC().toString("_hh.mm.ss");
@@ -617,7 +622,7 @@ void Camera::receive_diff(float diff)
     // 设置取景器
     m_camera->setViewfinder(_cameraFrameGrabber);
     connect(_cameraFrameGrabber, SIGNAL(frameAvailable(QImage)), this, SLOT(Camear_handleFrame(QImage)));
-    connect(_cameraFrameGrabber, SIGNAL(frameAvailable()), this, SLOT(on_radioButton_2_clicked()));
+
     m_camera->start();
 }
 
@@ -663,7 +668,7 @@ bool CameraFrameGrabber::present(const QVideoFrame &frame)
                            QVideoFrame::imageFormatFromPixelFormat(cloneFrame.pixelFormat()));
 
         emit frameAvailable(image);
-        emit frameAvailable();
+
 
         cloneFrame.unmap();
         return true;
@@ -759,6 +764,9 @@ void Camera::on_frontButton_clicked()
 // 读取下一张
 void Camera::on_rearButton_clicked()
 {
+//    if(speed == 0)
+//        speed = 1;
+
     if(image_num < files.size() - 1)
     {
         image_num += 1;
@@ -778,15 +786,61 @@ void Camera::on_rearButton_clicked()
 
         ui->horizontalSlider->setValue(image_num);
     }
+    else
+    {
+        image_num = files.size() - 1;
+
+        ui->num1->setNum(image_num + 1);
+
+        QPixmap pix = files[image_num];
+
+        // 显示图片信息
+        statusBar()->setStyleSheet("color:green");
+        statusBar()->showMessage(files[image_num]);
+
+        ui->ImagePreviewLabel->setPixmap(pix);
+
+        // 设置滑块的位置
+        ui->horizontalSlider->setSliderPosition(image_num);
+
+        ui->horizontalSlider->setValue(image_num);
+
+        timer_speed->stop();
+
+        // 重置
+        image_num = 0;
+    }
 }
 
 // 自动播放
 void Camera::on_autoplayButton_clicked()
-{
-
+{ 
+    if(image_num == 0)
+    {
+        autoplaySpeed *autoplaySpeedWidget = new autoplaySpeed;
+        connect(autoplaySpeedWidget, &autoplaySpeed::seed_speed, this, &Camera::receive_speed);
+        autoplaySpeedWidget->show();
+    }
+    else
+        receive_speed(speed);
 }
 
-float Camera::searchMinDiff(const QImage &img1,const QImage &img2,float scale,int searchStep){
+
+void Camera::receive_speed(int speed)
+{
+    this->speed = speed;
+
+    timer_speed->start(speed * 50);
+}
+
+// 暂停播放
+void Camera::on_stopPlayButton_clicked()
+{
+    timer_speed->stop();
+}
+
+float Camera::searchMinDiff(const QImage &img1,const QImage &img2,float scale,int searchStep)
+{
     if(img1.width() != img2.width() || img1.height() != img2.height())
     {
         qDebug() << "resolution diff:" << img1.width() << img2.width() << img1.height() << img2.height();

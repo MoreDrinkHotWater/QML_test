@@ -942,6 +942,7 @@ void GLWidget::genCylinder(QVector<float> &vec, float r, QVector<QVector2D> head
     QVector<QPointF> line_vec;
     float temp_proportion;
 
+    // 取样
     for (int i = 0; i < line_path.size(); i++) {
 
         if(i == 0)
@@ -968,6 +969,7 @@ void GLWidget::genCylinder(QVector<float> &vec, float r, QVector<QVector2D> head
     QVector<QPointF>::iterator it_first = line_vec.begin();
     QVector<QPointF>::iterator it_end = line_vec.end();
 
+    // 获取线段的中点
     do{
         auto first_next = it_first + 1;
         auto end_next = it_end - 1;
@@ -991,6 +993,7 @@ void GLWidget::genCylinder(QVector<float> &vec, float r, QVector<QVector2D> head
     // draw
     QVector<QVector3D> origin_circle;
 
+    // 设定 Z 值
     float z = centerPoint_vector[0].y();
 
     for(int i = 0; i < shotest_path_vector.size() - 1; i++)
@@ -1026,6 +1029,7 @@ void GLWidget::genCylinder(QVector<float> &vec, float r, QVector<QVector2D> head
 
         QVector<QVector3D> new_circle;
 
+        // 构建平行于 X 轴的椭圆轨迹
         for(int j = 0; j < head_path.size(); j++){
 
             temp_proportion =  radis / proportion;
@@ -1078,6 +1082,7 @@ void GLWidget::genCylinder(QVector<float> &vec, float r, QVector<QVector2D> head
 
         origin_circle = rotate_new_circle;
 
+        // 未得到正确结果
         if(i == shotest_path_vector.size() -2)
         {
             float new_minZ = origin_circle[0].z(), new_maxZ = new_minZ, center_z;

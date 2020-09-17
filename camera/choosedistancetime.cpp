@@ -17,5 +17,7 @@ void chooseDistanceTime::on_OK_clicked()
 {
     int distanceTime = ui->distanceTime->text().toInt();
     emit send_distanceTime(distanceTime);
+
     close();
+
 }
