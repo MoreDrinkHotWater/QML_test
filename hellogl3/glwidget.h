@@ -69,6 +69,8 @@ class Recognizecylinder;
 
 class Recognizecorner;
 
+class Common;
+
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
 class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
@@ -132,6 +134,9 @@ private:
     void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVector<QVector2D> line_path_1, QVector<QVector2D> line_path_2, float height_1, float height_2, QVector3D offset);
     void genCylinder(QVector<float> &vec,float r,QVector<QVector2D> head_path, QVector<QVector2D> line_path, QVector3D offset);
 
+    // 画花生
+    void genCylinder(QVector<float> &vec, QVector<QVector2D> line_path, QVector3D offset);
+
     bool m_core;
     int m_xRot;
     int m_yRot;
@@ -187,6 +192,8 @@ private:
     Recognizecylinder *recognizecylinder;
 
     Recognizecorner *recognizecorner;
+
+    Common *common;
 
     // 偏移值
     float off_var;

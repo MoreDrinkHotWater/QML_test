@@ -29,13 +29,17 @@ void Canvas::paintEvent(QPaintEvent *event){
 
     drawLines(painter);
 
+    if(draw_stack.size() == 1)
+        // 首尾按 5 为比例拉
+        draw_centerLine2(painter);
+
     if(draw_stack.size() == 2)
     {
 #if 0
         // 延长线拉
         draw_centerLine(painter);
 #elif 1
-        // 首尾按 1 为比例拉
+        // 首尾按 5 为比例拉
         draw_centerLine2(painter);
 #elif 0
         // 平行线拉
@@ -44,30 +48,6 @@ void Canvas::paintEvent(QPaintEvent *event){
         draw_centerLine4(painter);
 #endif
     }
-
-//    QPainter p;
-//    QPixmap map(108*2, 192*2-100);
-//    map.fill(Qt::transparent);
-//    p.begin(&map);
-
-//    p.setPen(QPen(QColor("red")));
-
-//    if(draw_stack.size() > 0)
-//        {
-//            for (int i = 0; i < draw_stack.size(); i++) {
-//                QPointFF points[draw_stack[i].size()];
-//                for (int j = 0; j < draw_stack[i].size(); j+=2) {
-//                    points->setX(draw_stack[i][j]);
-//                    points->setY(draw_stack[i][j+1]);
-//                }
-
-//                p.drawPolyline(points,draw_stack[i].size());
-//            }
-//        }
-
-//    p.end();
-//    map.save("/home/damon/Desktop/image/image.png", "PNG");
-
 }
 
 void Canvas::mousePressEvent(QMouseEvent *event){
@@ -440,11 +420,23 @@ void Canvas::draw_centerLine2(QPainter &painter)
     QVector<QLineF> temp_vector;
     QVector<QPointF> centerPoint_vector;
 
-    for (int i = 0; i < draw_stack[1].size() - 1; i+=2){
+    if(draw_stack.size() == 2)
+    {
+        for (int i = 0; i < draw_stack[1].size() - 1; i+=2){
 
-        QVector2D point = QVector2D(draw_stack[1][i], draw_stack[1][i+1]);
+            QVector2D point = QVector2D(draw_stack[1][i], draw_stack[1][i+1]);
 
-        corner_line.push_back(point);
+            corner_line.push_back(point);
+        }
+    }
+    else
+    {
+        for (int i = 0; i < draw_stack[0].size() - 1; i+=2){
+
+            QVector2D point = QVector2D(draw_stack[0][i], draw_stack[0][i+1]);
+
+            corner_line.push_back(point);
+        }
     }
 
     QPointF p1, p2;
