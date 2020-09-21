@@ -1012,8 +1012,9 @@ void GLWidget::genCylinder(QVector<float> &vec, QVector<QVector2D> line_path, QV
 
     std::cout<<"var_y: "<<var_y<<std::endl;
 
-    // draw
+    // 保存圆轨迹的数组
     QVector<QVector<QVector3D>> draw_circle_vector;
+
     QVector3D first_circle_center;
 
     // shotest_path_vector.size()
