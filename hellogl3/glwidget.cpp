@@ -1053,41 +1053,26 @@ void GLWidget::genCylinder(QVector<float> &vec, QVector<QVector2D> line_path, QV
 
     std::cout<<"centerPoint_vector.size: "<<centerPoint_vector.size()<<std::endl;
 
-    QVector<float> variance_x;
-    QVector<float> variance_y;
-    for (auto centerPoint : centerPoint_vector) {
-        variance_x.push_back(centerPoint.x());
-        variance_y.push_back(centerPoint.y());
-    }
-
-    // 计算方差
-    float var_x =  common->variance(variance_x);
-    float var_y =  common->variance(variance_y);
-
-    std::cout<<"var_x: "<<var_x<<std::endl;
-
-    std::cout<<"var_y: "<<var_y<<std::endl;
-
     // 保存圆轨迹的数组
     QVector<QVector<QVector3D>> draw_circle_vector;
 
     QVector3D first_circle_center;
 
     // shotest_path_vector.size()
-    for (int i = 0; i < shotest_path_vector.size(); i++) {
+    for (int i = 0; i < shotest_path_vector.size() - 1; i++) {
 
-        float radis = QVector2D(shotest_path_vector[i].p2() - shotest_path_vector[i].p1()).length() / 2;
+        p1 = shotest_path_vector[i].p1();
 
-        std::cout<<"radis: "<< radis <<std::endl;
+        p2 = shotest_path_vector[i].p2();
+
+        float radis = QVector2D(p2 - p1).length() / 2;
 
         QVector<QVector2D> circle_vector;
 
         QVector3D center(centerPoint_vector[i].x(), centerPoint_vector[i].y(), centerPoint_vector[i].y());
 
         if(i == 0)
-            first_circle_center = center;
-
-//        qDebug() << "center" << center;
+            first_circle_center = QVector3D(centerPoint_vector[i].x(), 0, centerPoint_vector[i].y());
 
         QVector<QVector3D> temp_circle;
 
@@ -1099,17 +1084,33 @@ void GLWidget::genCylinder(QVector<float> &vec, QVector<QVector2D> line_path, QV
             t = j * 2 * M_PI / 360;
 
             // 改变圆心位置，只用给 x,y 加入固定的数值即可。
-            circle_vector.push_back(QVector2D(radis * cos(t) + center.x(), radis * sin(t) + center.y()));
+            circle_vector.push_back(QVector2D(radis * cos(t), radis * sin(t)));
 
-            // center.z() : 竖条 -> x 坐标的方差小
-            // center.x() : 横条 -> y 坐标的方差小
-            if(var_x < 0.2 && var_y > 0.2)
-                temp_circle.push_back(QVector3D(circle_vector[j].x(), circle_vector[j].y(), center.z()));
-            else
-                temp_circle.push_back(QVector3D(circle_vector[j].x(), circle_vector[j].y(), center.x()));
+            temp_circle.push_back(QVector3D(circle_vector[j].x(), circle_vector[j].y(), 0));
         }
 
-        draw_circle_vector.push_back(temp_circle);
+        // 求旋转角度
+        float cos_angle = (p2.x() - p1.x()) / sqrt(pow(p2.x() - p1.x(), 2) + pow(p2.y() - p1.y(), 2));
+
+        float sin_angle = (p2.y() - p1.y()) / sqrt(pow(p2.x() - p1.x(), 2) + pow(p2.y() - p1.y(), 2));
+
+        std::cout << "cos_angle: " << cos_angle << "  " <<  sin_angle << std::endl;
+
+        QVector<QVector3D> rotate_new_circle;
+
+        // 逆时针旋转
+        for (int j = 0; j < temp_circle.size() ; j++) {
+
+            float x = cos_angle * temp_circle[j].x() +  centerPoint_vector[i].x();
+
+            float y = temp_circle[j].y();
+
+            float z = sin_angle * temp_circle[j].x() +  centerPoint_vector[i].y();
+
+            rotate_new_circle.push_back(QVector3D(x, y, z));
+        }
+
+        draw_circle_vector.push_back(rotate_new_circle);
 
     }
 
@@ -1120,9 +1121,11 @@ void GLWidget::genCylinder(QVector<float> &vec, QVector<QVector2D> line_path, QV
         for(int j = 0; j < draw_circle_vector[i].size(); j++)
         {
             int j_1 = (j + 1) % draw_circle_vector[i].size();
+
             QVector3D temp1 = QVector3D(draw_circle_vector[i][j].x(), draw_circle_vector[i][j].y(), draw_circle_vector[i][j].z());
             QVector3D temp3 = QVector3D(draw_circle_vector[i][j_1].x(), draw_circle_vector[i][j_1].y(), draw_circle_vector[i][j_1].z());
 
+            // 首
             if(i == 1)
                 genTriangle(vec, temp1, temp3, first_circle_center);
 
@@ -1131,6 +1134,11 @@ void GLWidget::genCylinder(QVector<float> &vec, QVector<QVector2D> line_path, QV
 
             genTriangle(vec,temp3,temp1,temp4);
             genTriangle(vec,temp1,temp2,temp4);
+
+            // 尾
+            if(i == draw_circle_vector[i].size() - 1)
+                genTriangle(vec, temp2, temp4,QVector3D(centerPoint_vector[i_1].x(), centerPoint_vector[i_1].y(), draw_circle_vector[i_1][j_1].z()));  //bottom
+
         }
     }
 
@@ -1144,9 +1152,6 @@ void GLWidget::genCylinder(QVector<float> &vec, QVector<QVector2D> line_path, QV
 void GLWidget::genCylinder(QVector<float> &vec, float r, QVector<QVector2D> head_path, QVector<QVector2D> line_path, QVector3D offset)
 {
     std::cout<<"====================start====================="<<std::endl;
-
-    // 高度比 (左右线段的 Z 值偏移角度)
-    float heightRatio = mapEllipseToCircle(head_path);
 
     QVector2D min,max;
     findMinMax(head_path, min,max);
@@ -1298,7 +1303,6 @@ void GLWidget::genCylinder(QVector<float> &vec, float r, QVector<QVector2D> head
         // 逆时针旋转
         for (int j = 0; j < new_circle.size() ; j++) {
 
-            // 没看懂 x 和 z
             float x = cos_angle * new_circle[j].x() +  centerPoint_vector[i].x();
 
             float y = new_circle[j].y();

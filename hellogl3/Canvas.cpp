@@ -429,7 +429,6 @@ void Canvas::draw_centerLine2(QPainter &painter)
     }
     else
     {
-
         // 寻找 y 值最小的点, 如果有多个, 则取中间的一个。
         // 记录下标的数组
         QVector<int> min_coory_vector;
