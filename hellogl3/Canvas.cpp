@@ -101,8 +101,6 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event)
 
         update();
     }
-
-
 }
 
 void Canvas::drawPoint(QPainter &painter)
@@ -431,11 +429,63 @@ void Canvas::draw_centerLine2(QPainter &painter)
     }
     else
     {
+
+        // 寻找 y 值最小的点, 如果有多个, 则取中间的一个。
+        // 记录下标的数组
+        QVector<int> min_coory_vector;
+
+        int miny_sub = 0;
+
+        float minY = draw_stack[0][1];
+
+        // 找出最小 y 值坐标
         for (int i = 0; i < draw_stack[0].size() - 1; i+=2){
 
             QVector2D point = QVector2D(draw_stack[0][i], draw_stack[0][i+1]);
 
+            minY = qMin(minY, draw_stack[0][i+1]);
+
             corner_line.push_back(point);
+        }
+
+        // 查找是否有多个
+        for (int i = 0; i < draw_stack[0].size() - 1; i+=2)
+        {
+            if(draw_stack[0][i+1] == minY)
+                min_coory_vector.push_back(i/2);
+        }
+
+        if(min_coory_vector.size() == 1)
+        {
+            miny_sub = min_coory_vector[0];
+        }
+        else
+        {
+            for(auto miny: min_coory_vector)
+            {
+                miny_sub += miny;
+            }
+            miny_sub /= min_coory_vector.size();
+        }
+
+        // 变换后的数组
+        QVector<QVector2D> temp = corner_line;
+
+        QVector<QVector2D> first_line, second_line;
+
+        corner_line.clear();
+
+        for (int i = 0; i < temp.size(); i++) {
+            if(i < miny_sub)
+                second_line.push_back(temp[i]);
+            else
+                first_line.push_back(temp[i]);
+        }
+
+        corner_line = first_line;
+
+        for (auto var: second_line) {
+            corner_line.push_back(var);
         }
     }
 

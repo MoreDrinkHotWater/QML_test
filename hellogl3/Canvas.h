@@ -57,9 +57,6 @@ protected:
 public slots:
     void paintEvent(QPaintEvent *event) override;
 
-
-
-
 };
 
 #endif // CANVAS_H

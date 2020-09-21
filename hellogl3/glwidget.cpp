@@ -859,11 +859,67 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
     // line_vector
     QVector<QVector2D> line_vector;
 
+    // 寻找 y 值最小的点, 如果有多个, 则取中间的一个。
+
+    // 记录下标的数组
+    QVector<int> min_coory_vector;
+
+    int miny_sub = 0;
+
+    float minY = draw_coorstack[0][1];
+
+    // 找出最小 y 值坐标
     for (int var = 0; var < draw_coorstack[0].size(); var+=2) {
 
         QVector2D temp(draw_coorstack[0][var],draw_coorstack[0][var+1]);
 
+        minY = qMin(minY, draw_coorstack[0][var+1]);
+
         line_vector.push_back(temp);
+    }
+
+    // 查找是否有多个
+    for(int var = 0; var < draw_coorstack[0].size(); var+=2)
+    {
+        if(draw_coorstack[0][var+1] == minY)
+            min_coory_vector.push_back(var / 2);
+    }
+
+    std::cout<< "min_coory_vector.size: "<< min_coory_vector.size() <<std::endl;
+
+    if(min_coory_vector.size() == 1)
+    {
+        miny_sub = min_coory_vector[0];
+    }
+    else
+    {
+        for(auto miny: min_coory_vector)
+        {
+            miny_sub += miny;
+        }
+        miny_sub /= min_coory_vector.size();
+    }
+
+    std::cout<<"miny_sub: "<< miny_sub <<std::endl;
+
+    // 变换后的数组
+    QVector<QVector2D> temp = line_vector;
+
+    QVector<QVector2D> first_line, second_line;
+
+    line_vector.clear();
+
+    for (int i = 0; i < temp.size(); i++) {
+        if(i < miny_sub)
+            second_line.push_back(temp[i]);
+        else
+            first_line.push_back(temp[i]);
+    }
+
+    line_vector = first_line;
+
+    for (auto var: second_line) {
+        line_vector.push_back(var);
     }
 
     QVector3D offset(off_var,off_var,off_var);
@@ -1031,7 +1087,7 @@ void GLWidget::genCylinder(QVector<float> &vec, QVector<QVector2D> line_path, QV
         if(i == 0)
             first_circle_center = center;
 
-        std::cout<<"center.z: "<< center.z() <<std::endl;
+//        qDebug() << "center" << center;
 
         QVector<QVector3D> temp_circle;
 
@@ -1047,7 +1103,7 @@ void GLWidget::genCylinder(QVector<float> &vec, QVector<QVector2D> line_path, QV
 
             // center.z() : 竖条 -> x 坐标的方差小
             // center.x() : 横条 -> y 坐标的方差小
-            if(var_x < 0.05 && var_y > 0.2)
+            if(var_x < 0.2 && var_y > 0.2)
                 temp_circle.push_back(QVector3D(circle_vector[j].x(), circle_vector[j].y(), center.z()));
             else
                 temp_circle.push_back(QVector3D(circle_vector[j].x(), circle_vector[j].y(), center.x()));
