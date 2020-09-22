@@ -29,9 +29,9 @@ void Canvas::paintEvent(QPaintEvent *event){
 
     drawLines(painter);
 
-    if(draw_stack.size() == 1)
-        // 首尾按 5 为比例拉
-        draw_centerLine2(painter);
+//    if(draw_stack.size() == 1)
+//        // 首尾按 5 为比例拉
+//        draw_centerLine2(painter);
 
     if(draw_stack.size() == 2)
     {

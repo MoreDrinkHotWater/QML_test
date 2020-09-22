@@ -684,7 +684,7 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
         draw_coorstack.push_back(temp_vector);
     }
 
-#if 0
+#if 1
     // 识别椭圆
     if(recognizecylinder->recognize_cylinder_shape(draw_coorstack))
     {
@@ -775,15 +775,18 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
 
         off_var += 1;
 
-        // 画椭圆
-        //        genCylinder(cylinder_vector, radius, height, offset);
+        // 圆柱体
+//        genCylinder(cylinder_vector, radius, height_1, offset);
 
         if(line_vector_1.isEmpty() && line_vector_2.isEmpty())
+            // 顶部具有倾斜角度的圆柱体
             genCylinder(cylinder_vector, head_vector, height_1, offset);
         else if(!line_vector_1.isEmpty() && line_vector_2.isEmpty())
+            // 右边和左边对称的立方体
             genCylinder(cylinder_vector, head_vector, line_vector_1, height_1, offset);
         else
         {
+            // 左边和右边均可任意的立方体
             genCylinder(cylinder_vector, head_vector, line_vector_1, line_vector_2, height_1, height_2, offset);
         }
 
@@ -853,7 +856,7 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
         update();
     }
 
-#elif 1
+#elif 0
     // 画花生
 
     // line_vector
@@ -988,7 +991,7 @@ float GLWidget::mapEllipseToCircle(QVector<QVector2D> &head_path){
 // 画花生
 void GLWidget::genCylinder(QVector<float> &vec, QVector<QVector2D> line_path, QVector3D offset)
 {
-    std::cout<<"====================start====================="<<std::endl;
+    std::cout<<"====================花生====================="<<std::endl;
 
     int initSize = vec.size();
 
@@ -1149,9 +1152,10 @@ void GLWidget::genCylinder(QVector<float> &vec, QVector<QVector2D> line_path, QV
     }
 }
 
+// 椭圆->琦角
 void GLWidget::genCylinder(QVector<float> &vec, float r, QVector<QVector2D> head_path, QVector<QVector2D> line_path, QVector3D offset)
 {
-    std::cout<<"====================start====================="<<std::endl;
+    std::cout<<"====================椭圆->琦角====================="<<std::endl;
 
     QVector2D min,max;
     findMinMax(head_path, min,max);
@@ -1386,9 +1390,10 @@ void GLWidget::genCylinder(QVector<float> &vec, float r, QVector<QVector2D> head
     }
 }
 
+// 左边和右边均可任意的立方体
 void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVector<QVector2D> line_path_1, QVector<QVector2D> line_path_2, float height_1, float height_2, QVector3D offset)
 {
-    std::cout<<"====================start====================="<<std::endl;
+    std::cout<<"====================椭圆->波浪线->波浪线->曲线====================="<<std::endl;
 
     // 高度比 (左右线段的 Z 值偏移角度)
     float heightRatio = mapEllipseToCircle(head_path);
@@ -1658,8 +1663,11 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
 #endif
 }
 
-// draw_arbitrary_line
+// 右边和左边对称的立方体
 void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVector<QVector2D> line_path, float height,QVector3D offset){
+
+    std::cout<<"=========================椭圆->波浪线->直线->曲线====================="<<std::endl;
+
     // 高度比
     float heightRatio = mapEllipseToCircle(head_path);
 
@@ -1760,19 +1768,24 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
 
 }
 
-// draw_cylinder
+// 圆柱体
 void GLWidget::genCylinder(QVector<float> &vec,float r,float z,QVector3D offset){
+
+    std::cout<<"===================椭圆->直线->直线->曲线=================="<<std::endl;
+
     int n = 100;
     QVector<QVector2D> path;
     for(int i = 0; i < n; i++){
         path.append(QVector2D(r*cos(i*2*M_PI/n),r*sin(i*2*M_PI/n)));
     }
     genCylinder(vec,path,z,offset);
-
 }
 
-// draw_arbitrary
+// 顶部具有倾斜角度的圆柱体
 void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path,float z,QVector3D offset){
+
+    std::cout<<"===================椭圆->直线->直线->曲线=================="<<std::endl;
+
     float maxX = head_path[0].x(), minX = head_path[0].x(), maxY = head_path[0].y(), minY = head_path[0].y();
     for(auto it = head_path.begin(); it != head_path.end(); it++)
     {

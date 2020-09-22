@@ -24,5 +24,4 @@ void MainWindow::on_pushButton_clicked()
 
     // 用于 test
 //    ui->canvas->draw_stack.clear();
-
 }

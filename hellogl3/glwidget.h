@@ -128,6 +128,7 @@ private:
 
     // 画出模型
 
+    // 画椭圆
     void genCylinder(QVector<float> &vec,float r,float z,QVector3D offset);
     void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path,float z,QVector3D offset);
     void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVector<QVector2D> line_path, float height,QVector3D offset);
