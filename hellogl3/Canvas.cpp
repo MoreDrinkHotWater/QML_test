@@ -29,16 +29,18 @@ void Canvas::paintEvent(QPaintEvent *event){
 
     drawLines(painter);
 
-//    if(draw_stack.size() == 1)
-//        // 首尾按 5 为比例拉
-//        draw_centerLine2(painter);
+    // 花生
+    if(draw_stack.size() == 1)
+        // 首尾按 5 为比例拉
+        draw_centerLine2(painter);
 
+    // 琦角
     if(draw_stack.size() == 2)
     {
 #if 0
         // 延长线拉
         draw_centerLine(painter);
-#elif 1
+#elif 0
         // 首尾按 5 为比例拉
         draw_centerLine2(painter);
 #elif 0

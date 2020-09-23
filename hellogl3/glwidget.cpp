@@ -54,6 +54,7 @@
 #include "recognizecorner.h"
 #include "common.h"
 #include "mainwindow.h"
+#include "identification_type.h"
 
 #include <QMouseEvent>
 #include <QOpenGLShaderProgram>
@@ -85,6 +86,7 @@ GLWidget::GLWidget(QWidget *parent)
       recognizecylinder(new Recognizecylinder()),
       recognizecorner(new Recognizecorner()),
       common(new Common()),
+      identificationtypes(new Identification_type()),
       off_var(0)
 {
     m_core = QSurfaceFormat::defaultFormat().profile() == QSurfaceFormat::CoreProfile;
@@ -657,6 +659,30 @@ float GLWidget::calculateArea(QVector<QVector2D> &vec)
     return s/2.0;
 }
 
+// 屏幕坐标转世界坐标
+void GLWidget::coordinate_transformation(QStack<QVector<float>> draw_stack)
+{
+    // 坐标转换
+    QVector<float> temp_vector;
+
+    for(auto it = draw_stack.begin(); it != draw_stack.end(); ++it)
+    {
+        std::cout<< "it->size: "<<it->size()<<std::endl;
+
+        temp_vector.clear();
+
+        for (int j = 0; j < it->size(); j+=2) {
+            float x = ( it->data()[j]  - 602 / 2 ) / (602 / 2 );
+            float y = ( it->data()[j+1]   - 612 / 2 ) / (612 / 2 );
+
+            temp_vector.push_back(x);
+            temp_vector.push_back(y);
+        }
+
+        draw_coorstack.push_back(temp_vector);
+    }
+}
+
 void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
 {
     this->draw_stack = draw_stack;
@@ -751,7 +777,7 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
             head_vector = temp_vec;
         }
 
-        // 由于只有这个函数会多次调用,所以我们写成 lambda 函数,后续有需要在拿出去
+        // 由于只有这个函数会多次调用,所以我们写成 lambda 函数,后续有需要再拿出去
         // 统一竖直方向的顺序为: 从上到下
         auto  vertical_order = [] (QVector<QVector2D> &line_vector){
             if(line_vector.begin()->y() < line_vector.end()->y())
@@ -855,88 +881,166 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
 
         update();
     }
+#endif
+}
 
-#elif 0
-    // 画花生
+// 识别杯子
+void GLWidget::Recognize_cup(QStack<QVector<float>> draw_stack)
+{
+    // 用于 test
+    draw_coorstack.clear();
 
-    // line_vector
-    QVector<QVector2D> line_vector;
+    // 转换坐标
+    coordinate_transformation(draw_stack);
 
-    // 寻找 y 值最小的点, 如果有多个, 则取中间的一个。
+    QStack<QVector<float>> cylinder;
 
-    // 记录下标的数组
-    QVector<int> min_coory_vector;
+    QVector<float> peanut;
 
-    int miny_sub = 0;
+    for (int i = 0; i < draw_coorstack.size(); i++) {
 
-    float minY = draw_coorstack[0][1];
-
-    // 找出最小 y 值坐标
-    for (int var = 0; var < draw_coorstack[0].size(); var+=2) {
-
-        QVector2D temp(draw_coorstack[0][var],draw_coorstack[0][var+1]);
-
-        minY = qMin(minY, draw_coorstack[0][var+1]);
-
-        line_vector.push_back(temp);
-    }
-
-    // 查找是否有多个
-    for(int var = 0; var < draw_coorstack[0].size(); var+=2)
-    {
-        if(draw_coorstack[0][var+1] == minY)
-            min_coory_vector.push_back(var / 2);
-    }
-
-    std::cout<< "min_coory_vector.size: "<< min_coory_vector.size() <<std::endl;
-
-    if(min_coory_vector.size() == 1)
-    {
-        miny_sub = min_coory_vector[0];
-    }
-    else
-    {
-        for(auto miny: min_coory_vector)
-        {
-            miny_sub += miny;
-        }
-        miny_sub /= min_coory_vector.size();
-    }
-
-    std::cout<<"miny_sub: "<< miny_sub <<std::endl;
-
-    // 变换后的数组
-    QVector<QVector2D> temp = line_vector;
-
-    QVector<QVector2D> first_line, second_line;
-
-    line_vector.clear();
-
-    for (int i = 0; i < temp.size(); i++) {
-        if(i < miny_sub)
-            second_line.push_back(temp[i]);
+        if(i == draw_coorstack.size() - 1)
+            peanut = draw_coorstack[i];
         else
-            first_line.push_back(temp[i]);
+            cylinder.push_back(draw_coorstack[i]);
     }
 
-    line_vector = first_line;
+    // step1: 识别圆柱体
+    if(recognizecylinder->recognize_cylinder_shape(cylinder))
+    {
+        this->radius = recognizecylinder->radius;
+        this->height_1 = recognizecylinder->height_1;
 
-    for (auto var: second_line) {
-        line_vector.push_back(var);
+        std::cout<<"radius: "<<radius<<std::endl;
+        std::cout<<"height_1: "<<height_1<<std::endl;
     }
+
+    // 保存花生数据的数组
+    QVector<QVector2D> peanutLine_vector;
+
+    // step2: 识别花生
+    if(identificationtypes->recognize_peanut(peanut))
+    {
+        // 寻找 y 值最小的点, 如果有多个, 则取中间的一个。
+
+        // 记录下标的数组
+        QVector<int> min_coory_vector;
+
+        int miny_sub = 0;
+
+        float minY = peanut[1];
+
+        // 找出最小 y 值坐标
+        for (int var = 0; var < peanut.size(); var+=2) {
+
+            QVector2D temp(peanut[var],peanut[var+1]);
+
+            minY = qMin(minY, peanut[var+1]);
+
+            peanutLine_vector.push_back(temp);
+        }
+
+        // 查找是否有多个
+        for(int var = 0; var < peanut.size(); var+=2)
+        {
+            if(peanut[var + 1] == minY)
+                min_coory_vector.push_back(var / 2);
+        }
+
+        std::cout<< "min_coory_vector.size: "<< min_coory_vector.size() <<std::endl;
+
+        if(min_coory_vector.size() == 1)
+        {
+            miny_sub = min_coory_vector[0];
+        }
+        else
+        {
+            for(auto miny: min_coory_vector)
+            {
+                miny_sub += miny;
+            }
+            miny_sub /= min_coory_vector.size();
+        }
+
+        std::cout<<"miny_sub: "<< miny_sub <<std::endl;
+
+        // 变换后的数组
+        QVector<QVector2D> temp = peanutLine_vector;
+
+        QVector<QVector2D> first_line, second_line;
+
+        peanutLine_vector.clear();
+
+        for (int i = 0; i < temp.size(); i++) {
+            if(i < miny_sub)
+                second_line.push_back(temp[i]);
+            else
+                first_line.push_back(temp[i]);
+        }
+
+        peanutLine_vector = first_line;
+
+        for (auto var: second_line) {
+            peanutLine_vector.push_back(var);
+        }
+
+    }
+
+    // step3: 识别相对位置
+
+    for(int i = 0; i < recognizecylinder->type_vec.size(); i++)
+    {
+        std::cout<< "type["<<i<<"]: "<<recognizecylinder->type_vec[i].toStdString()<<std::endl;
+
+        // 找最右边的直线
+        if(recognizecylinder->type_vec[i] == "直线")
+        {
+            int intersection_num = 0;
+
+            QVector<QVector2D> intersection_vector;
+            // 判断交点个数以及输出交点坐标
+            for(int j = 0; j < cylinder.size(); j+=2)
+            {
+                QVector2D point = QVector2D(cylinder[i][j], cylinder[i][j+1]);
+
+                for (auto peanut_point: peanutLine_vector)
+                {
+
+                    std::cout<<"diff: "<<QVector2D(point - peanut_point).length()<<std::endl;
+
+                    if(QVector2D(point - peanut_point).length() < 0.1)
+                    {
+                        intersection_num += 1;
+                        intersection_vector.push_back(point);
+                    }
+                }
+            }
+
+            std::cout<<"intersection_num: "<< intersection_num <<std::endl;
+
+            for(auto intersection_point: intersection_vector)
+                std::cout<<"intersection_point: "<< intersection_point.x()<< " "<<intersection_point.y()<<std::endl;
+
+        }
+    }
+
+    // step4: draw 模型
 
     QVector3D offset(off_var,off_var,off_var);
 
     off_var += 1;
 
-    genCylinder(cylinder_vector, line_vector, offset);
+    // 圆柱体
+    genCylinder(cylinder_vector, radius, height_1, offset);
+
+    // 花生
+    genCylinder(cylinder_vector, peanutLine_vector, offset);
 
     allocate_vector();
 
     update();
-
-#endif
 }
+
 
 // 三角化
 void GLWidget::genTriangle(QVector<float> &vec,QVector3D p0,QVector3D p1,QVector3D p2){
@@ -1097,7 +1201,7 @@ void GLWidget::genCylinder(QVector<float> &vec, QVector<QVector2D> line_path, QV
 
         float sin_angle = (p2.y() - p1.y()) / sqrt(pow(p2.x() - p1.x(), 2) + pow(p2.y() - p1.y(), 2));
 
-        std::cout << "cos_angle: " << cos_angle << "  " <<  sin_angle << std::endl;
+//        std::cout << "cos_angle: " << cos_angle << "  " <<  sin_angle << std::endl;
 
         QVector<QVector3D> rotate_new_circle;
 
@@ -1771,8 +1875,6 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
 // 圆柱体
 void GLWidget::genCylinder(QVector<float> &vec,float r,float z,QVector3D offset){
 
-    std::cout<<"===================椭圆->直线->直线->曲线=================="<<std::endl;
-
     int n = 100;
     QVector<QVector2D> path;
     for(int i = 0; i < n; i++){
@@ -1784,7 +1886,7 @@ void GLWidget::genCylinder(QVector<float> &vec,float r,float z,QVector3D offset)
 // 顶部具有倾斜角度的圆柱体
 void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path,float z,QVector3D offset){
 
-    std::cout<<"===================椭圆->直线->直线->曲线=================="<<std::endl;
+    std::cout<<"===================圆柱体=================="<<std::endl;
 
     float maxX = head_path[0].x(), minX = head_path[0].x(), maxY = head_path[0].y(), minY = head_path[0].y();
     for(auto it = head_path.begin(); it != head_path.end(); it++)

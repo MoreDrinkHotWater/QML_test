@@ -497,3 +497,19 @@ bool Identification_type::recognize_corner(QVector<float> vec)
     return true;
 }
 
+bool Identification_type::recognize_peanut(QVector<float> vec)
+{
+    // line
+    QVector<QVector2D> line_vector;
+
+    for (int var = 0; var < vec.size(); var+=2) {
+        QVector2D temp(vec[var],vec[var+1]);
+        line_vector.push_back(temp);
+    }
+
+    if(QVector2D(line_vector[line_vector.size() - 1] - line_vector[0]).length() < 0.01)
+        return true;
+    else
+        return false;
+}
+

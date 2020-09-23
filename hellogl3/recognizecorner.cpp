@@ -161,6 +161,4 @@ bool Recognizecorner::recognize_corner_shape(QStack<QVector<float>> draw_coorsta
     }
     else
         return false;
-
-
 }

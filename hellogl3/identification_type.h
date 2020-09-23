@@ -14,12 +14,18 @@ public:
     static Identification_type *getInstance();
 
     // 识别类型
+    // 椭圆
     bool recognize_cylinder(QVector<float> vec);
+    // 直线
     bool recognize_straightLine(QVector<float> vec);
+    // 曲线
     bool recognize_curveLine(QVector<float> vec);
+    // 波浪线
     bool recognize_wavyLine(QVector<float> vec);
-
+    // 琦角
     bool recognize_corner(QVector<float> vec);
+    // 花生
+    bool recognize_peanut(QVector<float> vec);
 
     float radius;
 

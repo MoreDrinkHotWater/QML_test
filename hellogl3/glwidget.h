@@ -71,6 +71,8 @@ class Recognizecorner;
 
 class Common;
 
+class Identification_type;
+
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
 class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
@@ -97,6 +99,9 @@ public slots:
 
     void reviceStackDataSlot(QStack<QVector<float>> draw_stack);
 
+    // 识别杯子
+    void Recognize_cup(QStack<QVector<float>> draw_coorstack);
+
 signals:
     void xRotationChanged(int angle);
     void yRotationChanged(int angle);
@@ -114,6 +119,9 @@ private:
     void setupVertexAttribs();
 
     void allocate_vector();
+
+    // 坐标转换
+    void coordinate_transformation(QStack<QVector<float>> draw_stack);
 
     // 计算多边形的面积
     float calculateArea(QVector<QVector2D> &vec);
@@ -195,6 +203,8 @@ private:
     Recognizecorner *recognizecorner;
 
     Common *common;
+
+    Identification_type *identificationtypes;
 
     // 偏移值
     float off_var;
