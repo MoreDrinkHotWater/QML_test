@@ -21,7 +21,21 @@ private slots:
 
     void cup_clicked();
 
+    void saveFile();
+
+    void quitApp();
+
 private:
     Ui::MainWindow *ui;
+
+    QMenuBar *pmeunBar;
+
+    QAction *saveAction;
+    QAction *exitAction;
+
+    QAction *cupAction;
+
+    void initActions();
+    void initMenu();
 };
 #endif // MAINWINDOW_H

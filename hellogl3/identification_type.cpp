@@ -507,7 +507,7 @@ bool Identification_type::recognize_peanut(QVector<float> vec)
         line_vector.push_back(temp);
     }
 
-    if(QVector2D(line_vector[line_vector.size() - 1] - line_vector[0]).length() < 0.01)
+    if(QVector2D(line_vector[line_vector.size() - 1] - line_vector[0]).length() < 0.1)
         return true;
     else
         return false;

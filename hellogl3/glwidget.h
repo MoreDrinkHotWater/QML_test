@@ -60,6 +60,7 @@
 
 #include <QTimer>
 #include <QStack>
+#include <QVector2D>
 
 class MainWindow;
 
@@ -90,6 +91,9 @@ public:
     QSize sizeHint() const override;
 
     void loader_data();
+
+    // 保存模型的数据
+    QVector<GLfloat> cylinder_vector;
 
 public slots:
     void setXRotation(int angle);
@@ -137,7 +141,7 @@ private:
     // 画出模型
 
     // 画椭圆
-    void genCylinder(QVector<float> &vec,float r,float z,QVector3D offset);
+    void genCylinder(QVector<float> &vec,QVector2D cylinder_center,float r,float z,QVector3D offset);
     void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path,float z,QVector3D offset);
     void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVector<QVector2D> line_path, float height,QVector3D offset);
     void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVector<QVector2D> line_path_1, QVector<QVector2D> line_path_2, float height_1, float height_2, QVector3D offset);
@@ -180,8 +184,6 @@ private:
 
     QStack<QVector<float>> draw_coorstack;
 
-    QVector<GLfloat> cylinder_vector;
-
     int m_projMatrixLoc;
     int m_mvMatrixLoc;
     int m_normalMatrixLoc;
@@ -208,6 +210,16 @@ private:
 
     // 偏移值
     float off_var;
+
+    // 保存花生和直线交点的数组
+    QVector<QVector2D> intersection_vector;
+
+    // 圆柱体的中心(2D和3D一样不会改变)
+    QVector2D  cylinder_center;
+
+    float cylinder_maxX_2D, peanut_minX_2D;
+    float cylinder_maxX_3D, peanut_minX_3D;
+    float peanut_offset_x;
 };
 
 #endif
