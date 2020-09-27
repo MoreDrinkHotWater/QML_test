@@ -104,7 +104,7 @@ void MainWindow::saveFile() {
 
     std::ofstream fout(filePath.toStdString());
     if ( fout ) { // 如果创建成功bai
-        fout << "solid " + current_date.toStdString() + " stl" << std::endl; // 使用与cout同样的方式进行du写入
+        fout << "solid " + current_date.toStdString() + "stl" << std::endl; // 使用与cout同样的方式进行du写入
 
         QVector<float> coorXYZ;
 
@@ -147,11 +147,11 @@ void MainWindow::saveFile() {
 
                 fout << "outor loop"<< std::endl;
 
-                fout << "Vertex " + Vertex1_string.toStdString() << std::endl;
+                fout << "vertex " + Vertex1_string.toStdString() << std::endl;
 
-                fout << "Vertex " + Vertex2_string.toStdString() << std::endl;
+                fout << "vertex " + Vertex2_string.toStdString() << std::endl;
 
-                fout << "Vertex " + Vertex3_string.toStdString() << std::endl;
+                fout << "vertex " + Vertex3_string.toStdString() << std::endl;
 
                 fout << "endloop"<< std::endl;
 
@@ -160,6 +160,9 @@ void MainWindow::saveFile() {
                 coorXYZ.clear();
             }
         }
+
+        fout << "endsolid " + current_date.toStdString() + "stl" << std::endl; // 使用与cout同样的方式进行du写入
+
         fout.close(); // 执行完操作zhi后关闭文件句柄
     }
 
