@@ -104,7 +104,10 @@ public slots:
     void reviceStackDataSlot(QStack<QVector<float>> draw_stack);
 
     // 识别杯子
-    void Recognize_cup(QStack<QVector<float>> draw_coorstack);
+    void Recognize_cup(QStack<QVector<float>> draw_stack);
+
+    // 识别台灯
+    void Recognize_deskLamp(QStack<QVector<float>> draw_stack);
 
 signals:
     void xRotationChanged(int angle);

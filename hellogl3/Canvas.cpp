@@ -27,7 +27,15 @@ void Canvas::paintEvent(QPaintEvent *event){
     if(draw_lines_vector.size() >= 2)
         drawPoint(painter);
 
-    drawLines(painter);
+    if(draw_canvas_stack.size()  != 0)
+    {
+
+       draw_stack = draw_canvas_stack;
+
+       drawCanvas(painter);
+    }
+    else
+        drawLines(painter);
 
     // 花生
     if(draw_stack.size() == 1)
@@ -115,6 +123,52 @@ void Canvas::drawPoint(QPainter &painter)
     }
 
     update();
+}
+
+void Canvas::drawCanvas(QPainter &painter)
+{
+
+    painter.setPen(Qt::green);
+
+    QVector<QLineF> temp_vector;
+
+    QVector<QPointF> draw_points_vector;
+    QStack<QVector<QPointF>> draw_points_stack;
+    for(auto it = draw_canvas_stack.begin(); it != draw_canvas_stack.end(); ++it)
+    {
+        for(int i = 0; i < it->size(); i+=2)
+        {
+            draw_points_vector.push_back(QPointF(it->data()[i], it->data()[i+1]));
+
+            if(i != 0 && i != it->size() - 1)
+                draw_points_vector.push_back(QPointF(it->data()[i], it->data()[i+1]));
+        }
+
+        draw_points_stack.push_back(draw_points_vector);
+
+        draw_points_vector.clear();
+    }
+
+    for(auto it = draw_points_stack.begin(); it != draw_points_stack.end(); ++it)
+    {
+        for(int i = 0; i < it->size() - 1; i++)
+        {
+            QLineF temp_line(it->data()[i].x(), it->data()[i].y(), it->data()[i+1].x(), it->data()[i+1].y());
+            temp_vector.push_back(temp_line);
+
+            if(i != 0 && i != it->size() - 2)
+            {
+                temp_vector.push_back(temp_line);
+            }
+
+        }
+
+        painter.drawLines(temp_vector);
+
+        temp_vector.clear();
+
+        update();
+    }
 }
 
 void Canvas::drawLines(QPainter &painter)
@@ -551,11 +605,11 @@ void Canvas::draw_centerLine2(QPainter &painter)
         centerLine_vector.push_back(temp_line);
     }
 
-    painter.drawLines(temp_vector);
+//    painter.drawLines(temp_vector);
 
     painter.setPen(Qt::red);
 
-    painter.drawLines(centerLine_vector);
+//    painter.drawLines(centerLine_vector);
 
     update();
 }

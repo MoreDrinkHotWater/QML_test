@@ -30,6 +30,8 @@ private:
 
     void drawLines(QPainter &painter);
 
+    void drawCanvas(QPainter &painter);
+
     void draw_centerLine(QPainter &painter);
 
     void draw_centerLine2(QPainter &painter);
@@ -41,9 +43,9 @@ private:
 public:
     QVector<float> draw_lines_vector;
 
-    QStack<QVector<float>> draw_stack;
+    QStack<QVector<float>> draw_canvas_stack;
 
-    QVector<float> draw_vector;
+    QStack<QVector<float>> draw_stack;
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;

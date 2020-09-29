@@ -490,6 +490,9 @@ void GLWidget::paintGL()
     {
         //        std::cout<<"=====================test3=================="<<std::endl;
         //        glDrawArrays(GL_LINES, 0, cylinder_vector.count() / 3 );
+
+//        std::cout<<"draw cylinder_vector.size: "<<cylinder_vector.size()<<std::endl;
+
         glDrawArrays(GL_TRIANGLES, 0, cylinder_vector.count() / 6 );
     }
 
@@ -670,6 +673,9 @@ float GLWidget::calculateArea(QVector<QVector2D> &vec)
 // 屏幕坐标转世界坐标
 void GLWidget::coordinate_transformation(QStack<QVector<float>> draw_stack)
 {
+    // 用于 test
+    draw_coorstack.clear();
+
     // 坐标转换
     QVector<float> temp_vector;
 
@@ -695,28 +701,7 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
 {
     this->draw_stack = draw_stack;
 
-    // 用于 test
-    draw_coorstack.clear();
-
-    // 坐标转换
-    QVector<float> temp_vector;
-
-    for(auto it = draw_stack.begin(); it != draw_stack.end(); ++it)
-    {
-        std::cout<< "it->size: "<<it->size()<<std::endl;
-
-        temp_vector.clear();
-
-        for (int j = 0; j < it->size(); j+=2) {
-            float x = ( it->data()[j]  - 602 / 2 ) / (602 / 2 );
-            float y = ( it->data()[j+1]   - 612 / 2 ) / (612 / 2 );
-
-            temp_vector.push_back(x);
-            temp_vector.push_back(y);
-        }
-
-        draw_coorstack.push_back(temp_vector);
-    }
+    coordinate_transformation(draw_stack);
 
 #if 1
     // 识别椭圆
@@ -889,14 +874,92 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
 
         update();
     }
+
+#elif 0
+    // 画花生
+
+    // line_vector
+    QVector<QVector2D> line_vector;
+
+    // 寻找 y 值最小的点, 如果有多个, 则取中间的一个。
+
+    // 记录下标的数组
+    QVector<int> min_coory_vector;
+
+    int miny_sub = 0;
+
+    float minY = draw_coorstack[0][1];
+
+    // 找出最小 y 值坐标
+    for (int var = 0; var < draw_coorstack[0].size(); var+=2) {
+
+        QVector2D temp(draw_coorstack[0][var],draw_coorstack[0][var+1]);
+
+        minY = qMin(minY, draw_coorstack[0][var+1]);
+
+        line_vector.push_back(temp);
+    }
+
+    // 查找是否有多个
+    for(int var = 0; var < draw_coorstack[0].size(); var+=2)
+    {
+        if(draw_coorstack[0][var+1] == minY)
+            min_coory_vector.push_back(var / 2);
+    }
+
+    std::cout<< "min_coory_vector.size: "<< min_coory_vector.size() <<std::endl;
+
+    if(min_coory_vector.size() == 1)
+    {
+        miny_sub = min_coory_vector[0];
+    }
+    else
+    {
+        for(auto miny: min_coory_vector)
+        {
+            miny_sub += miny;
+        }
+        miny_sub /= min_coory_vector.size();
+    }
+
+    std::cout<<"miny_sub: "<< miny_sub <<std::endl;
+
+    // 变换后的数组
+    QVector<QVector2D> temp = line_vector;
+
+    QVector<QVector2D> first_line, second_line;
+
+    line_vector.clear();
+
+    for (int i = 0; i < temp.size(); i++) {
+        if(i < miny_sub)
+            second_line.push_back(temp[i]);
+        else
+            first_line.push_back(temp[i]);
+    }
+
+    line_vector = first_line;
+
+    for (auto var: second_line) {
+        line_vector.push_back(var);
+    }
+
+    QVector3D offset(off_var,off_var,off_var);
+
+    off_var += 1;
+
+    genCylinder(cylinder_vector, line_vector, offset);
+
+    allocate_vector();
+
+    update();
 #endif
 }
 
 // 识别杯子
 void GLWidget::Recognize_cup(QStack<QVector<float>> draw_stack)
 {
-    // 用于 test
-    draw_coorstack.clear();
+    std::cout<<"=========================start========================"<<std::endl;
 
     // 转换坐标
     coordinate_transformation(draw_stack);
@@ -948,7 +1011,6 @@ void GLWidget::Recognize_cup(QStack<QVector<float>> draw_stack)
 
         return;
     }
-
 
     // 保存花生数据的数组
     QVector<QVector2D> peanutLine_vector;
@@ -1029,7 +1091,6 @@ void GLWidget::Recognize_cup(QStack<QVector<float>> draw_stack)
         return;
     }
 
-
     // step3: 识别相对位置
     int intersection_num = 0;
 
@@ -1098,10 +1159,16 @@ void GLWidget::Recognize_cup(QStack<QVector<float>> draw_stack)
     update();
 }
 
+void GLWidget::Recognize_deskLamp(QStack<QVector<float>> draw_stack)
+{
+    std::cout<<"======================start===================="<<std::endl;
+}
 
 // 三角化
 void GLWidget::genTriangle(QVector<float> &vec,QVector3D p0,QVector3D p1,QVector3D p2){
+    // 单位化法向量
     QVector3D n = QVector3D::normal(p0,p1,p2);
+
     vec.append(p0.x());vec.append(p0.y());vec.append(p0.z());
     vec.append(n.x());vec.append(n.y());vec.append(n.z());
     vec.append(p1.x());vec.append(p1.y());vec.append(p1.z());
@@ -1334,8 +1401,6 @@ void GLWidget::genCylinder(QVector<float> &vec, QVector<QVector2D> line_path, QV
 
     // 花生的 maxX 加偏移后的 y 值
     std::cout<<"peanut.y: "<<peanut_maxY_3D + peanut_offset_y<<std::endl;
-
-//    offset = QVector3D(peanut_offset_x, peanut_offset_y, 0);
 
     offset = QVector3D(0, peanut_offset_y, 0);
 
