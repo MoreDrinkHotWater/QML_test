@@ -513,3 +513,4 @@ bool Identification_type::recognize_peanut(QVector<float> vec)
         return false;
 }
 
+

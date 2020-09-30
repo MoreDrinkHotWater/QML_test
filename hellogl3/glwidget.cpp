@@ -1159,9 +1159,165 @@ void GLWidget::Recognize_cup(QStack<QVector<float>> draw_stack)
     update();
 }
 
+// 识别雨伞
 void GLWidget::Recognize_deskLamp(QStack<QVector<float>> draw_stack)
 {
     std::cout<<"======================start===================="<<std::endl;
+
+    coordinate_transformation(draw_stack);
+
+    // 保存雨伞上部分
+    QStack<QVector<float>> cylinder;
+    // 保存雨伞下部分
+    QVector<float> corner;
+
+    for (int i = 0; i < draw_coorstack.size(); i++) {
+
+        if(i == draw_coorstack.size() - 1)
+            corner = draw_coorstack[i];
+        else
+            cylinder.push_back(draw_coorstack[i]);
+    }
+
+    // 识别椭圆
+    // head_vector
+    QVector<QVector2D> head_vector, wavyline_vector_1, wavyline_vector_2;
+
+    if(recognizecylinder->recognize_cylinder_shape(cylinder))
+    {
+        this->radius = recognizecylinder->radius;
+        this->height_1 = recognizecylinder->height_1;
+        this->height_2 = recognizecylinder->height_2;
+
+        std::cout<<"radius: "<<radius<<std::endl;
+        std::cout<<"height_1: "<<height_1<<std::endl;
+        std::cout<<"height_2: "<<height_2<<std::endl;
+
+        int cylinder_index = 0, line_index = 0;
+
+        for(int i = 0; i < recognizecylinder->type_vec.size(); i++)
+        {
+            if(recognizecylinder->type_vec[i] == "椭圆")
+            {
+                cylinder_index = i;
+                for (int var = 0; var < draw_coorstack[cylinder_index].size(); var+=2) {
+
+                    QVector2D temp(draw_coorstack[cylinder_index][var],draw_coorstack[cylinder_index][var+1]);
+
+                    head_vector.push_back(temp);
+                }
+            }
+            // 没有区分左右
+            else if(recognizecylinder->type_vec[i] == "波浪线")
+            {
+                line_index = i;
+                // 波浪线 1
+                if(wavyline_vector_1.isEmpty())
+                {
+                    for (int var = 0; var < draw_coorstack[line_index].size(); var+=2) {
+
+                        QVector2D temp(draw_coorstack[line_index][var],draw_coorstack[line_index][var+1]);
+
+                        wavyline_vector_1.push_back(temp);
+                    }
+                }
+                // 波浪线 2
+                else
+                {
+                    for (int var = 0; var < draw_coorstack[line_index].size(); var+=2) {
+
+                        QVector2D temp(draw_coorstack[line_index][var],draw_coorstack[line_index][var+1]);
+
+                        wavyline_vector_2.push_back(temp);
+                    }
+                }
+            }
+        }
+
+        // 计算多边形面积 -> 确定是顺时针还是逆时针。
+        // 顺时针面积>0 逆时针面积<0
+        // 统一为逆时针方向
+        if(calculateArea(head_vector) > 0)
+        {
+            QVector<QVector2D> temp_vec;
+            for(int var = head_vector.size()-1; var >=0 ; var--)
+            {
+                temp_vec.push_back(head_vector[var]);
+            }
+            head_vector = temp_vec;
+        }
+
+        // 由于只有这个函数会多次调用,所以我们写成 lambda 函数,后续有需要再拿出去
+        // 统一竖直方向的顺序为: 从上到下
+        auto  vertical_order = [] (QVector<QVector2D> &line_vector){
+            if(line_vector.begin()->y() < line_vector.end()->y())
+            {
+                QVector<QVector2D> temp_vec;
+                for(int var = line_vector.size()-1; var >=0 ; var--)
+                {
+                    temp_vec.push_back(line_vector[var]);
+                }
+                line_vector = temp_vec;
+            }
+        };
+
+        if(!wavyline_vector_1.isEmpty())
+            vertical_order(wavyline_vector_1);
+
+        if(!wavyline_vector_2.isEmpty())
+            vertical_order(wavyline_vector_2);
+
+    }
+    else
+    {
+        QMessageBox::information(NULL, "Error", "识别椭圆立方体失败！");
+
+        return;
+    }
+
+    // 保存琦角数据的数组
+    QVector<QVector2D> cornerLine_vector;
+
+    // step2: 识别琦角
+    if(identificationtypes->recognize_corner(corner))
+    {
+        for(int i = 0; i < corner.size() - 1; i+=2)
+        {
+            cornerLine_vector.push_back(QVector2D(corner[i], corner[i+1]));
+        }
+    }
+
+    // 识别相对关系
+
+
+    // draw模型
+
+    QVector3D offset(off_var,off_var,off_var);
+
+    off_var += 0;
+
+    // 圆柱体
+//        genCylinder(cylinder_vector, radius, height_1, offset);
+
+    if(wavyline_vector_1.isEmpty() && wavyline_vector_2.isEmpty())
+        // 顶部具有倾斜角度的圆柱体
+        genCylinder(cylinder_vector, head_vector, height_1, offset);
+    else if(!wavyline_vector_1.isEmpty() && wavyline_vector_2.isEmpty())
+        // 右边和左边对称的立方体
+        genCylinder(cylinder_vector, head_vector, wavyline_vector_1, height_1, offset);
+    else
+    {
+        // 左边和右边均可任意的立方体
+        genCylinder(cylinder_vector, head_vector, wavyline_vector_1, wavyline_vector_2, height_1, height_2, offset);
+    }
+
+    // 画花生
+    genCylinder(cylinder_vector, radius, head_vector, cornerLine_vector, offset);
+
+    allocate_vector();
+
+    update();
+
 }
 
 // 三角化
@@ -1664,6 +1820,9 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
 
     std::cout<<"center.x: "<<center.x()<<" center.y: "<<center.y()<<std::endl;
 
+    std::cout<<"origin height_1: "<<abs(line_path_1[line_path_1.size()-1].y()-line_path_1[0].y())<<std::endl;
+    std::cout<<"origin height_2: "<<abs(line_path_2[line_path_2.size()-1].y()-line_path_2[0].y())<<std::endl;
+
     int initSize = vec.size();
 
     // 缩放变换
@@ -1712,8 +1871,8 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
         std::cout<<"拉伸成功!"<<std::endl;
     }
 
-    std::cout<<"height_1: "<<abs(line_path_1[line_path_1.size()-1].y()-line_path_1[0].y())<<std::endl;
-    std::cout<<"height_2: "<<abs(line_path_2[line_path_2.size()-1].y()-line_path_2[0].y())<<std::endl;
+    std::cout<<"new height_1: "<<abs(line_path_1[line_path_1.size()-1].y()-line_path_1[0].y())<<std::endl;
+    std::cout<<"new height_2: "<<abs(line_path_2[line_path_2.size()-1].y()-line_path_2[0].y())<<std::endl;
 
     if(str == "line_1")
     {
@@ -1752,8 +1911,8 @@ void GLWidget::genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVe
     if(abs(line_path_1.end()->y() - line_path_1[0].y() + ((Divide_size - 1) * Divide_Ratio)) < 0.01)
     {
         std::cout<<"Divide success! "<<std::endl;
-    }
 
+    }
     QVector<QVector2D> line1_vec, line2_vec, center_vec;
 
     for(int i = 0; i < Divide_size; i++)
