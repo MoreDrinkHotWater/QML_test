@@ -220,9 +220,7 @@ private:
     // 圆柱体的中心(2D和3D一样不会改变)
     QVector2D  cylinder_center;
 
-    float cylinder_maxX_2D, peanut_minX_2D;
-    float cylinder_maxX_3D, peanut_minX_3D;
-    float peanut_offset_x;
+    float peanut_minX_3D;
 };
 
 #endif

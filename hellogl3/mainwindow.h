@@ -31,6 +31,8 @@ private slots:
 
     void deskLamp_clicked();
 
+    void on_clearButton_clicked();
+
 private:
     Ui::MainWindow *ui;
 

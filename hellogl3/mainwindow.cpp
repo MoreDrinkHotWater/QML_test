@@ -323,3 +323,10 @@ void MainWindow::deskLamp_clicked()
 {
     ui->glwidget->glWidget->Recognize_deskLamp(ui->canvas->draw_stack);
 }
+
+void MainWindow::on_clearButton_clicked()
+{
+    ui->canvas->draw_stack.clear();
+
+    ui->glwidget->glWidget->cylinder_vector.clear();
+}
