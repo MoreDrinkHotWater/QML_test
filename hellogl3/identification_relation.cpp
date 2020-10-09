@@ -263,6 +263,21 @@ bool Identification_relation::join(QString str_1, QString str_2, QVector<float> 
 
         return jundge(cylinder_lower_left, cylinder_upper_right, corner_first, corner_end);
     }
+    // 直线和波浪线
+    else if(str_1 == "straightLine" && str_2 == "wavyLine")
+    {
+        find_straightLineNode(_vec1);
+        find_wavyLineNode(_vec2);
+
+        return jundge(straightLine_first, straightLine_end, wavyLine_first, wavyLine_end);
+    }
+    else if(str_1 == "wavyLine" && str_2 == "straightLine")
+    {
+        find_wavyLineNode(_vec1);
+        find_straightLineNode(_vec2);
+
+        return jundge(straightLine_first, straightLine_end, wavyLine_first, wavyLine_end);
+    }
     else
         return false;
 

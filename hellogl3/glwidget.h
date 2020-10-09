@@ -221,6 +221,14 @@ private:
     QVector2D  cylinder_center;
 
     float peanut_minX_3D;
+
+    bool offset_cup, offset_deskLamp;
+
+    // 台灯的底座高度 deskLamp_bottom_height
+    float deskLamp_bottom_radius,deskLamp_bottom_height;
+
+    // 底座和灯罩的偏移值
+    float offset_center;
 };
 
 #endif

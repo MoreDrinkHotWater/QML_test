@@ -605,11 +605,11 @@ void Canvas::draw_centerLine2(QPainter &painter)
         centerLine_vector.push_back(temp_line);
     }
 
-//    painter.drawLines(temp_vector);
+    painter.drawLines(temp_vector);
 
     painter.setPen(Qt::red);
 
-//    painter.drawLines(centerLine_vector);
+    painter.drawLines(centerLine_vector);
 
     update();
 }
