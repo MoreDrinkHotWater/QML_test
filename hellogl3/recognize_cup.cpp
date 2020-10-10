@@ -72,7 +72,6 @@ bool Recognize_cup::recognize_cup(QStack<QVector<float> > draw_stack)
                 cylinder_center = QVector2D(min + max)/2;
             }
         }
-
     }
     else
     {

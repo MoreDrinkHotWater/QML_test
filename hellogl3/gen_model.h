@@ -30,7 +30,7 @@ public:
     // 任意
     void genArbitrary(QVector<float> &vec,QVector<QVector2D> head_path, QVector<QVector2D> line_path_1, QVector<QVector2D> line_path_2, float height_1, float height_2, QVector3D offset);
     // 琦角
-    void genMarch_Angle(QVector<float> &vec,float r,QVector<QVector2D> head_path, QVector<QVector2D> line_path, QVector3D offset);
+    void genMarch_Angle(QVector<float> &vec,QVector<QVector2D> head_path, QVector<QVector2D> line_path, QVector3D offset);
     // 画花生
     void genPeanut(QVector<float> &vec, QVector<QVector2D> line_path, QVector3D offset);
 

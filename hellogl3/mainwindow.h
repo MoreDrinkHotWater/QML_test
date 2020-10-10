@@ -56,6 +56,7 @@ private:
     void initActions();
     void initMenu();
 
+private:
     Recognize_cup *recognizeCup;
 
     Recognize_deskLamp *recognizeDeskLamp;

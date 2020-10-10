@@ -58,7 +58,6 @@
 
 #include "recognize_cup.h"
 #include "recognize_desklamp.h"
-
 #include "gen_model.h"
 
 #include <QMouseEvent>

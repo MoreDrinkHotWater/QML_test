@@ -230,7 +230,7 @@ void gen_Model::genPeanut(QVector<float> &vec, QVector<QVector2D> line_path, QVe
 }
 
 // 琦角
-void gen_Model::genMarch_Angle(QVector<float> &vec, float r, QVector<QVector2D> head_path, QVector<QVector2D> line_path, QVector3D offset)
+void gen_Model::genMarch_Angle(QVector<float> &vec, QVector<QVector2D> head_path, QVector<QVector2D> line_path, QVector3D offset)
 {
     std::cout<<"====================琦角====================="<<std::endl;
 

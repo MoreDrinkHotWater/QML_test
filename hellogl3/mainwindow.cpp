@@ -92,22 +92,10 @@ void MainWindow::initMenu()
     pmeunBar->addMenu(menu);
 }
 
+// apply
 void MainWindow::on_pushButton_clicked()
 {
-
     ui->glwidget->glWidget->reviceStackDataSlot(ui->canvas->draw_stack);
-
-//    for(int i = 0; i < ui->canvas->draw_stack.size(); i++)
-//    {
-//        for(int j = 0; j < 20; j++)
-//        {
-//            std::cout << ui->canvas->draw_stack[i][j] << " " << ui->canvas->draw_stack[i][j+1]<<std::endl;
-//        }
-//    }
-
-    // 用于 test
-    //    ui->canvas->draw_stack.clear();
-
 }
 
 // 保存画布
@@ -143,13 +131,7 @@ void MainWindow::saveCanvas()
         for(int i = 0; i < ui->canvas->draw_stack.size(); i++)
         {
             for(int j = 0; j < ui->canvas->draw_stack[i].size() - 1; j+=2)
-            {
                 fout << ui->canvas->draw_stack[i][j] << " " << ui->canvas->draw_stack[i][j+1]<<std::endl;
-//                if(j != 0 && j != ui->canvas->draw_stack.size() - 2)
-//                {
-//                    fout << ui->canvas->draw_stack[i][j] << " " << ui->canvas->draw_stack[i][j+1]<<std::endl;
-//                }
-            }
 
             fout << (i+1) * 10000<<std::endl;
         }
@@ -321,8 +303,6 @@ void MainWindow::quitApp() {
 // cup
 void MainWindow::cup_clicked()
 {
-//    ui->glwidget->glWidget->Recognize_cup(ui->canvas->draw_stack);
-
     if(recognizeCup->recognize_cup(ui->canvas->draw_stack))
         ui->glwidget->glWidget->draw_cup();
 }
@@ -339,4 +319,6 @@ void MainWindow::on_clearButton_clicked()
     ui->canvas->draw_stack.clear();
 
     ui->glwidget->glWidget->cylinder_vector.clear();
+
+    ui->glwidget->glWidget->update();
 }

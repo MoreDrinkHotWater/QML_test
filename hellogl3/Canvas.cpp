@@ -16,8 +16,6 @@ Canvas::Canvas(QWidget *parent):
 }
 
 void Canvas::paintEvent(QPaintEvent *event){
-    //        qDebug() << "================================paintEvent" << draw_lines_vector.size();
-
     QPainter painter(this);
 
     painter.setRenderHint(QPainter::Antialiasing,true);
@@ -71,8 +69,6 @@ void Canvas::mousePressEvent(QMouseEvent *event){
         draw_lines_vector.push_back(dx);
         draw_lines_vector.push_back(dy);
 
-        //        std::cout<<"dx: "<<dx<<" dy: "<<dy<<std::endl;
-
         update();
     }
 }
@@ -87,8 +83,6 @@ void Canvas::mouseMoveEvent(QMouseEvent *event){
 
         draw_lines_vector.push_back(dx);
         draw_lines_vector.push_back(dy);
-
-        //        std::cout<<"dx: "<<dx<<" dy: "<<dy<<std::endl;
 
         update();
     }
@@ -118,9 +112,8 @@ void Canvas::drawPoint(QPainter &painter)
 
     painter.setPen(Qt::green);
 
-    for (int last = draw_lines_vector.size() - 1; last >= 1; last-=2) {
+    for (int last = draw_lines_vector.size() - 1; last >= 1; last-=2)
         painter.drawPoint(draw_lines_vector[last-1],draw_lines_vector[last]);
-    }
 
     update();
 }
@@ -157,10 +150,7 @@ void Canvas::drawCanvas(QPainter &painter)
             temp_vector.push_back(temp_line);
 
             if(i != 0 && i != it->size() - 2)
-            {
                 temp_vector.push_back(temp_line);
-            }
-
         }
 
         painter.drawLines(temp_vector);
@@ -303,8 +293,6 @@ void Canvas::draw_centerLine(QPainter &painter)
             std::cout<<"p4: ("<<p4.x()<<","<<p4.y()<<")"<<std::endl;
 
             // 已知两点 p3, p4坐标,求两点连成的直线中的某一点坐标
-//            p3_p4 = QPointF(p4 - p3);
-//            p5 = p4 + 5*(QVector2D(p3_p4)/QVector2D(p3_p4).length()).toPointF();
 
             int flag_last = 0;
             // 修复最后一段延长线过长的问题
@@ -389,9 +377,6 @@ void Canvas::draw_centerLine(QPainter &painter)
 
         for(int i = 1; i < Var.size(); i++)
         {
-
-//            std::cout<<"Var["<<i-1<<"]: "<<Var[i-1]<<std::endl;
-
             float it_front = Var[i-1];
             float it_next = Var[i];
 
@@ -960,10 +945,6 @@ void Canvas::draw_centerLine4(QPainter &painter)
             map_2.insert(QVector2D(QPointF(it) - p1).length(), QPointF(it));
         }
 
-//        p2 = map_2.first();
-
-//        temp_vector.push_back(QLineF(p1,p2));
-
         for(auto it: p1_vec)
         {
             map_1.insert(QVector2D(QPointF(it) - p2).length(), QPointF(it));
@@ -1009,8 +990,7 @@ void Canvas::keyPressEvent(QKeyEvent *event)
             update();
         }
         else
-        {
             std::cout<<"draw_stack size is zero!"<<std::endl;
-        }
+
     }
 }

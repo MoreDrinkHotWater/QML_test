@@ -31,7 +31,6 @@ public:
     // 相互关系: 平行，相连, 相离，垂直,等长
     bool parallel(QVector<float> _vec1, QVector<float> _vec2);
     bool equilong(QVector<float> _vec1, QVector<float> _vec2);
-
     bool join(QString str_1, QString str_2, QVector<float> _vec1, QVector<float> _vec2);
     bool separation(QString str_1, QString str_2, QVector<float> _vec1, QVector<float> _vec2);
     bool verticality(QString str_1, QString str_2, QVector<float> _vec1, QVector<float> _vec2);
@@ -41,7 +40,6 @@ private:
     // 记录结点的坐标值
     QVector2D cylinder_left,cylinder_right;
     QVector2D cylinder_lower_left,cylinder_upper_right;
-
     QVector2D straightLine_first, straightLine_end;
     QVector2D curveLine_first, curveLine_end;
     QVector2D wavyLine_first, wavyLine_end;

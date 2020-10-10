@@ -60,11 +60,7 @@ float Common::calculate_k(QVector<QVector2D> vec)
             k_vec.push_back(k);
     }
 
-    //    std::cout<< "k_vec size: "<<k_vec.size()<<std::endl;
-
     float vari = variance(k_vec);
-
-    //    std::cout<< "vari: "<<vari<<std::endl;
 
     return vari;
 }
@@ -92,10 +88,7 @@ float Common::calculate_meanK(QVector<QVector2D> vec, int &num)
         // 处理掉无效数据
         if(!std::isnan(k) && !std::isinf(k))
         {
-            //            std::cout<<"k: "<<k<<std::endl;
-
             sum+=k;
-
             k_vec.push_back(k);
         }
     }
@@ -103,10 +96,6 @@ float Common::calculate_meanK(QVector<QVector2D> vec, int &num)
     float meank = sum/k_vec.size();
 
     num = k_vec.size();
-
-//    std::cout<<"k_vec.size: "<<k_vec.size()<<std::endl;
-
-    //    std::cout<<"meanK: "<<meank<<std::endl;
 
     return meank;
 }

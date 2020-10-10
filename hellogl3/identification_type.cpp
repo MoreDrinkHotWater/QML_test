@@ -349,8 +349,6 @@ bool Identification_type::recognize_curveLine(QVector<float> vec)
         auto left = [](QVector<QVector2D> OriginPoints_vector,float step, bool flag){
             float AB = 0,CD = 0,BC = 0,AD = 0,AC = 0,BD = 0;
 
-            //            std::cout<<"step: "<<step<<std::endl;
-
             if(flag)
             {
                 AB =  sqrt(pow(OriginPoints_vector[1].y() * step - OriginPoints_vector[0].y() * step, 2) + pow(OriginPoints_vector[1].x() - OriginPoints_vector[0].x(), 2));
@@ -372,9 +370,7 @@ bool Identification_type::recognize_curveLine(QVector<float> vec)
 
 
             if(AB*CD + BC*AD == AC *BD)
-                //            if(abs((AB*CD + BC*AD) - AC *BD) < 0.001)
-            {
-                //                                std::cout<<"find the step"<<std::endl;
+            { 
                 return false;
             }
 
@@ -465,8 +461,6 @@ bool Identification_type::recognize_wavyLine(QVector<float> vec)
     int num = 100;
 
     common->calculate_meanK(line_vector, num);
-
-//    std::cout<<"common->calculate_k(line_vector): "<<common->calculate_k(line_vector)<<std::endl;
 
     // 排除曲线
     if(common->variance(ycoor_vector) < 0.1 && common->variance(xcoor_vector) > 0.1)
