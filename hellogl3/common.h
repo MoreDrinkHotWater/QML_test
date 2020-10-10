@@ -22,6 +22,24 @@ public:
     // 计算斜率的均值
     float calculate_meanK(QVector<QVector2D> vec, int &num);
 
+    // 坐标转换
+    QStack<QVector<float>> coordinate_transformation(QStack<QVector<float>> draw_stack);
+
+    // 查找最大，最小值
+    void findMinMax(QVector<QVector2D> head_path, QVector2D &min,QVector2D &max);
+
+    // 计算倾斜度
+    float mapEllipseToCircle(QVector<QVector2D> &head_path);
+
+    // 计算多边形面积
+    float calculateArea(QVector<QVector2D> &vec);
+
+    // 三角化面片
+    void genTriangle(QVector<float> &vec,QVector3D p0,QVector3D p1,QVector3D p2);
+
+    // 斜角点
+    void genRectangleZ(QVector<float> &vec,QVector3D p0,QVector3D p1);
+
 };
 
 #endif // COMMON_H

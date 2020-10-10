@@ -18,12 +18,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     Canvas.cpp \
     common.cpp \
+    gen_model.cpp \
     glwidget.cpp \
     identification_relation.cpp \
     identification_type.cpp \
     logo.cpp \
     main.cpp \
     mainwindow.cpp \
+    recognize_cup.cpp \
+    recognize_desklamp.cpp \
     recognizecorner.cpp \
     recognizecube.cpp \
     recognizecylinder.cpp \
@@ -32,11 +35,14 @@ SOURCES += \
 HEADERS += \
     Canvas.h \
     common.h \
+    gen_model.h \
     glwidget.h \
     identification_relation.h \
     identification_type.h \
     logo.h \
     mainwindow.h \
+    recognize_cup.h \
+    recognize_desklamp.h \
     recognizecorner.h \
     recognizecube.h \
     recognizecylinder.h \

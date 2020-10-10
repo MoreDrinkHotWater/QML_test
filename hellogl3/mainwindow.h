@@ -8,6 +8,10 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
+class Recognize_cup;
+
+class Recognize_deskLamp;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -51,5 +55,9 @@ private:
 
     void initActions();
     void initMenu();
+
+    Recognize_cup *recognizeCup;
+
+    Recognize_deskLamp *recognizeDeskLamp;
 };
 #endif // MAINWINDOW_H

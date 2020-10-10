@@ -74,6 +74,12 @@ class Common;
 
 class Identification_type;
 
+class Recognize_cup;
+
+class Recognize_deskLamp;
+
+class gen_Model;
+
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
 class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
@@ -103,11 +109,11 @@ public slots:
 
     void reviceStackDataSlot(QStack<QVector<float>> draw_stack);
 
-    // 识别杯子
-    void Recognize_cup(QStack<QVector<float>> draw_stack);
+    // 杯子
+    void draw_cup();
 
-    // 识别台灯
-    void Recognize_deskLamp(QStack<QVector<float>> draw_stack);
+    // 台灯
+    void draw_deskLamp();
 
 signals:
     void xRotationChanged(int angle);
@@ -126,32 +132,6 @@ private:
     void setupVertexAttribs();
 
     void allocate_vector();
-
-    // 坐标转换
-    void coordinate_transformation(QStack<QVector<float>> draw_stack);
-
-    // 计算多边形的面积
-    float calculateArea(QVector<QVector2D> &vec);
-
-    // 三角化面片
-    void genTriangle(QVector<float> &vec,QVector3D p0,QVector3D p1,QVector3D p2);
-    void genRectangleZ(QVector<float> &vec,QVector3D p0,QVector3D p1);
-
-    // 计算倾斜度
-    void findMinMax(QVector<QVector2D> head_path, QVector2D &min,QVector2D &max);
-    float mapEllipseToCircle(QVector<QVector2D> &head_path);
-
-    // 画出模型
-
-    // 画椭圆
-    void genCylinder(QVector<float> &vec,QVector2D cylinder_center,float r,float z,QVector3D offset);
-    void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path,float z,QVector3D offset);
-    void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVector<QVector2D> line_path, float height,QVector3D offset);
-    void genCylinder(QVector<float> &vec,QVector<QVector2D> head_path, QVector<QVector2D> line_path_1, QVector<QVector2D> line_path_2, float height_1, float height_2, QVector3D offset);
-    void genCylinder(QVector<float> &vec,float r,QVector<QVector2D> head_path, QVector<QVector2D> line_path, QVector3D offset);
-
-    // 画花生
-    void genCylinder(QVector<float> &vec, QVector<QVector2D> line_path, QVector3D offset);
 
     bool m_core;
     int m_xRot;
@@ -198,11 +178,14 @@ private:
 
     float m_cameraZ;
 
+    // 偏移值
+    float off_var;
+
+private:
     // 识别矩形
     RecognizeCube *recognizeCube;
     bool recognize_cube;
 
-    // 识别椭圆
     Recognizecylinder *recognizecylinder;
 
     Recognizecorner *recognizecorner;
@@ -211,24 +194,12 @@ private:
 
     Identification_type *identificationtypes;
 
-    // 偏移值
-    float off_var;
+    gen_Model *genModel;
 
-    // 保存花生和直线交点的数组
-    QVector<QVector2D> intersection_vector;
+    Recognize_cup *recognizeCup;
 
-    // 圆柱体的中心(2D和3D一样不会改变)
-    QVector2D  cylinder_center;
+    Recognize_deskLamp *recognizeDeskLamp;
 
-    float peanut_minX_3D;
-
-    bool offset_cup, offset_deskLamp;
-
-    // 台灯的底座高度 deskLamp_bottom_height
-    float deskLamp_bottom_radius,deskLamp_bottom_height;
-
-    // 底座和灯罩的偏移值
-    float offset_center;
 };
 
 #endif

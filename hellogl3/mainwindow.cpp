@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "glwidget.h"
+#include "recognize_cup.h"
+#include "recognize_desklamp.h"
 
 #include <QPainter>
 #include <QMenuBar>
@@ -30,6 +32,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     initActions();
     initMenu();
+
+    recognizeCup = Recognize_cup::getInstance();
+
+    recognizeDeskLamp = Recognize_deskLamp::getInstance();
 }
 
 MainWindow::~MainWindow()
@@ -315,13 +321,17 @@ void MainWindow::quitApp() {
 // cup
 void MainWindow::cup_clicked()
 {
-    ui->glwidget->glWidget->Recognize_cup(ui->canvas->draw_stack);
+//    ui->glwidget->glWidget->Recognize_cup(ui->canvas->draw_stack);
+
+    if(recognizeCup->recognize_cup(ui->canvas->draw_stack))
+        ui->glwidget->glWidget->draw_cup();
 }
 
 // deskLamp
 void MainWindow::deskLamp_clicked()
 {
-    ui->glwidget->glWidget->Recognize_deskLamp(ui->canvas->draw_stack);
+    if(recognizeDeskLamp->recognize_deskLamp(ui->canvas->draw_stack))
+        ui->glwidget->glWidget->draw_deskLamp();
 }
 
 void MainWindow::on_clearButton_clicked()
