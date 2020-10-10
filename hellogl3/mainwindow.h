@@ -12,6 +12,8 @@ class Recognize_cup;
 
 class Recognize_deskLamp;
 
+class Recognize_stool;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -35,6 +37,8 @@ private slots:
 
     void deskLamp_clicked();
 
+    void stool_clicked();
+
     void on_clearButton_clicked();
 
 private:
@@ -52,6 +56,7 @@ private:
 
     QAction *cupAction;
     QAction *deskLampAction;
+    QAction *stoolAction;
 
     void initActions();
     void initMenu();
@@ -60,5 +65,7 @@ private:
     Recognize_cup *recognizeCup;
 
     Recognize_deskLamp *recognizeDeskLamp;
+
+    Recognize_stool *recognizeStool;
 };
 #endif // MAINWINDOW_H

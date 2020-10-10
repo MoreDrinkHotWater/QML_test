@@ -52,7 +52,7 @@ public:
     QVector<QVector2D> head_vector_top, wavyline_vector_1, wavyline_vector_2;
 
     // 保存琦角数据的数组
-    QVector<QVector2D> cornerLine_vector;
+    QVector<QVector2D> peanutLine_vector;
 };
 
 #endif // RECOGNIZE_DESKLAMP_H

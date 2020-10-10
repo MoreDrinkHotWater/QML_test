@@ -58,6 +58,7 @@
 
 #include "recognize_cup.h"
 #include "recognize_desklamp.h"
+#include "recognize_stool.h"
 #include "gen_model.h"
 
 #include <QMouseEvent>
@@ -112,6 +113,8 @@ GLWidget::GLWidget(QWidget *parent)
     recognizeCup = Recognize_cup::getInstance();
 
     recognizeDeskLamp = Recognize_deskLamp::getInstance();
+
+    recognizeStool = Recognize_stool::getInstance();
 
     genModel = gen_Model::getInstance();
 }
@@ -907,7 +910,7 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
 #endif
 }
 
-// 识别杯子
+// 杯子
 void GLWidget::draw_cup()
 {
     QVector3D offset(off_var,off_var,off_var);
@@ -925,21 +928,41 @@ void GLWidget::draw_cup()
     update();
 }
 
-// 识别雨伞
+// 台灯
 void GLWidget::draw_deskLamp()
 {
     QVector3D offset(off_var,off_var,off_var);
 
+    genModel->offset_deskLamp = true;
+
     // 灯罩
     genModel->genSymmetric(cylinder_vector, recognizeDeskLamp->head_vector_top, recognizeDeskLamp->wavyline_vector_1, recognizeDeskLamp->height_1, offset);
 
-    genModel->offset_deskLamp = true;
-
     // 柱子
-    genModel->genPeanut(cylinder_vector, recognizeDeskLamp->cornerLine_vector, offset);
+    genModel->genPeanut(cylinder_vector, recognizeDeskLamp->peanutLine_vector, offset);
 
     // 底座
     genModel->genCylinder(cylinder_vector, recognizeDeskLamp->cylinder_center, recognizeDeskLamp->deskLamp_bottom_radius, recognizeDeskLamp->deskLamp_bottom_height, offset);
+
+    allocate_vector();
+
+    update();
+}
+
+// 凳子
+void GLWidget::draw_stool()
+{
+    QVector3D offset(off_var,off_var,off_var);
+
+    genModel->offset_stool = true;
+
+    // 凳子的桌面
+    genModel->genCylinder(cylinder_vector,recognizeStool->cylinder_center, recognizeStool->radius, recognizeStool->height_1, offset);
+
+    for(auto peanutLine: recognizeStool->stool_bottom_stack)
+    {
+        genModel->genPeanut(cylinder_vector, peanutLine, offset);
+    }
 
     allocate_vector();
 

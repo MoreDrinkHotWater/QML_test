@@ -2,6 +2,7 @@
 #include "common.h"
 #include "recognize_cup.h"
 #include "recognize_desklamp.h"
+#include "recognize_stool.h"
 
 #include <iostream>
 #include <QVector>
@@ -11,11 +12,13 @@
 
 gen_Model::gen_Model():
     offset_cup(false),
-    offset_deskLamp(false)
+    offset_deskLamp(false),
+    offset_stool(false)
 {
     common = Common::getInstance();
     recognizeCup = Recognize_cup::getInstance();
     recognizeDeskLamp = Recognize_deskLamp::getInstance();
+    recognizeStool = Recognize_stool::getInstance();
 }
 
 gen_Model *gen_Model::getInstance(){
@@ -216,6 +219,17 @@ void gen_Model::genPeanut(QVector<float> &vec, QVector<QVector2D> line_path, QVe
         std::cout<<"peanut.y: "<<peanut_maxY_3D + peanut_offset_y<<std::endl;
         offset = QVector3D(0,peanut_offset_y, 0);
         offset_deskLamp = false;
+    }
+    else if(offset_stool)
+    {
+        // 中心的 y 值
+        std::cout<<"cylinder_center.y: "<<recognizeStool->cylinder_center.y()<<std::endl;
+
+        float peanut_offset_y = recognizeStool->cylinder_center.y() - peanut_maxY_3D;
+
+        // 花生的 maxX 加偏移后的 y 值
+        std::cout<<"peanut.y: "<<peanut_maxY_3D + peanut_offset_y<<std::endl;
+        offset = QVector3D(0,peanut_offset_y, 0);
     }
     else
         offset = QVector3D(0, 0, 0);

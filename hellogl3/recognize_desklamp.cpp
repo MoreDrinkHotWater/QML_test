@@ -147,7 +147,7 @@ bool Recognize_deskLamp::recognize_deskLamp(QStack<QVector<float>> draw_stack)
     {
         for(int i = 0; i < corner.size() - 1; i+=2)
         {
-            cornerLine_vector.push_back(QVector2D(corner[i], corner[i+1]));
+            peanutLine_vector.push_back(QVector2D(corner[i], corner[i+1]));
         }
     }
 

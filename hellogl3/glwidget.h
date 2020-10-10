@@ -78,6 +78,8 @@ class Recognize_cup;
 
 class Recognize_deskLamp;
 
+class Recognize_stool;
+
 class gen_Model;
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
@@ -114,6 +116,9 @@ public slots:
 
     // 台灯
     void draw_deskLamp();
+
+    // 凳子
+    void draw_stool();
 
 signals:
     void xRotationChanged(int angle);
@@ -199,6 +204,8 @@ private:
     Recognize_cup *recognizeCup;
 
     Recognize_deskLamp *recognizeDeskLamp;
+
+    Recognize_stool *recognizeStool;
 
 };
 

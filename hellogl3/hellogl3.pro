@@ -27,6 +27,7 @@ SOURCES += \
     mainwindow.cpp \
     recognize_cup.cpp \
     recognize_desklamp.cpp \
+    recognize_stool.cpp \
     recognizecorner.cpp \
     recognizecube.cpp \
     recognizecylinder.cpp \
@@ -43,6 +44,7 @@ HEADERS += \
     mainwindow.h \
     recognize_cup.h \
     recognize_desklamp.h \
+    recognize_stool.h \
     recognizecorner.h \
     recognizecube.h \
     recognizecylinder.h \

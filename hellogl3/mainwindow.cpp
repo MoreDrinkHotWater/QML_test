@@ -3,6 +3,7 @@
 #include "glwidget.h"
 #include "recognize_cup.h"
 #include "recognize_desklamp.h"
+#include "recognize_stool.h"
 
 #include <QPainter>
 #include <QMenuBar>
@@ -26,7 +27,8 @@ MainWindow::MainWindow(QWidget *parent)
       exitAction(new QAction(this)),
 
       cupAction(new QAction(this)),
-      deskLampAction(new QAction(this))
+      deskLampAction(new QAction(this)),
+      stoolAction(new QAction(this))
 {
     ui->setupUi(this);
 
@@ -36,6 +38,8 @@ MainWindow::MainWindow(QWidget *parent)
     recognizeCup = Recognize_cup::getInstance();
 
     recognizeDeskLamp = Recognize_deskLamp::getInstance();
+
+    recognizeStool = Recognize_stool::getInstance();
 }
 
 MainWindow::~MainWindow()
@@ -68,6 +72,10 @@ void MainWindow::initActions()
     deskLampAction->setObjectName(QString::fromUtf8("deskLampAction"));
     deskLampAction->setText("DeskLamp");
     connect(deskLampAction, &QAction::triggered, this, &MainWindow::deskLamp_clicked);
+
+    stoolAction->setObjectName(QString::fromUtf8("stoolAction"));
+    stoolAction->setText("Stool");
+    connect(stoolAction, &QAction::triggered, this, &MainWindow::stool_clicked);
 }
 
 void MainWindow::initMenu()
@@ -87,6 +95,7 @@ void MainWindow::initMenu()
     QMenu *LifeGoodsMenu = new QMenu("&LifeGoods", this);
     LifeGoodsMenu->addAction(cupAction);
     LifeGoodsMenu->addAction(deskLampAction);
+    LifeGoodsMenu->addAction(stoolAction);
     menu->addMenu(LifeGoodsMenu);
 
     pmeunBar->addMenu(menu);
@@ -312,6 +321,13 @@ void MainWindow::deskLamp_clicked()
 {
     if(recognizeDeskLamp->recognize_deskLamp(ui->canvas->draw_stack))
         ui->glwidget->glWidget->draw_deskLamp();
+}
+
+// stool
+void MainWindow::stool_clicked()
+{
+    if(recognizeStool->recognize_stool(ui->canvas->draw_stack))
+        ui->glwidget->glWidget->draw_stool();
 }
 
 void MainWindow::on_clearButton_clicked()

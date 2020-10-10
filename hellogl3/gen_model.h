@@ -9,6 +9,8 @@ class Recognize_cup;
 
 class Recognize_deskLamp;
 
+class Recognize_stool;
+
 class gen_Model
 {
 public:
@@ -18,7 +20,7 @@ public:
 
     static gen_Model *getInstance();
 
-    bool offset_cup, offset_deskLamp;
+    bool offset_cup, offset_deskLamp, offset_stool;
 
 public:
     // 圆柱
@@ -41,6 +43,7 @@ private:
 
     Recognize_deskLamp *recognizeDeskLamp;
 
+    Recognize_stool *recognizeStool;
 };
 
 #endif // GENMODEL_H
