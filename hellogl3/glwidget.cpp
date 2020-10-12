@@ -957,7 +957,7 @@ void GLWidget::draw_stool()
     genModel->offset_stool = true;
 
     // 凳子的桌面
-    genModel->genCylinder(cylinder_vector,recognizeStool->cylinder_center, recognizeStool->radius, recognizeStool->height_1, offset);
+    genModel->genCylinder(cylinder_vector,recognizeStool->cylinder_center, recognizeStool->radius, recognizeStool->height, offset);
 
     for(auto peanutLine: recognizeStool->stool_bottom_stack)
     {

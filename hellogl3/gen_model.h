@@ -2,6 +2,7 @@
 #define GENMODEL_H
 
 #include <QVector2D>
+#include <QVector3D>
 
 class Common;
 
@@ -44,6 +45,10 @@ private:
     Recognize_deskLamp *recognizeDeskLamp;
 
     Recognize_stool *recognizeStool;
+
+private:
+    // 记录圆柱的底部中心
+    QVector3D centerBottom;
 };
 
 #endif // GENMODEL_H

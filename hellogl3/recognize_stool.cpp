@@ -48,10 +48,10 @@ bool Recognize_stool::recognize_stool(QStack<QVector<float>> draw_stack)
     if(recognizecylinder->recognize_cylinder_shape(stool_top))
     {
         this->radius = recognizecylinder->radius;
-        this->height_1 = recognizecylinder->height_1;
+        height = qMax(recognizecylinder->height_1, recognizecylinder->height_2);
 
         std::cout<<"radius: "<<radius<<std::endl;
-        std::cout<<"height_1: "<<height_1<<std::endl;
+        std::cout<<"height: "<<height<<std::endl;
 
         // 记录椭圆的中心坐标
         for(int i = 0; i < recognizecylinder->type_vec.size(); i++)

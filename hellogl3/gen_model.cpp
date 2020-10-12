@@ -36,7 +36,7 @@ void gen_Model::genPeanut(QVector<float> &vec, QVector<QVector2D> line_path, QVe
     std::cout<<"line_path.size: "<<line_path.size()<<std::endl;
 
     // 拉伸y
-    //    common->mapEllipseToCircle(line_path);
+//    common->mapEllipseToCircle(line_path);
 
     // 保存最短路径 p1_p2 的数组
     QVector<QLineF> shotest_path_vector;
@@ -183,16 +183,7 @@ void gen_Model::genPeanut(QVector<float> &vec, QVector<QVector2D> line_path, QVe
         }
     }
 
-    float peanut_minX_3D = vec[0];
-
-    float peanut_maxY_3D = vec[1];
-
-    for(int i = 0; i < vec.size() - 1; i+=2)
-    {
-        peanut_minX_3D = qMin(peanut_minX_3D, vec[i]);
-
-        peanut_maxY_3D = vec[i + 1];
-    }
+    std::cout<<"first_circle_center.z(): "<<first_circle_center.z()<<std::endl;
 
     // cup 的偏移值
     if(offset_cup)
@@ -200,10 +191,8 @@ void gen_Model::genPeanut(QVector<float> &vec, QVector<QVector2D> line_path, QVe
         // 中心的 y 值
         std::cout<<"recognizeCup->cylinder_center.y: "<<recognizeCup->cylinder_center.y()<<std::endl;
 
-        float peanut_offset_y = recognizeCup->cylinder_center.y() - peanut_maxY_3D;
+        float peanut_offset_y = recognizeCup->cylinder_center.y();
 
-        // 花生的 maxX 加偏移后的 y 值
-        std::cout<<"peanut.y: "<<peanut_maxY_3D + peanut_offset_y<<std::endl;
         offset = QVector3D(0,peanut_offset_y, 0);
         offset_cup = false;
 
@@ -213,23 +202,19 @@ void gen_Model::genPeanut(QVector<float> &vec, QVector<QVector2D> line_path, QVe
         // 中心的 y 值
         std::cout<<"cylinder_center.y: "<<recognizeDeskLamp->cylinder_center.y()<<std::endl;
 
-        float peanut_offset_y = recognizeDeskLamp->cylinder_center.y() - peanut_maxY_3D;
-
-        // 花生的 maxX 加偏移后的 y 值
-        std::cout<<"peanut.y: "<<peanut_maxY_3D + peanut_offset_y<<std::endl;
-        offset = QVector3D(0,peanut_offset_y, 0);
+        float peanut_offset_y = recognizeDeskLamp->cylinder_center.y();
+        offset = QVector3D(0, peanut_offset_y, 0);
         offset_deskLamp = false;
     }
+    // 凳子
     else if(offset_stool)
     {
         // 中心的 y 值
         std::cout<<"cylinder_center.y: "<<recognizeStool->cylinder_center.y()<<std::endl;
 
-        float peanut_offset_y = recognizeStool->cylinder_center.y() - peanut_maxY_3D;
-
-        // 花生的 maxX 加偏移后的 y 值
-        std::cout<<"peanut.y: "<<peanut_maxY_3D + peanut_offset_y<<std::endl;
-        offset = QVector3D(0,peanut_offset_y, 0);
+        float peanut_offset_y = recognizeStool->cylinder_center.y();
+//        offset = QVector3D(0, peanut_offset_y, -(first_circle_center.z() - centerBottom.z()));
+        offset = QVector3D(0, 0,0);
     }
     else
         offset = QVector3D(0, 0, 0);
@@ -337,8 +322,6 @@ void gen_Model::genMarch_Angle(QVector<float> &vec, QVector<QVector2D> head_path
         std::cout<<"=========================================="<<std::endl;
         if(i == 0)
         {
-            std::cout<<"centerTop.x: "<<centerTop.x()<<" centerTop.y: "<<centerTop.y()<<" centerTop.z: "<<z<<std::endl;
-
             std::cout<<"centerPoint_vector[i].x: "<< centerPoint_vector[i].x() << " centerPoint_vector[i].y: "<< centerPoint_vector[i].y() <<std::endl;
 
             for(int j = 0; j < head_path.size(); j++)
@@ -488,6 +471,8 @@ void gen_Model::genArbitrary(QVector<float> &vec,QVector<QVector2D> head_path, Q
 
     // 高度比 (左右线段的 Z 值偏移角度)
     float heightRatio = common->mapEllipseToCircle(head_path);
+
+    std::cout<<"heightRatio: "<< heightRatio <<std::endl;
 
     QVector2D min,max;
     common->findMinMax(head_path, min,max);
@@ -760,8 +745,10 @@ void gen_Model::genSymmetric(QVector<float> &vec,QVector<QVector2D> head_path, Q
 
     std::cout<<"=========================对称====================="<<std::endl;
 
-    // 高度比
+    // 高度比 (左右线段的 Z 值偏移角度)
     float heightRatio = common->mapEllipseToCircle(head_path);
+
+    std::cout<<"heightRatio: "<< heightRatio <<std::endl;
 
     // 中心
     QVector2D min,max;
@@ -777,7 +764,6 @@ void gen_Model::genSymmetric(QVector<float> &vec,QVector<QVector2D> head_path, Q
     std::cout<<"center.x: "<<center.x()<<" center.y: "<<center.y()<<std::endl;
 
     QVector3D centerTop(center.x(), center.y(), center.y());
-    QVector3D centerBottom;
 
     QVector<QVector2D> head_path_bottom;
 
@@ -867,6 +853,7 @@ void gen_Model::genCylinder(QVector<float> &vec,QVector2D cylinder_center,float 
         path.append(QVector2D(r*cos(i*2*M_PI/n) + cylinder_center.x(),r*sin(i*2*M_PI/n) + cylinder_center.y()));
     }
     genIncline_Cylinder(vec,path,z,offset);
+
 }
 
 // 倾斜圆柱体
@@ -884,14 +871,12 @@ void gen_Model::genIncline_Cylinder(QVector<float> &vec,QVector<QVector2D> head_
 
     std::cout<<"center.x: "<<center.x()<<" center.y: "<<center.y()<<std::endl;
 
-    // 拉伸y
-    common->mapEllipseToCircle(head_path);
-
     QVector3D centerTop(center.x(), center.y(), center.y());
 
-    std::cout<<"centerTop.z: "<< centerTop.z() <<std::endl;
+    // 由于和花生组合时会存在偏差，所以我们给它记录下来。
+    centerBottom = QVector3D(center.x(), center.y(), z + center.y());
 
-    QVector3D centerBottom(center.x(), center.y(), z + center.y());
+    std::cout<<"centerBottom.z: "<< centerBottom.z() <<std::endl;
 
     int initSize = vec.size();
 
@@ -901,19 +886,21 @@ void gen_Model::genIncline_Cylinder(QVector<float> &vec,QVector<QVector2D> head_
         QVector3D p0(head_path[i].x(),head_path[i].y(),center.y());
         QVector3D p1(head_path[i_1].x(),head_path[i_1].y(),center.y());
 
-        common->genTriangle(vec,p0,p1,centerTop);//top
+        common->genTriangle(vec,p0,p1,centerTop); //top
 
         p1.setZ(z + center.y());
         common->genRectangleZ(vec,p0,p1);       //竖条
 
         p0.setZ(z + center.y());
-        common->genTriangle(vec,p1,p0,centerBottom);//bottom
+        common->genTriangle(vec,p1,p0,centerBottom); //bottom
 
     }
 
     // 偏移错误
     if(recognizeDeskLamp->offset_center != 0)
         offset = QVector3D(0,0,recognizeDeskLamp->offset_center);
+
+    std::cout<<"offset: "<<offset.x()<< " "<< offset.y() << " " << offset.z()<<std::endl;
 
     for(int i = initSize; i < vec.size(); i += 6){
         vec[i] += offset.x();

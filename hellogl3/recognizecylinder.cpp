@@ -101,7 +101,7 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                     else
                     {
                         row_vec[j].push_back("separation");
-                        std::cout<<"the cylinder join without straightLine"<<std::endl;
+                        std::cout<<"the cylinder separation with straightLine"<<std::endl;
                     }
                 }
                 else if(identification_type->recognize_wavyLine(draw_coorstack[j]))
@@ -118,7 +118,7 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                     else
                     {
                         row_vec[j].push_back("separation");
-                        std::cout<<"the cylinder join without wavyLine"<<std::endl;
+                        std::cout<<"the cylinder separation with wavyLine"<<std::endl;
                     }
                 }
                 else
@@ -137,7 +137,7 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                         else
                         {
                             row_vec[j].push_back("join");
-                            std::cout<<"the cylinder separate without curveLine"<<std::endl;
+                            std::cout<<"the cylinder join with curveLine"<<std::endl;
                         }
                     }
                 }
@@ -188,9 +188,9 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                 else if(identification_type->recognize_straightLine(draw_coorstack[j]))
                 {
                     std::cout<<"第"<<j<<"条线段是: 直线"<<std::endl;
-                    // 关系？ 相连？ 垂直？
                     str_1 = "straightLine";
                     str_2 = "straightLine";
+                    // 平行且等长
                     if(identification_relation->parallel(draw_coorstack[i],draw_coorstack[j]))
                     {
                         std::cout<<"the line1 parallel line2"<<std::endl;
@@ -208,10 +208,19 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                             std::cout<<"the line1.length unequal to line2.length"<<std::endl;
                         }
                     }
+                    // 相连 （垂直先没加）
+                    else if(identification_relation->join(str_1, str_2, draw_coorstack[i], draw_coorstack[j]))
+                    {
+                        row_vec[j].push_back("join");
+                        std::cout<<"the straightLine join with straightLine"<<std::endl;
+                    }
+                    // 不平行
                     else
                     {
-                        row_vec[j].push_back("isnot parallel");
-                        std::cout<<"the line1 不平行 line2"<<std::endl;
+//                        row_vec[j].push_back("isnot parallel");
+//                        std::cout<<"the line1 不平行 line2"<<std::endl;
+                        row_vec[j].push_back("separation");
+                        std::cout<<"the straightLine separation with straightLine"<<std::endl;
                     }
 
                 }
@@ -455,7 +464,8 @@ bool Recognizecylinder::recognize_cylinder_shape(QStack<QVector<float>> draw_coo
                             || (vec[i][vec[i].size()-1] == "波浪线" && vec[j][vec[i].size()-1] == "曲线")
                             || (vec[i][vec[i].size()-1] == "曲线" && vec[j][vec[i].size()-1] == "波浪线")
                             || (vec[i][vec[i].size()-1] == "波浪线" && vec[j][vec[i].size()-1] == "直线")
-                            || (vec[i][vec[i].size()-1] == "直线" && vec[j][vec[i].size()-1] == "波浪线"))
+                            || (vec[i][vec[i].size()-1] == "直线" && vec[j][vec[i].size()-1] == "波浪线")
+                            || (vec[i][vec[i].size()-1] == "直线" && vec[j][vec[i].size()-1] == "直线"))
                     {
 //                        std::cout<<"vec[i][vec[i].size()-1]: "<<vec[i][vec[i].size()-1].toStdString()<<std::endl;
 //                        std::cout<<"vec[j][vec[i].size()-1]: "<<vec[j][vec[i].size()-1].toStdString()<<std::endl;

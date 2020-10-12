@@ -37,7 +37,7 @@ private:
 
 public:
 
-    float radius,height_1;
+    float radius,height;
 
     // 圆柱体的中心(2D和3D一样不会改变)
     QVector2D  cylinder_center;

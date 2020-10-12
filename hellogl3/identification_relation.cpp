@@ -278,6 +278,16 @@ bool Identification_relation::join(QString str_1, QString str_2, QVector<float> 
 
         return jundge(straightLine_first, straightLine_end, wavyLine_first, wavyLine_end);
     }
+    // 直线和直线
+    else if(str_1 == "straightLine" && str_2 == "straightLine")
+    {
+        find_straightLineNode(_vec1);
+        QVector2D straightLine_1_first = straightLine_first, straightLine_1_end = straightLine_end;
+        find_straightLineNode(_vec2);
+        QVector2D straightLine_2_first = straightLine_first, straightLine_2_end = straightLine_end;
+
+        return jundge(straightLine_1_first, straightLine_1_end, straightLine_2_first, straightLine_2_end);
+    }
     else
         return false;
 
