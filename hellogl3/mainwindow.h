@@ -23,40 +23,43 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_pushButton_clicked();
+
+    void on_applyButton_clicked();
+    void on_clearButton_clicked();
 
     void saveCanvas();
-
     void readCanvas();
-
     void saveFile();
-
     void quitApp();
 
     void cup_clicked();
-
     void deskLamp_clicked();
-
     void stool_clicked();
 
-    void on_clearButton_clicked();
+    void line_clicked();
+    void triangle_clicked();
+    void rect_clicked();
+    void circle_clicked();
 
 private:
     Ui::MainWindow *ui;
 
     QMenuBar *pmeunBar;
 
-    // 保存画布信息
     QAction *saveCanvasAction;
-    // 读取画布信息
     QAction *readCanvasAction;
-
     QAction *saveAction;
     QAction *exitAction;
 
     QAction *cupAction;
     QAction *deskLampAction;
     QAction *stoolAction;
+
+    // polygon
+    QAction *lineAction;
+    QAction *triangleAction;
+    QAction *rectAction;
+    QAction *circleAction;
 
     void initActions();
     void initMenu();

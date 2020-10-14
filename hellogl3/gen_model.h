@@ -37,6 +37,12 @@ public:
     // 画花生
     void genPeanut(QVector<float> &vec, QVector<QVector2D> line_path, QVector3D offset);
 
+    // line
+    void genLine(QVector<float> &vec, QVector<QVector2D> line_path,float width, QVector3D offset);
+
+    // circle
+    void genCircle(QVector<float> &vec, QVector<QVector2D> line_path, QVector3D offset);
+
 private:
     Common *common;
 

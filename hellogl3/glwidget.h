@@ -120,6 +120,12 @@ public slots:
     // 凳子
     void draw_stool();
 
+    // line
+    void draw_line(QVector<float> draw_stack);
+
+    // circle
+    void draw_circle(QVector<float> draw_vector);
+
 signals:
     void xRotationChanged(int angle);
     void yRotationChanged(int angle);

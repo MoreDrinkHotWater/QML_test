@@ -38,7 +38,7 @@ void Canvas::paintEvent(QPaintEvent *event){
     // 花生
     if(draw_stack.size() == 1)
         // 首尾按 5 为比例拉
-        draw_centerLine2(painter);
+//        draw_centerLine2(painter);
 
     // 琦角
     if(draw_stack.size() == 2)

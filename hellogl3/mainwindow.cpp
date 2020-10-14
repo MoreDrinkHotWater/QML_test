@@ -22,13 +22,17 @@ MainWindow::MainWindow(QWidget *parent)
 
       saveCanvasAction(new QAction(this)),
       readCanvasAction(new QAction(this)),
-
       saveAction(new QAction(this)),
       exitAction(new QAction(this)),
 
       cupAction(new QAction(this)),
       deskLampAction(new QAction(this)),
-      stoolAction(new QAction(this))
+      stoolAction(new QAction(this)),
+
+      lineAction(new QAction(this)),
+      triangleAction(new QAction(this)),
+      rectAction(new QAction(this)),
+      circleAction(new QAction(this))
 {
     ui->setupUi(this);
 
@@ -76,6 +80,22 @@ void MainWindow::initActions()
     stoolAction->setObjectName(QString::fromUtf8("stoolAction"));
     stoolAction->setText("Stool");
     connect(stoolAction, &QAction::triggered, this, &MainWindow::stool_clicked);
+
+    lineAction->setObjectName(QString::fromUtf8("lineAction"));
+    lineAction->setText("Line");
+    connect(lineAction, &QAction::triggered, this, &MainWindow::line_clicked);
+
+    triangleAction->setObjectName(QString::fromUtf8("triangleAction"));
+    triangleAction->setText("Triangle");
+    connect(triangleAction, &QAction::triggered, this, &MainWindow::triangle_clicked);
+
+    rectAction->setObjectName(QString::fromUtf8("rectAction"));
+    rectAction->setText("Rect");
+    connect(rectAction, &QAction::triggered, this, &MainWindow::rect_clicked);
+
+    circleAction->setObjectName(QString::fromUtf8("circleAction"));
+    circleAction->setText("Circle");
+    connect(circleAction, &QAction::triggered, this, &MainWindow::circle_clicked);
 }
 
 void MainWindow::initMenu()
@@ -84,27 +104,48 @@ void MainWindow::initMenu()
 
     menu = new QMenu("&File", this);
     menu->addAction(saveCanvasAction);
-    menu->addAction(readCanvasAction);
-    menu->addAction(saveAction);
-    menu->addAction(exitAction);
     menu->addSeparator();
-
+    menu->addAction(readCanvasAction);
+    menu->addSeparator();
+    menu->addAction(saveAction);
+    menu->addSeparator();
+    menu->addAction(exitAction);
     pmeunBar->addMenu(menu);
 
     menu = new QMenu("&Kind", this);
     QMenu *LifeGoodsMenu = new QMenu("&LifeGoods", this);
     LifeGoodsMenu->addAction(cupAction);
+    LifeGoodsMenu->addSeparator();
     LifeGoodsMenu->addAction(deskLampAction);
+    LifeGoodsMenu->addSeparator();
     LifeGoodsMenu->addAction(stoolAction);
     menu->addMenu(LifeGoodsMenu);
+    pmeunBar->addMenu(menu);
 
+    menu = new QMenu("&Polygon", this);
+    menu->addAction(lineAction);
+    menu->addSeparator();
+    menu->addAction(triangleAction);
+    menu->addSeparator();
+    menu->addAction(rectAction);
+    menu->addSeparator();
+    menu->addAction(circleAction);
     pmeunBar->addMenu(menu);
 }
 
 // apply
-void MainWindow::on_pushButton_clicked()
+void MainWindow::on_applyButton_clicked()
 {
     ui->glwidget->glWidget->reviceStackDataSlot(ui->canvas->draw_stack);
+}
+
+void MainWindow::on_clearButton_clicked()
+{
+    ui->canvas->draw_stack.clear();
+
+    ui->glwidget->glWidget->cylinder_vector.clear();
+
+    ui->glwidget->glWidget->update();
 }
 
 // 保存画布
@@ -201,7 +242,9 @@ void MainWindow::readCanvas()
 
 }
 
-void MainWindow::saveFile() {
+// 保存为 stl 文件
+void MainWindow::saveFile()
+{
 
     std::cout<<"==================save=============="<<std::endl;
 
@@ -305,7 +348,8 @@ void MainWindow::saveFile() {
 
 }
 
-void MainWindow::quitApp() {
+void MainWindow::quitApp()
+{
     QApplication::quit();
 }
 
@@ -330,11 +374,22 @@ void MainWindow::stool_clicked()
         ui->glwidget->glWidget->draw_stool();
 }
 
-void MainWindow::on_clearButton_clicked()
+void MainWindow::line_clicked()
 {
-    ui->canvas->draw_stack.clear();
+    ui->glwidget->glWidget->draw_line(ui->canvas->draw_stack[ui->canvas->draw_stack.size() - 1]);
+}
 
-    ui->glwidget->glWidget->cylinder_vector.clear();
+void MainWindow::triangle_clicked()
+{
+    std::cout<<"===============triangle==========="<<std::endl;
+}
 
-    ui->glwidget->glWidget->update();
+void MainWindow::rect_clicked()
+{
+    std::cout<<"===============rect==========="<<std::endl;
+}
+
+void MainWindow::circle_clicked()
+{
+    ui->glwidget->glWidget->draw_circle(ui->canvas->draw_stack[ui->canvas->draw_stack.size() - 1]);
 }

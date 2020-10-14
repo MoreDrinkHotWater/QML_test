@@ -106,27 +106,34 @@ QStack<QVector<float>> Common::coordinate_transformation(QStack<QVector<float>> 
 
     QStack<QVector<float>> draw_coorstack;
 
-    // 坐标转换
-    QVector<float> temp_vector;
-
-    for(auto it = draw_stack.begin(); it != draw_stack.end(); ++it)
+    for(int i = 0; i < draw_stack.size(); i++)
     {
-        std::cout<< "it->size: "<<it->size()<<std::endl;
+        std::cout<< "it->size: "<<draw_stack[i].size()<<std::endl;
 
-        temp_vector.clear();
-
-        for (int j = 0; j < it->size(); j+=2) {
-            float x = ( it->data()[j]  - 602 / 2 ) / (602 / 2 );
-            float y = ( it->data()[j+1]   - 612 / 2 ) / (612 / 2 );
-
-            temp_vector.push_back(x);
-            temp_vector.push_back(y);
-        }
-
-        draw_coorstack.push_back(temp_vector);
+        draw_coorstack.push_back(coordinate_transformation(draw_stack[i]));
     }
 
     return draw_coorstack;
+}
+
+// 屏幕坐标转世界坐标
+QVector<float> Common::coordinate_transformation(QVector<float> draw_vector)
+{
+
+    QVector<float> draw_coorVector;
+
+    // 坐标转换
+
+    for(auto it = 0; it < draw_vector.size(); it+=2)
+    {
+        float x = ( draw_vector[it]  - 602 / 2 ) / (602 / 2 );
+        float y = ( draw_vector[it+1]   - 612 / 2 ) / (612 / 2 );
+
+        draw_coorVector.push_back(x);
+        draw_coorVector.push_back(y);
+    }
+
+    return draw_coorVector;
 }
 
 // 查找最大，最小值

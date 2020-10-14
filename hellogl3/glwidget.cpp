@@ -959,10 +959,59 @@ void GLWidget::draw_stool()
     // 凳子的桌面
     genModel->genCylinder(cylinder_vector,recognizeStool->cylinder_center, recognizeStool->radius, recognizeStool->height, offset);
 
-    for(auto peanutLine: recognizeStool->stool_bottom_stack)
+    std::cout << "(recognizeStool->radius / 0.25 * 0.05): "<<(recognizeStool->radius / 0.25 * 0.05)<<std::endl;
+
+    for(int i = 0; i < recognizeStool->stool_bottom_stack.size(); i++)
     {
-        genModel->genPeanut(cylinder_vector, peanutLine, offset);
+
+        if(i == 1)
+            offset = QVector3D(0, recognizeStool->radius - 0.1, 0);
+        else if(i == 2)
+            offset = QVector3D(0, - recognizeStool->radius + 0.1, 0);
+        else
+            offset = QVector3D(0, 0, 0);
+        genModel->genPeanut(cylinder_vector, recognizeStool->stool_bottom_stack[i], offset);
     }
+
+    allocate_vector();
+
+    update();
+}
+
+void GLWidget::draw_line(QVector<float> draw_vector)
+{
+    QVector3D offset(off_var,off_var,off_var);
+
+    QVector<QVector2D> draw_coorVector;
+
+    draw_vector = common->coordinate_transformation(draw_vector);
+
+    for (int i = 0; i < draw_vector.size(); i+=2)
+    {
+          draw_coorVector.push_back(QVector2D(draw_vector[i], draw_vector[i+1]));
+    }
+
+    genModel->genLine(cylinder_vector, draw_coorVector, 0.02, offset);
+
+    allocate_vector();
+
+    update();
+}
+
+void GLWidget::draw_circle(QVector<float> draw_vector)
+{
+    QVector3D offset(off_var,off_var,off_var);
+
+    QVector<QVector2D> draw_coorVector;
+
+    draw_vector = common->coordinate_transformation(draw_vector);
+
+    for (int i = 0; i < draw_vector.size(); i+=2)
+    {
+          draw_coorVector.push_back(QVector2D(draw_vector[i], draw_vector[i+1]));
+    }
+
+    genModel->genCircle(cylinder_vector, draw_coorVector, offset);
 
     allocate_vector();
 

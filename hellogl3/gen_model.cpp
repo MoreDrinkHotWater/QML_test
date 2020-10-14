@@ -213,8 +213,8 @@ void gen_Model::genPeanut(QVector<float> &vec, QVector<QVector2D> line_path, QVe
         std::cout<<"cylinder_center.y: "<<recognizeStool->cylinder_center.y()<<std::endl;
 
         float peanut_offset_y = recognizeStool->cylinder_center.y();
-//        offset = QVector3D(0, peanut_offset_y, -(first_circle_center.z() - centerBottom.z()));
-        offset = QVector3D(0, 0,0);
+        offset = QVector3D(0 + 0.1, peanut_offset_y + offset.y(), -(first_circle_center.z() - centerBottom.z()));
+//        offset = QVector3D(0, 0,0);
     }
     else
         offset = QVector3D(0, 0, 0);
@@ -899,6 +899,245 @@ void gen_Model::genIncline_Cylinder(QVector<float> &vec,QVector<QVector2D> head_
     // 偏移错误
     if(recognizeDeskLamp->offset_center != 0)
         offset = QVector3D(0,0,recognizeDeskLamp->offset_center);
+
+    std::cout<<"offset: "<<offset.x()<< " "<< offset.y() << " " << offset.z()<<std::endl;
+
+    for(int i = initSize; i < vec.size(); i += 6){
+        vec[i] += offset.x();
+        vec[i+1] += offset.y();
+        vec[i+2] += offset.z();
+    }
+}
+
+void gen_Model::genLine(QVector<float> &vec, QVector<QVector2D> line_path, float width, QVector3D offset)
+{
+    std::cout<<"===============line==========="<<std::endl;
+
+    int initSize = vec.size();
+
+    std::cout<<"line_path.size: "<<line_path.size()<<std::endl;
+
+    // 保存最短路径 p1_p2 的数组
+    QVector<QLineF> shotest_path_vector;
+    // 保存中心线的数组
+    QVector<QPointF> centerPoint_vector;
+
+    QPointF p1, p2;
+    QVector<QPointF> line_vec;
+
+    // 取样
+    for(int i = 0; i < line_path.size() - 1; i++)
+    {
+        QPointF p1 = QPointF(line_path[i].x(), line_path[i].y());
+        QPointF p2 = QPointF(line_path[i+1].x(), line_path[i+1].y());
+
+        // 以 p2 为中心 width 为半径画圆,求p3, p4;
+        QVector<QPointF> path;
+        for(int j = 0; j < 360; j++){
+            path.append(QPointF(width*cos(j*2*M_PI/360) + p2.x(),width*sin(j*2*M_PI/360) + p2.y()));
+        }
+
+        QPointF p3(0,0), p4(0,0);
+
+        for(auto point: path)
+        {
+            // 夹角
+            QVector2D v1 = QVector2D(p1 - p2);
+            QVector2D v2 = QVector2D(point - p2);
+            float cos_a_b =(v1.x()*v2.x() + v1.y()*v2.y())/(v1.length()*v2.length());
+
+            if(qAbs(cos_a_b) < 0.0001)
+            {
+                if(p3 == QPointF(0,0))
+                    p3 = QPointF(point.x(), point.y());
+                else
+                    p4 = QPointF(point.x(), point.y());
+            }
+        }
+
+        std::cout<<"======================================"<<std::endl;
+        std::cout<<"p3: "<< p3.x() << " "<< p3.y() <<std::endl;
+        std::cout<<"p4: "<< p4.x() << " "<< p4.y() <<std::endl;
+
+        if(p3 != QPointF(0,0) && p4 != QPointF(0,0))
+        {
+            shotest_path_vector.push_back(QLineF(p3, p4));
+
+            centerPoint_vector.push_back(p2);
+        }
+
+    }
+
+    std::cout<<"shotest_path_vector.size: "<<shotest_path_vector.size()<<std::endl;
+
+    std::cout<<"centerPoint_vector.size: "<<centerPoint_vector.size()<<std::endl;
+
+    // 保存圆轨迹的数组
+    QVector<QVector<QVector3D>> draw_circle_vector;
+
+    QVector3D first_circle_center;
+
+    // shotest_path_vector.size()
+    for (int i = 0; i < shotest_path_vector.size() - 1; i++) {
+
+        p1 = shotest_path_vector[i].p1();
+
+        p2 = shotest_path_vector[i].p2();
+
+        float radis = QVector2D(p2 - p1).length() / 2;
+
+        QVector<QVector2D> circle_vector;
+
+        QVector3D center(centerPoint_vector[i].x(), centerPoint_vector[i].y(), centerPoint_vector[i].y());
+
+        if(i == 0)
+            first_circle_center = QVector3D(centerPoint_vector[i].x(), 0, centerPoint_vector[i].y());
+
+        QVector<QVector3D> temp_circle;
+
+        // 构建圆的坐标
+        float t = 0.0;
+        for (int j = 0; j <= 360 ; j++) {
+
+            // i 是弧度，需要转成角度 t
+            t = j * 2 * M_PI / 360;
+
+            // 改变圆心位置，只用给 x,y 加入固定的数值即可。
+            circle_vector.push_back(QVector2D(radis * cos(t), radis * sin(t)));
+
+            temp_circle.push_back(QVector3D(circle_vector[j].x(), circle_vector[j].y(), 0));
+        }
+
+        // 求旋转角度
+        float cos_angle = (p2.x() - p1.x()) / sqrt(pow(p2.x() - p1.x(), 2) + pow(p2.y() - p1.y(), 2));
+
+        float sin_angle = (p2.y() - p1.y()) / sqrt(pow(p2.x() - p1.x(), 2) + pow(p2.y() - p1.y(), 2));
+
+        QVector<QVector3D> rotate_new_circle;
+
+        // 逆时针旋转
+        for (int j = 0; j < temp_circle.size() ; j++) {
+
+            float x = cos_angle * temp_circle[j].x() +  centerPoint_vector[i].x();
+
+            float y = temp_circle[j].y();
+
+            float z = sin_angle * temp_circle[j].x() +  centerPoint_vector[i].y();
+
+            rotate_new_circle.push_back(QVector3D(x, y, z));
+        }
+
+        draw_circle_vector.push_back(rotate_new_circle);
+    }
+
+    std::cout<<"draw_circle_vector.size: "<<draw_circle_vector.size()<<std::endl;
+
+    for (int i = 0; i < draw_circle_vector.size() - 1; i++)
+    {
+        int i_1 = (i + 1) % draw_circle_vector.size();
+
+        for(int j = 0; j < draw_circle_vector[i].size(); j++)
+        {
+            int j_1 = (j + 1) % draw_circle_vector[i].size();
+
+            QVector3D temp1 = QVector3D(draw_circle_vector[i][j].x(), draw_circle_vector[i][j].y(), draw_circle_vector[i][j].z());
+            QVector3D temp3 = QVector3D(draw_circle_vector[i][j_1].x(), draw_circle_vector[i][j_1].y(), draw_circle_vector[i][j_1].z());
+
+            // 首
+            if(i == 1)
+                common->genTriangle(vec, temp1, temp3, first_circle_center);
+
+            QVector3D temp2 = QVector3D(draw_circle_vector[i_1][j].x(), draw_circle_vector[i_1][j].y(), draw_circle_vector[i_1][j].z());
+            QVector3D temp4 = QVector3D(draw_circle_vector[i_1][j_1].x(), draw_circle_vector[i_1][j_1].y(), draw_circle_vector[i_1][j_1].z());
+
+            common->genTriangle(vec,temp3,temp1,temp4);
+            common->genTriangle(vec,temp1,temp2,temp4);
+
+            // 尾
+            if(i == draw_circle_vector[i].size() - 1)
+                common->genTriangle(vec, temp2, temp4,QVector3D(centerPoint_vector[i_1].x(), centerPoint_vector[i_1].y(), draw_circle_vector[i_1][j_1].z()));  //bottom
+
+        }
+    }
+
+    std::cout<<"offset: "<<offset.x()<< " "<< offset.y() << " " << offset.z()<<std::endl;
+
+    for(int i = initSize; i < vec.size(); i += 6){
+        vec[i] += offset.x();
+        vec[i+1] += offset.y();
+        vec[i+2] += offset.z();
+    }
+}
+
+void gen_Model::genCircle(QVector<float> &vec, QVector<QVector2D> line_path, QVector3D offset)
+{
+    std::cout<<"==========================circle===================="<<std::endl;
+
+    int initSize = vec.size();
+
+    std::cout<<"line_path.size: "<<line_path.size()<<std::endl;
+
+    // 求圆心坐标以及半径
+    QVector2D min,max;
+    common->findMinMax(line_path, min,max);
+
+    QVector2D center((max.x() + min.x())/2, (max.y() + min.y())/2);
+
+    float radis = qMax((max.x() - min.x())/2, (max.y() - min.y())/2);
+
+    std::cout<<"center.x: "<<center.x()<<" center.y: "<<center.y()<<std::endl;
+
+    std::cout<<"radis: "<<radis<<std::endl;
+
+    QVector<QVector3D> circle_vector;
+
+    QVector<QVector<QVector3D>> all_circle_vector;
+
+    // 构建圆的坐标
+    float t = 0.0;
+    for (int j = 0; j <= 360 ; j++) {
+
+        // i 是弧度，需要转成角度 t
+        t = j * 2 * M_PI / 360;
+
+        // 改变圆心位置，只用给 x,y 加入固定的数值即可。
+        circle_vector.push_back(QVector3D(radis * cos(t) + center.x(), radis * sin(t) + center.y(), center.y()));
+    }
+
+    all_circle_vector.push_back(circle_vector);
+
+    QVector<QVector3D> rotate_new_circle;
+
+    // 旋转之后的圆坐标 (绕y轴)
+    for(int i = 0; i < circle_vector.size(); i++)
+    {
+
+        float x = cos(180 * M_PI / 360) * circle_vector[i].x() + sin(180 * M_PI / 360) * circle_vector[i].z();
+
+        float y = circle_vector[i].y();
+
+        float z = -sin(180 * M_PI / 360) * circle_vector[i].x() + cos(180 * M_PI / 360) * circle_vector[i].z();
+
+        rotate_new_circle.push_back(QVector3D(x, y, z));
+    }
+
+    all_circle_vector.push_back(rotate_new_circle);
+
+    // 旋转之后的圆中心坐标
+
+    for(int i = 0; i < all_circle_vector.size(); i++)
+    {
+
+        for(int j = 0; j < all_circle_vector[i].size(); j++)
+        {
+            int j_1 = (j + 1) % all_circle_vector[i].size();
+
+            QVector3D p0 = QVector3D(all_circle_vector[i][j].x(), all_circle_vector[i][j].y(), all_circle_vector[i][j].z());
+            QVector3D p1 = QVector3D(all_circle_vector[i][j_1].x(), all_circle_vector[i][j_1].y(), all_circle_vector[i][j_1].z());
+
+            common->genTriangle(vec, p1, p0, QVector3D(center.x(), center.y(), center.y()));
+        }
+    }
 
     std::cout<<"offset: "<<offset.x()<< " "<< offset.y() << " " << offset.z()<<std::endl;
 

@@ -25,6 +25,9 @@ public:
     // 坐标转换
     QStack<QVector<float>> coordinate_transformation(QStack<QVector<float>> draw_stack);
 
+    // 重载
+    QVector<float> coordinate_transformation(QVector<float> draw_vector);
+
     // 查找最大，最小值
     void findMinMax(QVector<QVector2D> head_path, QVector2D &min,QVector2D &max);
 
