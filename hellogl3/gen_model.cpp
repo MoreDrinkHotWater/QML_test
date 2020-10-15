@@ -926,7 +926,7 @@ void gen_Model::genLine(QVector<float> &vec, QVector<QVector2D> line_path, float
     QVector<QPointF> line_vec;
 
     // 取样
-    for(int i = 0; i < line_path.size() - 1; i++)
+    for(int i = 0; i < line_path.size(); i++)
     {
         QPointF p1 = QPointF(line_path[i].x(), line_path[i].y());
         QPointF p2 = QPointF(line_path[i+1].x(), line_path[i+1].y());
@@ -967,6 +967,13 @@ void gen_Model::genLine(QVector<float> &vec, QVector<QVector2D> line_path, float
         }
 
     }
+    std::cout<<"centerPoint_vector[0]: "<<centerPoint_vector[0].x() << " "<<centerPoint_vector[0].y()<<std::endl;
+
+    std::cout<<"centerPoint_vector[centerPoint_vector.size - 3]: "<<centerPoint_vector[centerPoint_vector.size() - 3].x() << " "<<centerPoint_vector[centerPoint_vector.size() - 3].y()<<std::endl;
+
+    std::cout<<"centerPoint_vector[centerPoint_vector.size - 2]: "<<centerPoint_vector[centerPoint_vector.size() - 2].x() << " "<<centerPoint_vector[centerPoint_vector.size() - 2].y()<<std::endl;
+
+    std::cout<<"centerPoint_vector[centerPoint_vector.size - 1]: "<<centerPoint_vector[centerPoint_vector.size() - 1].x() << " "<<centerPoint_vector[centerPoint_vector.size() - 1].y()<<std::endl;
 
     std::cout<<"shotest_path_vector.size: "<<shotest_path_vector.size()<<std::endl;
 
@@ -978,7 +985,7 @@ void gen_Model::genLine(QVector<float> &vec, QVector<QVector2D> line_path, float
     QVector3D first_circle_center;
 
     // shotest_path_vector.size()
-    for (int i = 0; i < shotest_path_vector.size() - 1; i++) {
+    for (int i = 0; i < shotest_path_vector.size(); i++) {
 
         p1 = shotest_path_vector[i].p1();
 
@@ -1054,9 +1061,12 @@ void gen_Model::genLine(QVector<float> &vec, QVector<QVector2D> line_path, float
             common->genTriangle(vec,temp1,temp2,temp4);
 
             // 尾
-            if(i == draw_circle_vector[i].size() - 1)
-                common->genTriangle(vec, temp2, temp4,QVector3D(centerPoint_vector[i_1].x(), centerPoint_vector[i_1].y(), draw_circle_vector[i_1][j_1].z()));  //bottom
+            if(i == draw_circle_vector.size() - 2)
+            {
+                QVector3D center_bottom = QVector3D(centerPoint_vector[i_1].x(), 0, draw_circle_vector[i_1][j_1].z());
 
+                common->genTriangle(vec, temp4, temp2,center_bottom);  //bottom
+            }
         }
     }
 
@@ -1089,53 +1099,168 @@ void gen_Model::genCircle(QVector<float> &vec, QVector<QVector2D> line_path, QVe
 
     std::cout<<"radis: "<<radis<<std::endl;
 
-    QVector<QVector3D> circle_vector;
-
-    QVector<QVector<QVector3D>> all_circle_vector;
+    QVector<QVector2D> circle_vector;
 
     // 构建圆的坐标
     float t = 0.0;
-    for (int j = 0; j <= 360 ; j++) {
+    for (int j = 0; j <= 1000 ; j++) {
 
         // i 是弧度，需要转成角度 t
-        t = j * 2 * M_PI / 360;
+        t = j * 2 * M_PI / 1000;
 
         // 改变圆心位置，只用给 x,y 加入固定的数值即可。
-        circle_vector.push_back(QVector3D(radis * cos(t) + center.x(), radis * sin(t) + center.y(), center.y()));
+        circle_vector.push_back(QVector2D(radis * cos(t) + center.x(), radis * sin(t) + center.y()));
     }
 
-    all_circle_vector.push_back(circle_vector);
-
-    QVector<QVector3D> rotate_new_circle;
-
-    // 旋转之后的圆坐标 (绕y轴)
-    for(int i = 0; i < circle_vector.size(); i++)
+    for(int j = 0; j < circle_vector.size(); j++)
     {
+        int j_1 = (j + 1) % circle_vector.size();
 
-        float x = cos(180 * M_PI / 360) * circle_vector[i].x() + sin(180 * M_PI / 360) * circle_vector[i].z();
+        QVector3D p0 = QVector3D(circle_vector[j].x(), circle_vector[j].y(), center.y());
+        QVector3D p1 = QVector3D(circle_vector[j_1].x(), circle_vector[j_1].y(), center.y());
 
-        float y = circle_vector[i].y();
-
-        float z = -sin(180 * M_PI / 360) * circle_vector[i].x() + cos(180 * M_PI / 360) * circle_vector[i].z();
-
-        rotate_new_circle.push_back(QVector3D(x, y, z));
+//        common->genTriangle(vec, p1, p0, QVector3D(center.x(), center.y(), center.y()));
     }
 
-    all_circle_vector.push_back(rotate_new_circle);
+    QVector2D min_point, max_point;
 
-    // 旋转之后的圆中心坐标
+    common->findMinMax(circle_vector, min_point, max_point);
 
-    for(int i = 0; i < all_circle_vector.size(); i++)
+    std::cout<<"min_point.y: "<<min_point.y()<<std::endl;
+
+    std::cout<<"max_point.y: "<<max_point.y()<<std::endl;
+
+    float part = (max_point.y() - min_point.y()) / 50;
+
+    std::cout<<"part: "<<part<<std::endl;
+
+    QVector<QVector2D> dividecircle_vector;
+
+    for(int i = 1; i < 50; i++)
     {
+        float y = min_point.y() + part * i;
 
-        for(int j = 0; j < all_circle_vector[i].size(); j++)
+//        std::cout<<"==============="<<std::endl;
+
+//        std::cout<<"y: "<<y<<std::endl;
+
+        QVector<QVector2D> temp_vec;
+
+        // 根据y值， 划分;
+        for(auto point : circle_vector)
         {
-            int j_1 = (j + 1) % all_circle_vector[i].size();
 
-            QVector3D p0 = QVector3D(all_circle_vector[i][j].x(), all_circle_vector[i][j].y(), all_circle_vector[i][j].z());
-            QVector3D p1 = QVector3D(all_circle_vector[i][j_1].x(), all_circle_vector[i][j_1].y(), all_circle_vector[i][j_1].z());
+            if(abs(point.y() - y) < 0.001)
+            {
+//                std::cout<<"point.y(): "<<point.y()<<std::endl;
 
-            common->genTriangle(vec, p1, p0, QVector3D(center.x(), center.y(), center.y()));
+                if(temp_vec.size() == 0)
+                {
+                    temp_vec.push_back(point);
+                }
+                else
+                {
+                    if(temp_vec[0].y() == point.y())
+                        temp_vec.push_back(point);
+                }
+            }
+//            else
+//            {
+//                if(point.x() == min_point.x() || point.x() == max_point.x())
+//                {
+//                    temp_vec.push_back(point);
+//                }
+//            }
+
+            if(temp_vec.size() == 2)
+            {
+                for(auto point : temp_vec)
+                    dividecircle_vector.push_back(point);
+
+                temp_vec.clear();
+            }
+        }
+    }
+
+    std::cout<<"dividecircle_vector.size: "<< dividecircle_vector.size() <<std::endl;
+
+    // 划分圆的中心
+    QVector<QVector2D> dividecircle_center;
+
+    // 划分圆的半径
+     QVector<float>  dividecircle_radis;
+
+    for(int i = 0; i < dividecircle_vector.size() - 1; i+=2)
+    {
+        QVector2D left = dividecircle_vector[i];
+        QVector2D right = dividecircle_vector[i+1];
+
+        std::cout<<"==============="<<std::endl;
+
+        std::cout<<"left: "<<left.x()<<" "<<left.y()<<std::endl;
+
+        std::cout<<"right: "<<right.x()<<" "<<right.y()<<std::endl;
+
+        QVector2D center = QVector2D(left + right)/2;
+
+        float radis = abs(right.x() - left.x())/2;
+
+        std::cout<<"center: "<<center.x()<<" "<<center.y()<<std::endl;
+
+        std::cout<<"radis: "<<radis<<std::endl;
+
+        dividecircle_center.push_back(center);
+
+        dividecircle_radis.push_back(radis);
+    }
+
+    QVector<QVector<QVector2D>> all_dividecircle_circle;
+
+    for(int i = 0; i < dividecircle_center.size(); i++)
+    {
+
+        QVector<QVector2D> dividecircle_circle;
+        // 构建圆的坐标
+        for (int j = 0; j <= 1000 ; j++) {
+
+            // i 是弧度，需要转成角度 t
+           float t = j * 2 * M_PI / 1000;
+
+            // 改变圆心位置，只用给 x,y 加入固定的数值即可。
+            dividecircle_circle.push_back(QVector2D(dividecircle_radis[i] * cos(t) + dividecircle_center[i].x(), dividecircle_radis[i] * sin(t) + dividecircle_center[i].y()));
+        }
+
+        all_dividecircle_circle.push_back(dividecircle_circle);
+
+        std::cout<<"dividecircle_center[i]: "<<dividecircle_center[i].x()<<" "<<dividecircle_center[i].y()<<std::endl;
+    }
+
+    for(int i = 0; i < all_dividecircle_circle.size() - 1; i++)
+    {
+        int i_1 = (i + 1) % all_dividecircle_circle.size();
+        // 缺一个 z 的偏移值
+        for(int j = 0; j < all_dividecircle_circle[i].size(); j++)
+        {
+            int j_1 = (j + 1) % all_dividecircle_circle[i].size();
+
+            float offset_z = center.y() - dividecircle_center[i].y();
+
+            QVector3D temp1 = QVector3D(all_dividecircle_circle[i][j].x(), all_dividecircle_circle[i][j].y(), dividecircle_center[i].y());
+            QVector3D temp3 = QVector3D(all_dividecircle_circle[i][j_1].x(), all_dividecircle_circle[i][j_1].y(), dividecircle_center[i].y());
+
+            if(i == 0)
+                common->genTriangle(vec, temp1, temp3, QVector3D(dividecircle_center[i].x(), dividecircle_center[i].y(), dividecircle_center[i].y()));
+
+            offset_z = center.y() - dividecircle_center[i_1].y();
+
+            QVector3D temp2 = QVector3D(all_dividecircle_circle[i_1][j].x(), all_dividecircle_circle[i_1][j].y(), dividecircle_center[i_1].y());
+            QVector3D temp4 = QVector3D(all_dividecircle_circle[i_1][j_1].x(), all_dividecircle_circle[i_1][j_1].y(), dividecircle_center[i_1].y());
+
+            common->genTriangle(vec,temp3,temp1,temp4);
+            common->genTriangle(vec,temp1,temp2,temp4);
+
+            if(i == all_dividecircle_circle.size() - 2)
+                common->genTriangle(vec, temp4, temp2, QVector3D(dividecircle_center[i_1].x(), dividecircle_center[i_1].y(), dividecircle_center[i_1].y()));
         }
     }
 
