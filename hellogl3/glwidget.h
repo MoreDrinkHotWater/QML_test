@@ -121,10 +121,13 @@ public slots:
     void draw_stool();
 
     // line
-    void draw_line(QVector<float> draw_stack);
+    void draw_line(QVector<float> draw_stack, float width_var);
 
     // circle
     void draw_circle(QVector<float> draw_vector);
+
+    // Extrude
+    void draw_Extrude(QVector<float> draw_vector, float width_var, float up_var, float down_var);
 
 signals:
     void xRotationChanged(int angle);

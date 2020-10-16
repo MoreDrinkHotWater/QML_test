@@ -10,6 +10,11 @@
 #include <QLineF>
 #include <math.h>
 
+// 产生随机数据
+#include <cstdlib>
+#include <ctime>
+#define random(a,b) (rand()%(b-a)+a)
+
 gen_Model::gen_Model():
     offset_cup(false),
     offset_deskLamp(false),
@@ -909,7 +914,7 @@ void gen_Model::genIncline_Cylinder(QVector<float> &vec,QVector<QVector2D> head_
     }
 }
 
-void gen_Model::genLine(QVector<float> &vec, QVector<QVector2D> line_path, float width, QVector3D offset)
+void gen_Model::genLine(QVector<float> &vec, QVector<QVector2D> line_path, float width_var, QVector3D offset)
 {
     std::cout<<"===============line==========="<<std::endl;
 
@@ -934,7 +939,7 @@ void gen_Model::genLine(QVector<float> &vec, QVector<QVector2D> line_path, float
         // 以 p2 为中心 width 为半径画圆,求p3, p4;
         QVector<QPointF> path;
         for(int j = 0; j < 360; j++){
-            path.append(QPointF(width*cos(j*2*M_PI/360) + p2.x(),width*sin(j*2*M_PI/360) + p2.y()));
+            path.append(QPointF(width_var * cos(j*2*M_PI/360) + p2.x(),width_var * sin(j*2*M_PI/360) + p2.y()));
         }
 
         QPointF p3(0,0), p4(0,0);
@@ -1112,16 +1117,6 @@ void gen_Model::genCircle(QVector<float> &vec, QVector<QVector2D> line_path, QVe
         circle_vector.push_back(QVector2D(radis * cos(t) + center.x(), radis * sin(t) + center.y()));
     }
 
-    for(int j = 0; j < circle_vector.size(); j++)
-    {
-        int j_1 = (j + 1) % circle_vector.size();
-
-        QVector3D p0 = QVector3D(circle_vector[j].x(), circle_vector[j].y(), center.y());
-        QVector3D p1 = QVector3D(circle_vector[j_1].x(), circle_vector[j_1].y(), center.y());
-
-//        common->genTriangle(vec, p1, p0, QVector3D(center.x(), center.y(), center.y()));
-    }
-
     QVector2D min_point, max_point;
 
     common->findMinMax(circle_vector, min_point, max_point);
@@ -1136,13 +1131,9 @@ void gen_Model::genCircle(QVector<float> &vec, QVector<QVector2D> line_path, QVe
 
     QVector<QVector2D> dividecircle_vector;
 
-    for(int i = 1; i < 50; i++)
+    for(int i = 0; i <= 50; i++)
     {
         float y = min_point.y() + part * i;
-
-//        std::cout<<"==============="<<std::endl;
-
-//        std::cout<<"y: "<<y<<std::endl;
 
         QVector<QVector2D> temp_vec;
 
@@ -1152,8 +1143,6 @@ void gen_Model::genCircle(QVector<float> &vec, QVector<QVector2D> line_path, QVe
 
             if(abs(point.y() - y) < 0.001)
             {
-//                std::cout<<"point.y(): "<<point.y()<<std::endl;
-
                 if(temp_vec.size() == 0)
                 {
                     temp_vec.push_back(point);
@@ -1164,13 +1153,6 @@ void gen_Model::genCircle(QVector<float> &vec, QVector<QVector2D> line_path, QVe
                         temp_vec.push_back(point);
                 }
             }
-//            else
-//            {
-//                if(point.x() == min_point.x() || point.x() == max_point.x())
-//                {
-//                    temp_vec.push_back(point);
-//                }
-//            }
 
             if(temp_vec.size() == 2)
             {
@@ -1227,31 +1209,26 @@ void gen_Model::genCircle(QVector<float> &vec, QVector<QVector2D> line_path, QVe
            float t = j * 2 * M_PI / 1000;
 
             // 改变圆心位置，只用给 x,y 加入固定的数值即可。
-            dividecircle_circle.push_back(QVector2D(dividecircle_radis[i] * cos(t) + dividecircle_center[i].x(), dividecircle_radis[i] * sin(t) + dividecircle_center[i].y()));
+            dividecircle_circle.push_back(QVector2D(dividecircle_radis[i] * cos(t) + center.x(), dividecircle_radis[i] * sin(t) + center.y()));
         }
 
         all_dividecircle_circle.push_back(dividecircle_circle);
-
-        std::cout<<"dividecircle_center[i]: "<<dividecircle_center[i].x()<<" "<<dividecircle_center[i].y()<<std::endl;
     }
 
     for(int i = 0; i < all_dividecircle_circle.size() - 1; i++)
     {
         int i_1 = (i + 1) % all_dividecircle_circle.size();
+
         // 缺一个 z 的偏移值
         for(int j = 0; j < all_dividecircle_circle[i].size(); j++)
         {
             int j_1 = (j + 1) % all_dividecircle_circle[i].size();
 
-            float offset_z = center.y() - dividecircle_center[i].y();
-
             QVector3D temp1 = QVector3D(all_dividecircle_circle[i][j].x(), all_dividecircle_circle[i][j].y(), dividecircle_center[i].y());
             QVector3D temp3 = QVector3D(all_dividecircle_circle[i][j_1].x(), all_dividecircle_circle[i][j_1].y(), dividecircle_center[i].y());
 
             if(i == 0)
-                common->genTriangle(vec, temp1, temp3, QVector3D(dividecircle_center[i].x(), dividecircle_center[i].y(), dividecircle_center[i].y()));
-
-            offset_z = center.y() - dividecircle_center[i_1].y();
+                common->genTriangle(vec, temp1, temp3, QVector3D(center.x(),  center.y(), dividecircle_center[i].y()));
 
             QVector3D temp2 = QVector3D(all_dividecircle_circle[i_1][j].x(), all_dividecircle_circle[i_1][j].y(), dividecircle_center[i_1].y());
             QVector3D temp4 = QVector3D(all_dividecircle_circle[i_1][j_1].x(), all_dividecircle_circle[i_1][j_1].y(), dividecircle_center[i_1].y());
@@ -1260,7 +1237,7 @@ void gen_Model::genCircle(QVector<float> &vec, QVector<QVector2D> line_path, QVe
             common->genTriangle(vec,temp1,temp2,temp4);
 
             if(i == all_dividecircle_circle.size() - 2)
-                common->genTriangle(vec, temp4, temp2, QVector3D(dividecircle_center[i_1].x(), dividecircle_center[i_1].y(), dividecircle_center[i_1].y()));
+                common->genTriangle(vec, temp4, temp2, QVector3D(center.x(), center.y(), dividecircle_center[i_1].y()));
         }
     }
 
@@ -1271,5 +1248,54 @@ void gen_Model::genCircle(QVector<float> &vec, QVector<QVector2D> line_path, QVe
         vec[i+1] += offset.y();
         vec[i+2] += offset.z();
     }
+
 }
 
+void gen_Model::genExtrude(QVector<float> &vec, QVector<QVector2D> line_path, float width_var, float up_var, float down_var, QVector3D offset)
+{
+    std::cout<<"===============extrude==========="<<std::endl;
+
+    int initSize = vec.size();
+
+    std::cout<<"line_path.size: "<<line_path.size()<<std::endl;
+
+    QVector2D min, max;
+
+    common->findMinMax(line_path, min, max);
+
+    QVector2D extrude_center = QVector2D((min + max) / 2);
+
+    std::cout<< "extrude_center: "<< extrude_center.x() << " " <<extrude_center.y() <<std::endl;
+
+    for(int i = 0; i < line_path.size(); i++)
+    {
+        int i_1 = (i + 1) % line_path.size();
+
+        QVector3D temp1 = QVector3D(line_path[i].x(), line_path[i].y(), extrude_center.y());
+        QVector3D temp3 = QVector3D(line_path[i_1].x(), line_path[i_1].y(), extrude_center.y());
+
+        // up
+        // extrude_center.y() - 0.1: 凸
+        // extrude_center.y() + 0.1: 凹
+        common->genTriangle(vec, temp1, temp3, QVector3D(extrude_center.x(),  extrude_center.y(), extrude_center.y() + up_var));
+
+        QVector3D temp2 = QVector3D(line_path[i].x(), line_path[i].y(), extrude_center.y() + width_var);
+        QVector3D temp4 = QVector3D(line_path[i_1].x(), line_path[i_1].y(), extrude_center.y() + width_var);
+
+        common->genTriangle(vec,temp3,temp1,temp4);
+        common->genTriangle(vec,temp1,temp2,temp4);
+
+        // down
+        // extrude_center.y() + width_var - 0.1: 凹
+        // extrude_center.y() + width_var + 0.1: 凸
+        common->genTriangle(vec, temp4, temp2, QVector3D(extrude_center.x(),  extrude_center.y(), extrude_center.y() + width_var + down_var));
+    }
+
+    std::cout<<"offset: "<<offset.x()<< " "<< offset.y() << " " << offset.z()<<std::endl;
+
+    for(int i = initSize; i < vec.size(); i += 6){
+        vec[i] += offset.x();
+        vec[i+1] += offset.y();
+        vec[i+2] += offset.z();
+    }
+}

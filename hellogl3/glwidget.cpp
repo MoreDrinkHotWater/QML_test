@@ -73,11 +73,6 @@
 #include <QMessageBox>
 #include <QTimer>
 
-// 产生随机数据
-#include <cstdlib>
-#include <ctime>
-#define random(a,b) (rand()%(b-a)+a)
-
 bool GLWidget::m_transparent = false;
 
 extern bool flag;
@@ -978,8 +973,10 @@ void GLWidget::draw_stool()
     update();
 }
 
-void GLWidget::draw_line(QVector<float> draw_vector)
+void GLWidget::draw_line(QVector<float> draw_vector, float width_var)
 {
+    std::cout<<"width_var: "<<width_var<<std::endl;
+
     QVector3D offset(off_var,off_var,off_var);
 
     QVector<QVector2D> draw_coorVector;
@@ -991,7 +988,7 @@ void GLWidget::draw_line(QVector<float> draw_vector)
           draw_coorVector.push_back(QVector2D(draw_vector[i], draw_vector[i+1]));
     }
 
-    genModel->genLine(cylinder_vector, draw_coorVector, 0.02, offset);
+    genModel->genLine(cylinder_vector, draw_coorVector, width_var, offset);
 
     allocate_vector();
 
@@ -1012,6 +1009,32 @@ void GLWidget::draw_circle(QVector<float> draw_vector)
     }
 
     genModel->genCircle(cylinder_vector, draw_coorVector, offset);
+
+    allocate_vector();
+
+    update();
+}
+
+void GLWidget::draw_Extrude(QVector<float> draw_vector, float width_var, float up_var, float down_var)
+{
+    std::cout<<"width_var: "<<width_var<<std::endl;
+
+    std::cout<<"up_var: "<<up_var<<std::endl;
+
+    std::cout<<"down_var: "<<down_var<<std::endl;
+
+    QVector3D offset(off_var,off_var,off_var);
+
+    QVector<QVector2D> draw_coorVector;
+
+    draw_vector = common->coordinate_transformation(draw_vector);
+
+    for (int i = 0; i < draw_vector.size(); i+=2)
+    {
+          draw_coorVector.push_back(QVector2D(draw_vector[i], draw_vector[i+1]));
+    }
+
+    genModel->genExtrude(cylinder_vector, draw_coorVector, width_var, up_var, down_var, offset);
 
     allocate_vector();
 

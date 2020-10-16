@@ -17,6 +17,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     Canvas.cpp \
+    ExtrudeProperty_dialog.cpp \
+    Lineproperty_dialog.cpp \
     common.cpp \
     gen_model.cpp \
     glwidget.cpp \
@@ -35,6 +37,8 @@ SOURCES += \
 
 HEADERS += \
     Canvas.h \
+    ExtrudeProperty_dialog.h \
+    Lineproperty_dialog.h \
     common.h \
     gen_model.h \
     glwidget.h \
@@ -51,6 +55,8 @@ HEADERS += \
     window.h
 
 FORMS += \
+    ExtrudeProperty_dialog.ui \
+    Lineproperty_dialog.ui \
     mainwindow.ui
 
 

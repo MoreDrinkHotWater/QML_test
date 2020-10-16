@@ -38,10 +38,13 @@ public:
     void genPeanut(QVector<float> &vec, QVector<QVector2D> line_path, QVector3D offset);
 
     // line
-    void genLine(QVector<float> &vec, QVector<QVector2D> line_path,float width, QVector3D offset);
+    void genLine(QVector<float> &vec, QVector<QVector2D> line_path, float width_var, QVector3D offset);
 
     // circle
     void genCircle(QVector<float> &vec, QVector<QVector2D> line_path, QVector3D offset);
+
+    // extrude
+    void genExtrude(QVector<float> &vec, QVector<QVector2D> line_path, float width_var, float up_var, float down_var, QVector3D offset);
 
 private:
     Common *common;

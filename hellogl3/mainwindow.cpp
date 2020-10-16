@@ -5,6 +5,9 @@
 #include "recognize_desklamp.h"
 #include "recognize_stool.h"
 
+#include "ExtrudeProperty_dialog.h"
+#include "Lineproperty_dialog.h"
+
 #include <QPainter>
 #include <QMenuBar>
 #include <QMenu>
@@ -30,8 +33,7 @@ MainWindow::MainWindow(QWidget *parent)
       stoolAction(new QAction(this)),
 
       lineAction(new QAction(this)),
-      triangleAction(new QAction(this)),
-      rectAction(new QAction(this)),
+      extrudeAction(new QAction(this)),
       circleAction(new QAction(this))
 {
     ui->setupUi(this);
@@ -85,13 +87,9 @@ void MainWindow::initActions()
     lineAction->setText("Line");
     connect(lineAction, &QAction::triggered, this, &MainWindow::line_clicked);
 
-    triangleAction->setObjectName(QString::fromUtf8("triangleAction"));
-    triangleAction->setText("Triangle");
-    connect(triangleAction, &QAction::triggered, this, &MainWindow::triangle_clicked);
-
-    rectAction->setObjectName(QString::fromUtf8("rectAction"));
-    rectAction->setText("Rect");
-    connect(rectAction, &QAction::triggered, this, &MainWindow::rect_clicked);
+    extrudeAction->setObjectName(QString::fromUtf8("extrudeAction"));
+    extrudeAction->setText("Extrude");
+    connect(extrudeAction, &QAction::triggered, this, &MainWindow::extrude_clicked);
 
     circleAction->setObjectName(QString::fromUtf8("circleAction"));
     circleAction->setText("Circle");
@@ -125,9 +123,7 @@ void MainWindow::initMenu()
     menu = new QMenu("&Polygon", this);
     menu->addAction(lineAction);
     menu->addSeparator();
-    menu->addAction(triangleAction);
-    menu->addSeparator();
-    menu->addAction(rectAction);
+    menu->addAction(extrudeAction);
     menu->addSeparator();
     menu->addAction(circleAction);
     pmeunBar->addMenu(menu);
@@ -376,17 +372,29 @@ void MainWindow::stool_clicked()
 
 void MainWindow::line_clicked()
 {
-    ui->glwidget->glWidget->draw_line(ui->canvas->draw_stack[ui->canvas->draw_stack.size() - 1]);
+
+    LinePropertyDialog *linePropertyDialog = new LinePropertyDialog;
+    connect(linePropertyDialog, &LinePropertyDialog::send_LineProperty, this, &MainWindow::receive_LineProperty);
+
+    linePropertyDialog->show();
 }
 
-void MainWindow::triangle_clicked()
+void MainWindow::receive_LineProperty(float width_var)
 {
-    std::cout<<"===============triangle==========="<<std::endl;
+    ui->glwidget->glWidget->draw_line(ui->canvas->draw_stack[ui->canvas->draw_stack.size() - 1], width_var);
 }
 
-void MainWindow::rect_clicked()
+void MainWindow::extrude_clicked()
 {
-    std::cout<<"===============rect==========="<<std::endl;
+    ExtrudePropertryDialog *extrudePropertyDialog = new ExtrudePropertryDialog;
+    connect(extrudePropertyDialog, &ExtrudePropertryDialog::send_ExtrudeProperty, this, &MainWindow::receive_ExtrudeProperty);
+
+    extrudePropertyDialog->show();
+}
+
+void MainWindow::receive_ExtrudeProperty(float width_var, float up_var, float down_var)
+{
+    ui->glwidget->glWidget->draw_Extrude(ui->canvas->draw_stack[ui->canvas->draw_stack.size() - 1], width_var, up_var, down_var);
 }
 
 void MainWindow::circle_clicked()

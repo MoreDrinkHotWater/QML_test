@@ -37,8 +37,7 @@ private slots:
     void stool_clicked();
 
     void line_clicked();
-    void triangle_clicked();
-    void rect_clicked();
+    void extrude_clicked();
     void circle_clicked();
 
 private:
@@ -57,8 +56,7 @@ private:
 
     // polygon
     QAction *lineAction;
-    QAction *triangleAction;
-    QAction *rectAction;
+    QAction *extrudeAction;
     QAction *circleAction;
 
     void initActions();
@@ -70,5 +68,10 @@ private:
     Recognize_deskLamp *recognizeDeskLamp;
 
     Recognize_stool *recognizeStool;
+
+private slots:
+    void receive_ExtrudeProperty(float width_var, float up_var, float down_var);
+
+    void receive_LineProperty(float width_var);
 };
 #endif // MAINWINDOW_H
