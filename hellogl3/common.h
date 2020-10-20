@@ -37,7 +37,7 @@ public:
     // 计算多边形面积
     float calculateArea(QVector<QVector2D> &vec);
 
-    // 三角化
+    // 三角化（竖直拉）
     void genTriangle(QVector<float> &vec,QVector3D p0,QVector3D p1,QVector3D p2);
 
     // 斜角点

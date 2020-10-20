@@ -1,8 +1,10 @@
-QT       += core gui
+QT += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
+
+LIBS += -lGL -lglut
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
@@ -59,6 +61,8 @@ FORMS += \
     Lineproperty_dialog.ui \
     mainwindow.ui
 
+# link opengl libray
+LIBS += -lglut -lGL -lGLU -lGLEW
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

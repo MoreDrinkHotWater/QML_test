@@ -3,15 +3,34 @@
 #include <QPushButton>
 #include <iostream>
 #include <math.h>
+#include <GL/glut.h>
 
 #include "Canvas.h"
 #include "glwidget.h"
+
+GLfloat xwcMin = -50.0, xwcMax = 50.0;
+GLfloat ywcMin = -50.0, ywcMax = 50.0;
 
 Canvas::Canvas(QWidget *parent):
     QWidget(parent)
 {
     // keyPressEvent 函数没有响应键盘事件的解决方法
     setFocusPolicy(Qt::ClickFocus);
+
+    int argc = 0; // 这里不赋初值，程序会发生错误
+    char **argv;
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+    glutInitWindowPosition(50,50);
+    glutInitWindowSize(600, 600);
+    glutCreateWindow("Bezier Curve");
+    // 背景设置成白色
+    glClearColor(1.0, 1.0, 1.0, 0.0);
+
+    glutDisplayFunc(draw_bezier); // draw_bezier: 绘图函数
+    glutReshapeFunc(winReshapeFcn); // winReshapeFcn: 世界坐标裁剪窗口
+
+    glutMainLoop(); // 事件循环
 
 }
 
@@ -20,7 +39,6 @@ void Canvas::paintEvent(QPaintEvent *event){
 
     painter.setRenderHint(QPainter::Antialiasing,true);
     painter.fillRect(event->rect(), QBrush(Qt::blue));
-
 
     if(draw_lines_vector.size() >= 2)
         drawPoint(painter);
@@ -86,12 +104,10 @@ void Canvas::mouseMoveEvent(QMouseEvent *event){
 
         update();
     }
-
 }
 
 void Canvas::mouseReleaseEvent(QMouseEvent *event)
 {
-
     if (event->KeyRelease && event->button() == Qt::LeftButton)
     {
         // 不加入这个函数无法触发 mouseReleaseEvent ！
@@ -105,6 +121,51 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event)
 
         update();
     }
+}
+
+void Canvas::winReshapeFcn(int newWidth, int newHeight)
+{
+    glViewport(0,0, newHeight, newWidth);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+
+    gluOrtho2D(xwcMin, xwcMax, ywcMin, ywcMax);
+
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void Canvas::draw_bezier()
+{
+    glClear(GL_COLOR_BUFFER_BIT); // clear display window
+
+    std::cout<<"============bezier============="<<std::endl;
+
+    GLfloat ctrlPts [4][3] = {{-40.0, -40.0, 0.0},{-10.0, 200.0, 0.0},{10.0, -200.0, 0.0},{40.0, 40.0, 0.0}};
+
+    glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, 4, *ctrlPts);
+
+    glEnable(GL_MAP1_VERTEX_3);
+
+    GLint k;
+
+    glColor3f(0.0, 0.0, 1.0);
+    glBegin(GL_LINE_STRIP);
+
+        for(k = 0; k <= 50; k++)
+            glEvalCoord1f(GLfloat(k) / 50.0);
+    glEnd();
+
+    glColor3f(1.0, 0.0, 0.0);
+    glPointSize(5.0);
+    glBegin(GL_POINTS);
+
+        for(k = 0; k < 4; k++)
+            glVertex3fv(&ctrlPts[k][0]);
+    glEnd();
+
+    std::cout<<"============bezier end============="<<std::endl;
+
+    glFlush();
 }
 
 void Canvas::drawPoint(QPainter &painter)

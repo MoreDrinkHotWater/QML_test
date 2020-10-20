@@ -40,6 +40,10 @@ private:
 
     void draw_centerLine4(QPainter &painter);
 
+    static void draw_bezier();
+
+    static void winReshapeFcn(int newWidth, int newHeight);
+
 public:
     QVector<float> draw_lines_vector;
 

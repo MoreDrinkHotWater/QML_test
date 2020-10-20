@@ -652,7 +652,7 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
 
     this->draw_coorstack = common->coordinate_transformation(draw_stack);
 
-#if 0
+#if 1
     // 识别椭圆
     if(recognizecylinder->recognize_cylinder_shape(draw_coorstack))
     {
@@ -824,7 +824,7 @@ void GLWidget::reviceStackDataSlot(QStack<QVector<float>> draw_stack)
         update();
     }
 
-#elif 1
+#elif 0
     // 画花生
 
     // line_vector

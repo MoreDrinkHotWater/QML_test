@@ -187,7 +187,7 @@ float Common::calculateArea(QVector<QVector2D> &vec)
 }
 
 
-// 三角化
+// 三角化(竖直拉)
 void Common::genTriangle(QVector<float> &vec,QVector3D p0,QVector3D p1,QVector3D p2){
     // 单位化法向量
     QVector3D n = QVector3D::normal(p0,p1,p2);

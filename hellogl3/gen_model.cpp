@@ -866,6 +866,11 @@ void gen_Model::genIncline_Cylinder(QVector<float> &vec,QVector<QVector2D> head_
 
     std::cout<<"===================圆柱体=================="<<std::endl;
 
+    // 高度比 (左右线段的 Z 值偏移角度)
+    float heightRatio = common->mapEllipseToCircle(head_path);
+
+    std::cout<<"heightRatio: "<< heightRatio <<std::endl;
+
     QVector2D min,max;
 
     common->findMinMax(head_path,min,max);
@@ -1283,7 +1288,11 @@ void gen_Model::genExtrude(QVector<float> &vec, QVector<QVector2D> line_path, fl
         QVector3D temp4 = QVector3D(line_path[i_1].x(), line_path[i_1].y(), extrude_center.y() + width_var);
 
         common->genTriangle(vec,temp3,temp1,temp4);
-        common->genTriangle(vec,temp1,temp2,temp4);
+
+
+//        std::cout<<"===================================="<<std::endl;
+//        std::cout<<"temp1: "<<temp1.x()<<" "<<temp1.y()<<" "<<temp1.z()<<std::endl;
+//        std::cout<<"temp2: "<<temp2.x()<<" "<<temp2.y()<<" "<<temp2.z()<<std::endl;
 
         // down
         // extrude_center.y() + width_var - 0.1: 凹
