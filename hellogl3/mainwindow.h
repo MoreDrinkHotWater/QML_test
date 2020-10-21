@@ -1,8 +1,11 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
 #include "glwidget.h"
+
+#include <QMainWindow>
+#include <QThread>
+#include <QVector3D>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -13,6 +16,10 @@ class Recognize_cup;
 class Recognize_deskLamp;
 
 class Recognize_stool;
+
+class Common;
+
+class Draw_bezier;
 
 class MainWindow : public QMainWindow
 {
@@ -69,9 +76,20 @@ private:
 
     Recognize_stool *recognizeStool;
 
+    Common *common;
+
+    Draw_bezier *draw_bezier;
+
+    QThread draw_bezierThread;
+
+signals:
+
+    void send_bezierSignal(QVector<QVector3D> draw_vector);
+
 private slots:
     void receive_ExtrudeProperty(float width_var, float up_var, float down_var);
 
     void receive_LineProperty(float width_var);
+    void on_BezierButton_clicked();
 };
 #endif // MAINWINDOW_H

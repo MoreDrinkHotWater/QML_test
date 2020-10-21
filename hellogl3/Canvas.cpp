@@ -3,35 +3,15 @@
 #include <QPushButton>
 #include <iostream>
 #include <math.h>
-#include <GL/glut.h>
 
 #include "Canvas.h"
 #include "glwidget.h"
-
-GLfloat xwcMin = -50.0, xwcMax = 50.0;
-GLfloat ywcMin = -50.0, ywcMax = 50.0;
 
 Canvas::Canvas(QWidget *parent):
     QWidget(parent)
 {
     // keyPressEvent 函数没有响应键盘事件的解决方法
     setFocusPolicy(Qt::ClickFocus);
-
-    int argc = 0; // 这里不赋初值，程序会发生错误
-    char **argv;
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-    glutInitWindowPosition(50,50);
-    glutInitWindowSize(600, 600);
-    glutCreateWindow("Bezier Curve");
-    // 背景设置成白色
-    glClearColor(1.0, 1.0, 1.0, 0.0);
-
-    glutDisplayFunc(draw_bezier); // draw_bezier: 绘图函数
-    glutReshapeFunc(winReshapeFcn); // winReshapeFcn: 世界坐标裁剪窗口
-
-    glutMainLoop(); // 事件循环
-
 }
 
 void Canvas::paintEvent(QPaintEvent *event){
@@ -46,9 +26,9 @@ void Canvas::paintEvent(QPaintEvent *event){
     if(draw_canvas_stack.size()  != 0)
     {
 
-       draw_stack = draw_canvas_stack;
+        draw_stack = draw_canvas_stack;
 
-       drawCanvas(painter);
+        drawCanvas(painter);
     }
     else
         drawLines(painter);
@@ -56,24 +36,24 @@ void Canvas::paintEvent(QPaintEvent *event){
     // 花生
     if(draw_stack.size() == 1)
         // 首尾按 5 为比例拉
-//        draw_centerLine2(painter);
+        //        draw_centerLine2(painter);
 
-    // 琦角
-    if(draw_stack.size() == 2)
-    {
+        // 琦角
+        if(draw_stack.size() == 2)
+        {
 #if 0
-        // 延长线拉
-        draw_centerLine(painter);
+            // 延长线拉
+            draw_centerLine(painter);
 #elif 0
-        // 首尾按 5 为比例拉
-        draw_centerLine2(painter);
+            // 首尾按 5 为比例拉
+            draw_centerLine2(painter);
 #elif 0
-        // 平行线拉
-        draw_centerLine3(painter);
+            // 平行线拉
+            draw_centerLine3(painter);
 #elif 0
-        draw_centerLine4(painter);
+            draw_centerLine4(painter);
 #endif
-    }
+        }
 }
 
 void Canvas::mousePressEvent(QMouseEvent *event){
@@ -121,51 +101,6 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event)
 
         update();
     }
-}
-
-void Canvas::winReshapeFcn(int newWidth, int newHeight)
-{
-    glViewport(0,0, newHeight, newWidth);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-
-    gluOrtho2D(xwcMin, xwcMax, ywcMin, ywcMax);
-
-    glClear(GL_COLOR_BUFFER_BIT);
-}
-
-void Canvas::draw_bezier()
-{
-    glClear(GL_COLOR_BUFFER_BIT); // clear display window
-
-    std::cout<<"============bezier============="<<std::endl;
-
-    GLfloat ctrlPts [4][3] = {{-40.0, -40.0, 0.0},{-10.0, 200.0, 0.0},{10.0, -200.0, 0.0},{40.0, 40.0, 0.0}};
-
-    glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, 4, *ctrlPts);
-
-    glEnable(GL_MAP1_VERTEX_3);
-
-    GLint k;
-
-    glColor3f(0.0, 0.0, 1.0);
-    glBegin(GL_LINE_STRIP);
-
-        for(k = 0; k <= 50; k++)
-            glEvalCoord1f(GLfloat(k) / 50.0);
-    glEnd();
-
-    glColor3f(1.0, 0.0, 0.0);
-    glPointSize(5.0);
-    glBegin(GL_POINTS);
-
-        for(k = 0; k < 4; k++)
-            glVertex3fv(&ctrlPts[k][0]);
-    glEnd();
-
-    std::cout<<"============bezier end============="<<std::endl;
-
-    glFlush();
 }
 
 void Canvas::drawPoint(QPainter &painter)
@@ -368,11 +303,11 @@ void Canvas::draw_centerLine(QPainter &painter)
                 if(A != 0 && B != 0 && C != 0)
                 {
                     for (int j = 0; j < corner_line.size(); j++) {
-                         if(A * corner_line[j].x() + B * corner_line[j].y() + C == 0)
-                         {
+                        if(A * corner_line[j].x() + B * corner_line[j].y() + C == 0)
+                        {
                             flag_last += 1;
                             last_point = corner_line[j].toPoint();
-                         }
+                        }
                     }
 
                     centerPoint_vector.push_back(last_point);
@@ -593,7 +528,7 @@ void Canvas::draw_centerLine2(QPainter &painter)
     QPointF p1, p2;
     QVector<QPointF> line_vec;
 
-//    std::cout<<"corner_line.size: "<<corner_line.size()<<std::endl;
+    //    std::cout<<"corner_line.size: "<<corner_line.size()<<std::endl;
 
     for (int i = 0; i < corner_line.size(); i++) {
 
@@ -613,12 +548,12 @@ void Canvas::draw_centerLine2(QPainter &painter)
             continue;
         }
 
-       if(i % 5 == 0)
-           line_vec.push_back(QVector2D(corner_line[i]).toPointF());
+        if(i % 5 == 0)
+            line_vec.push_back(QVector2D(corner_line[i]).toPointF());
 
     }
 
-//    std::cout<<"line_vec.size: "<<line_vec.size()<<std::endl;
+    //    std::cout<<"line_vec.size: "<<line_vec.size()<<std::endl;
 
     QVector<QPointF>::iterator it_first = line_vec.begin();
     QVector<QPointF>::iterator it_end = line_vec.end();
@@ -800,7 +735,7 @@ void Canvas::draw_centerLine3(QPainter &painter)
         for(int i = 1; i < Var.size(); i++)
         {
 
-//            std::cout<<"Var["<<i-1<<"]: "<<Var[i-1]<<std::endl;
+            //            std::cout<<"Var["<<i-1<<"]: "<<Var[i-1]<<std::endl;
 
             float it_front = Var[i-1];
             float it_next = Var[i];
@@ -923,8 +858,8 @@ void Canvas::draw_centerLine4(QPainter &painter)
             continue;
         }
 
-       if(i % 5 == 0)
-           p1_vec.push_back(QVector2D(corner_line[i]).toPointF());
+        if(i % 5 == 0)
+            p1_vec.push_back(QVector2D(corner_line[i]).toPointF());
 
     }
 
@@ -961,7 +896,7 @@ void Canvas::draw_centerLine4(QPainter &painter)
         rear_vec.push_back(temp_vec);
     }
 
-//    std::cout<<"rear_vec.size: "<<rear_vec.size()<<std::endl;
+    //    std::cout<<"rear_vec.size: "<<rear_vec.size()<<std::endl;
 
     QVector<QPointF>::iterator it_p1 = p1_vec.begin();
     QVector<QPointF>::iterator it_p2 = p2_vec.begin();

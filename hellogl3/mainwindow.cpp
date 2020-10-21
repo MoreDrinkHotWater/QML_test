@@ -4,9 +4,12 @@
 #include "recognize_cup.h"
 #include "recognize_desklamp.h"
 #include "recognize_stool.h"
+#include "common.h"
 
 #include "ExtrudeProperty_dialog.h"
 #include "Lineproperty_dialog.h"
+
+#include "draw_bezier.h"
 
 #include <QPainter>
 #include <QMenuBar>
@@ -17,6 +20,9 @@
 #include <fstream>
 #include <cassert>
 #include <QDateTime>
+#include <QVector3D>
+#include <QVector>
+#include <QMetaType>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -46,10 +52,21 @@ MainWindow::MainWindow(QWidget *parent)
     recognizeDeskLamp = Recognize_deskLamp::getInstance();
 
     recognizeStool = Recognize_stool::getInstance();
+
+    common = Common::getInstance();
+
+    draw_bezier = new Draw_bezier();
+
+    qRegisterMetaType<QVector<QVector3D> > ("QVector<QVector3D>");
 }
 
 MainWindow::~MainWindow()
 {
+    std::cout<<"==================~MainWindow=============="<<std::endl;
+
+    draw_bezierThread.quit();
+    draw_bezierThread.wait();
+
     delete ui;
 }
 
@@ -400,4 +417,58 @@ void MainWindow::receive_ExtrudeProperty(float width_var, float up_var, float do
 void MainWindow::circle_clicked()
 {
     ui->glwidget->glWidget->draw_circle(ui->canvas->draw_stack[ui->canvas->draw_stack.size() - 1]);
+}
+
+void MainWindow::on_BezierButton_clicked()
+{
+    std::cout << "MainWindow thread: " << QThread::currentThreadId() << std::endl;
+
+    // ==============
+    QVector<float> last_vector = common->coordinate_transformation(ui->canvas->draw_stack[ui->canvas->draw_stack.size() - 1]);
+
+    std::cout<<"last_vector.size: "<<last_vector.size()<<std::endl;
+
+    QVector<QVector3D> draw_vector;
+
+    for(int i = 0; i < last_vector.size() - 1; i+=2)
+        draw_vector.push_back(QVector3D(last_vector[i], last_vector[i+1], 0));
+
+    std::cout<<"draw_vector.size: "<<draw_vector.size()<<std::endl;
+
+    // 筛选控制点
+
+    QVector<QVector3D> contorlPoint_vector;
+
+    contorlPoint_vector.push_back(draw_vector[0]); // 首
+
+    for (int j = 1; j < draw_vector.size() - 1; j++) {
+        QVector3D point = draw_vector[j];
+
+        // 转折点
+        if(point.y() < draw_vector[j-1].y() && point.y() < draw_vector[j+1].y())
+            contorlPoint_vector.push_back(point);
+
+        if(point.y() > draw_vector[j-1].y() && point.y() > draw_vector[j+1].y())
+            contorlPoint_vector.push_back(point);
+    }
+
+    contorlPoint_vector.push_back(draw_vector[draw_vector.size() - 1]); // 尾
+
+    std::cout<<"contorlPoint_vector.size: "<<contorlPoint_vector.size()<<std::endl;
+
+    // ==============
+
+    connect(this, &MainWindow::send_bezierSignal, draw_bezier, &Draw_bezier::receiver_bezierSlot);
+
+    // 当 draw_bezier 对象实例销毁时，退出线程
+    connect(draw_bezier,&QObject::destroyed, &draw_bezierThread, &QThread::quit);
+
+    // 当线程结束时，销毁线程对象实例
+    connect(&draw_bezierThread, &QThread::finished, draw_bezier, &QObject::deleteLater);
+
+    draw_bezier->moveToThread(&draw_bezierThread);
+
+    draw_bezierThread.start();
+
+    emit send_bezierSignal(contorlPoint_vector);
 }

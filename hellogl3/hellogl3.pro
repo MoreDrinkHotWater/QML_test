@@ -22,6 +22,7 @@ SOURCES += \
     ExtrudeProperty_dialog.cpp \
     Lineproperty_dialog.cpp \
     common.cpp \
+    draw_bezier.cpp \
     gen_model.cpp \
     glwidget.cpp \
     identification_relation.cpp \
@@ -42,6 +43,7 @@ HEADERS += \
     ExtrudeProperty_dialog.h \
     Lineproperty_dialog.h \
     common.h \
+    draw_bezier.h \
     gen_model.h \
     glwidget.h \
     identification_relation.h \

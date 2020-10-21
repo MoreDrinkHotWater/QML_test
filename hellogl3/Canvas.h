@@ -22,7 +22,6 @@ public:
 
      virtual ~Canvas() {};
 
-
 private:
     QPointF m_lastPos;
 
@@ -40,16 +39,14 @@ private:
 
     void draw_centerLine4(QPainter &painter);
 
-    static void draw_bezier();
-
-    static void winReshapeFcn(int newWidth, int newHeight);
-
 public:
     QVector<float> draw_lines_vector;
 
     QStack<QVector<float>> draw_canvas_stack;
 
     QStack<QVector<float>> draw_stack;
+
+    void draw_Bezier();
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
