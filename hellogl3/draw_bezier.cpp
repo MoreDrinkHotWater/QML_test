@@ -13,6 +13,12 @@ GLfloat ywcMin = -50.0, ywcMax = 50.0;
 #define BLUE 3
 #define WHITE 4
 
+Draw_bezier *Draw_bezier::getInstance(){
+    static Draw_bezier _instance;
+    return &_instance;
+}
+
+
 Draw_bezier::~Draw_bezier()
 {
     std::cout<<"=================~Draw_bezier================="<<std::endl;
@@ -52,8 +58,6 @@ void Draw_bezier::receiver_bezierSlot(QVector<QVector3D> draw_vector)
 
     Draw_bezier::draw_vector = draw_vector;
 
-    std::cout<<"Draw_bezier::draw_vector.size: "<<Draw_bezier::draw_vector.size()<<std::endl;
-
     std::cout << "Draw_bezier thread: " << QThread::currentThreadId() << std::endl;
 
     /*
@@ -63,7 +67,7 @@ void Draw_bezier::receiver_bezierSlot(QVector<QVector3D> draw_vector)
     char **argv = nullptr;
     glutInit (&argc, argv); // glut 环境初始化
     glutInitDisplayMode (GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH); // 显示模式初始化
-    glutInitWindowPosition(50,50);
+    glutInitWindowPosition(650,150);
     glutInitWindowSize(600, 600);
     int window = glutCreateWindow("Bezier Curve");
 
@@ -97,9 +101,7 @@ void Draw_bezier::draw_bezier(void)
 {
     glClear(GL_COLOR_BUFFER_BIT); // clear display window
 
-    std::cout<<"============bezier============="<<std::endl;
-
-    int multiple = 30;
+    int multiple = 50;
 
 #if 0
     QVector<QVector3D> draw_vector;
@@ -121,9 +123,56 @@ void Draw_bezier::draw_bezier(void)
 
     std::cout<<"row: "<<row<<std::endl;
 
-    int col = 3;
+    for(int i = 0; i <= row; i+=3)
+    {
+        QVector<QVector3D> temp_vector;
+        temp_vector.push_back(draw_vector[i]);
+        temp_vector.push_back(draw_vector[i+1]);
+        temp_vector.push_back(draw_vector[i+2]);
+        temp_vector.push_back(draw_vector[i+3]);
+        spline_subdivision(temp_vector);
+    }
 
-    GLfloat ctrlPts [row][col];
+//    GLfloat ctrlPts [row][3];
+
+//    for(int i = 0; i < row; i++)
+//    {
+//        ctrlPts[i][0] = multiple * draw_vector[i].x();
+//        ctrlPts[i][1] = multiple * draw_vector[i].y();
+//        ctrlPts[i][2] = draw_vector[i].z();
+//    }
+
+//    glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, row, *ctrlPts);
+//    glEnable(GL_MAP1_VERTEX_3);
+
+//    GLint k;
+
+//    glColor3f(0.0, 0.0, 1.0);  // line
+//    glMapGrid1f(100, 0.0, 1.0);
+//    glEvalMesh1(GL_LINE, 0, 100);
+
+//    glColor3f(1.0, 0.0, 0.0); // points
+//    glPointSize(5.0);
+//    glBegin(GL_POINTS);
+//    for(k = 0; k < row; k++)
+//        glVertex3fv(&ctrlPts[k][0]);
+//    glEnd();
+
+//    glFlush(); //用于强制刷新缓冲，保证绘图命令将被执行
+
+}
+
+void Draw_bezier::spline_subdivision(QVector<QVector3D> draw_vector)
+{
+    int row = draw_vector.size();
+
+    std::cout<<"row: "<<row<<std::endl;
+
+    std::cout<<"draw_vector[0][3]: "<<draw_vector[0][0]<<" "<<draw_vector[0][1]<<" "<<draw_vector[0][2]<<std::endl;
+
+    GLfloat ctrlPts [row][3];
+
+    int multiple = 50;
 
     for(int i = 0; i < row; i++)
     {
@@ -132,29 +181,21 @@ void Draw_bezier::draw_bezier(void)
         ctrlPts[i][2] = draw_vector[i].z();
     }
 
-    // 输出
-    for(int j = 0; j < row; j++)
-    {
-        std::cout<<"j: "<<ctrlPts[j][0]<< " " << ctrlPts[j][1] << " "<< ctrlPts[j][2]<<std::endl;
-    }
-
     glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, row, *ctrlPts);
     glEnable(GL_MAP1_VERTEX_3);
 
     GLint k;
 
     glColor3f(0.0, 0.0, 1.0);  // line
-    glMapGrid1f(50, 0.0, 1.0);
-    glEvalMesh1(GL_LINE, 0, 50);
+    glMapGrid1f(100, 0.0, 1.0);
+    glEvalMesh1(GL_LINE, 0, 100);
 
     glColor3f(1.0, 0.0, 0.0); // points
-    glPointSize(row + 1);
+    glPointSize(5.0);
     glBegin(GL_POINTS);
     for(k = 0; k < row; k++)
-        glVertex3fv(&ctrlPts[k][0]);
+//        glVertex3fv(&ctrlPts[k][0]);
     glEnd();
-
-    std::cout<<"============bezier end============="<<std::endl;
 
     glFlush();
 }
