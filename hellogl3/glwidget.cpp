@@ -437,7 +437,10 @@ void GLWidget::paintGL()
     // 开启背面剔除
     glEnable(GL_CULL_FACE);
 
+    glEnable(GL_BLEND);
     glEnable(GL_LINE_SMOOTH); //开启线的反走样
+    glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);  // Antialias the lines
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // 控制旋转
     m_world.setToIdentity();

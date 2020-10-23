@@ -28,6 +28,8 @@ private:
     static QVector<QVector3D> draw_vector;
 
     static void spline_subdivision(QVector<QVector3D> draw_vector);
+
+    static void keyboard(unsigned char key, int x, int y);
 };
 
 #endif // DRAW_BEZIER_H
