@@ -123,7 +123,6 @@ QVector<float> Common::coordinate_transformation(QVector<float> draw_vector)
     QVector<float> draw_coorVector;
 
     // 坐标转换
-
     for(auto it = 0; it < draw_vector.size(); it+=2)
     {
         float x = ( draw_vector[it]  - 602 / 2 ) / (602 / 2 );

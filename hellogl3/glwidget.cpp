@@ -987,9 +987,7 @@ void GLWidget::draw_line(QVector<float> draw_vector, float width_var)
     draw_vector = common->coordinate_transformation(draw_vector);
 
     for (int i = 0; i < draw_vector.size(); i+=2)
-    {
           draw_coorVector.push_back(QVector2D(draw_vector[i], draw_vector[i+1]));
-    }
 
     genModel->genLine(cylinder_vector, draw_coorVector, width_var, offset);
 
@@ -1004,12 +1002,10 @@ void GLWidget::draw_circle(QVector<float> draw_vector)
 
     QVector<QVector2D> draw_coorVector;
 
-    draw_vector = common->coordinate_transformation(draw_vector);
+//    draw_vector = common->coordinate_transformation(draw_vector);
 
     for (int i = 0; i < draw_vector.size(); i+=2)
-    {
           draw_coorVector.push_back(QVector2D(draw_vector[i], draw_vector[i+1]));
-    }
 
     genModel->genCircle(cylinder_vector, draw_coorVector, offset);
 
@@ -1030,12 +1026,11 @@ void GLWidget::draw_Extrude(QVector<float> draw_vector, float width_var, float u
 
     QVector<QVector2D> draw_coorVector;
 
-    draw_vector = common->coordinate_transformation(draw_vector);
+    // 坐标转换
+//    draw_vector = common->coordinate_transformation(draw_vector);
 
     for (int i = 0; i < draw_vector.size(); i+=2)
-    {
           draw_coorVector.push_back(QVector2D(draw_vector[i], draw_vector[i+1]));
-    }
 
     genModel->genExtrude(cylinder_vector, draw_coorVector, width_var, up_var, down_var, offset);
 

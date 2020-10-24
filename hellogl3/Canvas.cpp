@@ -72,6 +72,7 @@ void Canvas::mousePressEvent(QMouseEvent *event){
 }
 
 void Canvas::mouseMoveEvent(QMouseEvent *event){
+
     m_lastPos = event->pos();
 
     if (event->buttons() & Qt::LeftButton) {
@@ -166,7 +167,6 @@ void Canvas::drawLines(QPainter &painter)
     for(auto it = draw_stack.begin(); it != draw_stack.end(); ++it)
     {
         for (int last = it->size() - 1; last >= 3; last-=2) {
-
             QLineF temp_line(it->data()[last-3],it->data()[last-2],it->data()[last-1],it->data()[last]);
             temp_vector.push_back(temp_line);
         }

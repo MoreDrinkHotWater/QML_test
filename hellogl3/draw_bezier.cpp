@@ -21,11 +21,7 @@ Draw_bezier::~Draw_bezier()
 
 QVector<QVector3D> Draw_bezier::draw_vector;
 
-class wcPt3D
-{
-public:
-    GLfloat x,y,z;
-};
+QVector<float> Draw_bezier::bezierCurve_vector;
 
 // 画点
 void plotPoint(wcPt3D bzeCurvePt)
@@ -36,7 +32,7 @@ void plotPoint(wcPt3D bzeCurvePt)
 }
 
 // 计算二次项系数
-void binomialCoeffs(GLint n, GLint *C)
+void Draw_bezier::binomialCoeffs(GLint n, GLint *C)
 {
     GLint k,j;
     for(k = 0; k <= n; k++)
@@ -50,7 +46,7 @@ void binomialCoeffs(GLint n, GLint *C)
 }
 
 // 计算曲线路径坐标
-void computeBezpt(GLfloat u, wcPt3D *bezPt, GLint nCtrlPts, wcPt3D *ctrlPts, GLint *C)
+void Draw_bezier::computeBezpt(GLfloat u, wcPt3D *bezPt, GLint nCtrlPts, wcPt3D *ctrlPts, GLint *C)
 {
     GLint k,n = nCtrlPts -1;
     GLfloat bezBlendFcn;
@@ -63,13 +59,13 @@ void computeBezpt(GLfloat u, wcPt3D *bezPt, GLint nCtrlPts, wcPt3D *ctrlPts, GLi
         bezPt->x += ctrlPts[k].x * bezBlendFcn;
         bezPt->y += ctrlPts[k].y * bezBlendFcn;
         bezPt->z += ctrlPts[k].z * bezBlendFcn;
-
-        std::cout<<"bezPt: "<<bezPt->x<<" "<<bezPt->y<<" "<<bezPt->z<<std::endl;
     }
+
+    std::cout<<"bezPt: "<<bezPt->x/50.0<<" "<<bezPt->y/50.0<<" "<<bezPt->z<<std::endl;
 }
 
 // 曲线公式计算
-void bezier(wcPt3D *ctrlPts, GLint nCtrlPts, GLint nBezCurvePts)
+void Draw_bezier::bezier(wcPt3D *ctrlPts, GLint nCtrlPts, GLint nBezCurvePts)
 {
     wcPt3D bezCurvePt;
     GLfloat u;
@@ -80,11 +76,17 @@ void bezier(wcPt3D *ctrlPts, GLint nCtrlPts, GLint nBezCurvePts)
     binomialCoeffs(nCtrlPts-1, C);
 
     glBegin(GL_LINE_STRIP);
-    for(k=0; k<=nBezCurvePts; k++)
+    for(k = 0; k <= nBezCurvePts; k++)
     {
         u = GLfloat(k)/GLfloat(nBezCurvePts);
         glEvalCoord1f(u);
         computeBezpt(u, &bezCurvePt, nCtrlPts, ctrlPts, C);
+
+        if(k != nBezCurvePts)
+        {
+            bezierCurve_vector.push_back(bezCurvePt.x/50.0);
+            bezierCurve_vector.push_back(- bezCurvePt.y/50.0);
+        }
 //        plotPoint(bezCurvePt);
     }
     glEnd();
@@ -96,9 +98,9 @@ void Draw_bezier::spline_subdivision(QVector<QVector3D> draw_vector)
 {
     int row = draw_vector.size();
 
-    std::cout<<"row: "<<row<<std::endl;
+    std::cout<<"spline_subdivision row: "<<row<<std::endl;
 
-    wcPt3D ctrlPts[4];
+    wcPt3D ctrlPts[row];
 
     GLfloat test_ctrlPts [row][3];
 
@@ -115,7 +117,7 @@ void Draw_bezier::spline_subdivision(QVector<QVector3D> draw_vector)
         test_ctrlPts[i][2] = draw_vector[i].z();
     }
 
-    GLint nCtrlPts = 4, nBezCurvePts = 1000;
+    GLint nCtrlPts = row, nBezCurvePts = 1000;
 
     glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, row, *test_ctrlPts);
     glEnable(GL_MAP1_VERTEX_3);
@@ -134,7 +136,7 @@ void Draw_bezier::spline_subdivision(QVector<QVector3D> draw_vector)
     glFlush();
 }
 
-void winReshapeFnc(int newWidth, int newHeight)
+void Draw_bezier::winReshapeFcn(int newWidth, int newHeight)
 {
     glViewport(0,0, newHeight, newWidth);
     glMatrixMode(GL_PROJECTION);
@@ -149,7 +151,7 @@ void Draw_bezier::keyboard(unsigned char key, int x, int y)
 {
     switch (key)
     {
-    case 27:   //ESC键
+    case 27:   // ESC键
         exit(0);
         break;
     default:
@@ -166,14 +168,36 @@ void Draw_bezier::draw_bezier(void)
 
     std::cout<<"row: "<<row<<std::endl;
 
-    for(int i = 0; i <= row; i+=3)
+    for(int i = 0; i < row; i+=3)
     {
+        std::cout<<"i: "<<i<<std::endl;
+
         QVector<QVector3D> temp_vector;
-        temp_vector.push_back(draw_vector[i]);
-        temp_vector.push_back(draw_vector[i+1]);
-        temp_vector.push_back(draw_vector[i+2]);
-        temp_vector.push_back(draw_vector[i+3]);
-        spline_subdivision(temp_vector);
+
+        std::cout<<"================================"<<std::endl;
+
+        // 均匀分段
+        int num = abs(row - i);
+        if(num >= 4)
+        {
+            temp_vector.push_back(draw_vector[i]);
+            temp_vector.push_back(draw_vector[i+1]);
+            temp_vector.push_back(draw_vector[i+2]);
+            temp_vector.push_back(draw_vector[i+3]);
+        }
+        // 多余分段
+        else
+        {
+            for(int j = 0; j < num; j++)
+                temp_vector.push_back(draw_vector[i + j]);
+        }
+
+        for(auto point : temp_vector)
+            std::cout<<"point: "<<point.x()<<" "<<point.y()<<" "<<point.z()<<std::endl;
+
+        // 样条细分
+        if(temp_vector.size() > 0)
+            spline_subdivision(temp_vector);
     }
 }
 
@@ -191,14 +215,13 @@ void Draw_bezier::receiver_bezierSlot(QVector<QVector3D> draw_vector)
     glutInit (&argc, argv); // glut 环境初始化
     glutInitDisplayMode (GLUT_SINGLE | GLUT_RGB); // 显示模式初始化
     glutInitWindowPosition(650,150);
-    glutInitWindowSize(600, 600);
+    glutInitWindowSize(602, 612);
     glutCreateWindow("Bezier Curve");
 
-    // 背景设置成白色
-    glClearColor(1.0, 1.0, 1.0, 0.0);
+    glClearColor(1.0, 1.0, 1.0, 0.0);  // 背景设置成白色
 
     glutDisplayFunc(draw_bezier); // draw_bezier: 绘图函数
-    glutReshapeFunc(winReshapeFnc); // winReshapeFcn: 世界坐标裁剪窗口
+    glutReshapeFunc(winReshapeFcn); // winReshapeFcn: 世界坐标裁剪窗口
     glutKeyboardFunc(keyboard);
 
     glutMainLoop(); // 事件循环

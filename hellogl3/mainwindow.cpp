@@ -411,33 +411,30 @@ void MainWindow::extrude_clicked()
 
 void MainWindow::receive_ExtrudeProperty(float width_var, float up_var, float down_var)
 {
-    ui->glwidget->glWidget->draw_Extrude(ui->canvas->draw_stack[ui->canvas->draw_stack.size() - 1], width_var, up_var, down_var);
+    ui->glwidget->glWidget->draw_Extrude(draw_bezier->bezierCurve_vector, width_var, up_var, down_var);
 }
 
 void MainWindow::circle_clicked()
 {
-    ui->glwidget->glWidget->draw_circle(ui->canvas->draw_stack[ui->canvas->draw_stack.size() - 1]);
+    ui->glwidget->glWidget->draw_circle(draw_bezier->bezierCurve_vector);
 }
 
 void MainWindow::on_BezierButton_clicked()
 {
     std::cout << "MainWindow thread: " << QThread::currentThreadId() << std::endl;
 
-    // ==============
     QVector<float> last_vector = common->coordinate_transformation(ui->canvas->draw_stack[ui->canvas->draw_stack.size() - 1]);
 
     QVector<QVector3D> draw_vector;
 
+    // 屏幕坐标转世界坐标（由于 y 轴坐标系相反，所以我们给 y 坐标添加负号）
     for(int i = 0; i < last_vector.size() - 1; i+=2)
         draw_vector.push_back(QVector3D(last_vector[i], - last_vector[i+1], 0));
 
     std::cout<<"draw_vector.size: "<<draw_vector.size()<<std::endl;
 
     // 筛选控制点
-
     QVector<QVector3D> contorlPoint_vector, tempPoint_vector;
-
-#if 1
 
     for (int j = 0; j < draw_vector.size(); j+=5) {
 
@@ -470,39 +467,7 @@ void MainWindow::on_BezierButton_clicked()
             contorlPoint_vector.push_back(point);
     }
 
-#elif 0
-
-    for (int j = 0; j < draw_vector.size(); j++) {
-
-        QVector3D point = draw_vector[j];
-
-        if(j == 0 || j == draw_vector.size()-1)
-            tempPoint_vector.push_back(point); // 首尾
-
-        // 转折点(极值点)
-        if((j != 0 && j != draw_vector.size()-1) && point.y() < draw_vector[j-1].y() && point.y() < draw_vector[j+1].y())
-            tempPoint_vector.push_back(QVector3D(point.x(), point.y() - 0, 0));
-
-        if((j != 0 && j != draw_vector.size()-1) && point.y() > draw_vector[j-1].y() && point.y() > draw_vector[j+1].y())
-            tempPoint_vector.push_back(QVector3D(point.x(), point.y() + 0, 0));
-
-        if(tempPoint_vector.size() == 2)
-        {
-            contorlPoint_vector.push_back(tempPoint_vector[0]);
-            if(tempPoint_vector[0].y() > tempPoint_vector[1].y())
-                contorlPoint_vector.push_back(QVector3D(tempPoint_vector[0]+tempPoint_vector[1])/2 - QVector3D(0.1,0,0));
-            else
-                contorlPoint_vector.push_back(QVector3D(tempPoint_vector[0]+tempPoint_vector[1])/2 - QVector3D(0.1,0,0));
-            contorlPoint_vector.push_back(tempPoint_vector[1]);
-            tempPoint_vector.pop_front();
-        }
-    }
-
-#endif
-
     std::cout<<"contorlPoint_vector.size: "<<contorlPoint_vector.size()<<std::endl;
-
-    // ==============
 
     connect(this, &MainWindow::send_bezierSignal, draw_bezier, &Draw_bezier::receiver_bezierSlot);
 

@@ -1290,11 +1290,6 @@ void gen_Model::genExtrude(QVector<float> &vec, QVector<QVector2D> line_path, fl
         common->genTriangle(vec,temp3,temp1,temp4);
         common->genTriangle(vec,temp1,temp2,temp4);
 
-
-//        std::cout<<"===================================="<<std::endl;
-//        std::cout<<"temp1: "<<temp1.x()<<" "<<temp1.y()<<" "<<temp1.z()<<std::endl;
-//        std::cout<<"temp2: "<<temp2.x()<<" "<<temp2.y()<<" "<<temp2.z()<<std::endl;
-
         // down
         // extrude_center.y() + width_var - 0.1: 凹
         // extrude_center.y() + width_var + 0.1: 凸
