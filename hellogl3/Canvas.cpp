@@ -64,6 +64,8 @@ void Canvas::mousePressEvent(QMouseEvent *event){
         float dx = m_lastPos.x();
         float dy = m_lastPos.y();
 
+        std::cout<<"dx: "<<dx<<" "<<"dy: "<<dy<<std::endl;
+
         draw_lines_vector.push_back(dx);
         draw_lines_vector.push_back(dy);
 
@@ -80,6 +82,8 @@ void Canvas::mouseMoveEvent(QMouseEvent *event){
         float dx = m_lastPos.x() ;
         float dy = m_lastPos.y() ;
 
+        std::cout<<"dx: "<<dx<<" "<<"dy: "<<dy<<std::endl;
+
         draw_lines_vector.push_back(dx);
         draw_lines_vector.push_back(dy);
 
@@ -93,6 +97,67 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event)
     {
         // 不加入这个函数无法触发 mouseReleaseEvent ！
         releaseMouse();
+
+        // 记录要插入的数据点
+        QVector<float> addPoint_vector;
+
+        auto divide = [](QVector<float> draw_lines_vector, QVector<float> addPoint_vector, int &flag){
+
+            for(int i = 0; i <= draw_lines_vector.size() - 4; i+=2)
+            {
+
+                QVector2D front = QVector2D(draw_lines_vector[i], draw_lines_vector[i+1]);
+                QVector2D rear = QVector2D(draw_lines_vector[i+2], draw_lines_vector[i+3]);
+
+                if(i == 0)
+                {
+                    addPoint_vector.push_back(front.x());
+                    addPoint_vector.push_back(front.y());
+                }
+
+                float length = QVector2D(rear - front).length();
+
+                QVector2D mid = (QVector2D(front + rear) / 2);
+
+                std::cout<<"==============================="<<std::endl;
+
+                std::cout<<"front: "<<front.x()<<" "<<front.y()<<std::endl;
+
+                std::cout<<"rear: "<<rear.x()<<" "<<rear.y()<<std::endl;
+
+                std::cout<<"mid: "<<mid.x()<< " "<< mid.y()<<std::endl;
+
+                std::cout<<"length: "<<length<<std::endl;
+
+                if(length >= 3)
+                {
+                    flag += 2;
+                    addPoint_vector.push_back(mid.x());
+                    addPoint_vector.push_back(mid.y());
+                }
+
+                addPoint_vector.push_back(rear.x());
+                addPoint_vector.push_back(rear.y());
+            }
+
+            return addPoint_vector;
+        };
+
+        int flag = 0;
+
+        std::cout<<"origin draw_lines_vector.size: "<<draw_lines_vector.size()<<std::endl;
+
+        // 画线过快取点少，所以我们手动添加一些点。
+        for(int i = 0; i < 5; i++)
+        {
+            addPoint_vector.clear();
+
+            draw_lines_vector = divide(draw_lines_vector, addPoint_vector, flag);
+        }
+
+        std::cout<<"flag: "<<flag<<std::endl;
+
+        std::cout<<"new draw_lines_vector.size: "<<draw_lines_vector.size()<<std::endl;
 
         draw_stack.push_back(draw_lines_vector);
 
