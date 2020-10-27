@@ -59,8 +59,6 @@
 #include <QDesktopWidget>
 #include <QApplication>
 #include <QMessageBox>
-
-
 #include <iostream>
 
 Window::Window(QWidget *mw)

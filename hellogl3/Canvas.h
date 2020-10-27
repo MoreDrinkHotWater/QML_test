@@ -10,8 +10,6 @@
 
 #include <QPushButton>
 
-
-
 class Canvas : public QWidget
 {
 

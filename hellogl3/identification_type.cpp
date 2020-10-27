@@ -71,12 +71,9 @@ bool Identification_type::recognize_cylinder(QVector<float> vec)
         // 对随机数据排序
         std::sort(rand_vector.begin(), rand_vector.end());
 
-        for (int j = 0; j < 4; j++) {
-            QVector2D temp;
-            temp.setX(head_circle[rand_vector[j]].x());
-            temp.setY(head_circle[rand_vector[j]].y());
-            OriginPoints_vector.push_back(temp);
-        }
+        for (int j = 0; j < 4; j++)
+            OriginPoints_vector.push_back(QVector2D(head_circle[rand_vector[j]]));
+
 
         float step = 1.0;
 
@@ -106,11 +103,8 @@ bool Identification_type::recognize_cylinder(QVector<float> vec)
             }
 
             if(AB*CD + BC*AD == AC *BD)
-                //            if(abs((AB*CD + BC*AD) - AC *BD) < 0.001)
-            {
-                //                                std::cout<<"find the step"<<std::endl;
                 return false;
-            }
+
             return true;
         };
 
@@ -122,13 +116,7 @@ bool Identification_type::recognize_cylinder(QVector<float> vec)
             flag=true;
             do
             {
-                if(step == 5.0)
-                {
-                    //                                        std::cout<<"can't find the step "<<std::endl;
-                }
-
                 step+=0.0001;
-
             }while(left(OriginPoints_vector, step, flag) && step <= 5);
         }
         // 拉伸 x 值
@@ -137,13 +125,7 @@ bool Identification_type::recognize_cylinder(QVector<float> vec)
             flag = false;
             do
             {
-                if(step == 5.0)
-                {
-                    //                                        std::cout<<"can't find the step "<<std::endl;
-                }
-
                 step+=0.0001;
-
             }while(left(OriginPoints_vector,step,flag) && step <= 5);
         }
 
@@ -197,8 +179,6 @@ bool Identification_type::recognize_cylinder(QVector<float> vec)
                         num += 1;
                     }
                 }
-                std::cout<<"i: "<<i<<std::endl;
-                std::cout<<"num: "<<num<<std::endl;
 
                 for(auto it : head_circle)
                 {
@@ -213,13 +193,6 @@ bool Identification_type::recognize_cylinder(QVector<float> vec)
                         else
                             if(abs(abs(y - (minY + maxY)/2) - abs(it.y() - (minY + maxY)/2)) < 0.001 && x == it.x())
                             {
-                                std::cout<<"i: "<<i<<std::endl;
-
-                                std::cout<<"x: "<<x<<std::endl;
-                                std::cout<<"y: "<<y<<std::endl;
-
-                                std::cout<<"it->x: "<<it.x()<<std::endl;
-                                std::cout<<"it->y: "<<it.y()<<std::endl;
 
                                 flag += 1;
                                 x = 0;
@@ -228,8 +201,6 @@ bool Identification_type::recognize_cylinder(QVector<float> vec)
                     }
                 }
             }
-
-            std::cout<<"============flag: "<<flag<<std::endl;
 
             if(flag >= 2)
             {

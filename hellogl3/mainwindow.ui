@@ -79,13 +79,13 @@
   <customwidget>
    <class>Window</class>
    <extends>QWidget</extends>
-   <header>window.h</header>
+   <header location="global">window.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>Canvas</class>
    <extends>QWidget</extends>
-   <header>Canvas.h</header>
+   <header location="global">Canvas.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

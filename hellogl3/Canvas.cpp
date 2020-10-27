@@ -64,7 +64,7 @@ void Canvas::mousePressEvent(QMouseEvent *event){
         float dx = m_lastPos.x();
         float dy = m_lastPos.y();
 
-        std::cout<<"dx: "<<dx<<" "<<"dy: "<<dy<<std::endl;
+//        std::cout<<"dx: "<<dx<<" "<<"dy: "<<dy<<std::endl;
 
         draw_lines_vector.push_back(dx);
         draw_lines_vector.push_back(dy);
@@ -82,7 +82,7 @@ void Canvas::mouseMoveEvent(QMouseEvent *event){
         float dx = m_lastPos.x() ;
         float dy = m_lastPos.y() ;
 
-        std::cout<<"dx: "<<dx<<" "<<"dy: "<<dy<<std::endl;
+//        std::cout<<"dx: "<<dx<<" "<<"dy: "<<dy<<std::endl;
 
         draw_lines_vector.push_back(dx);
         draw_lines_vector.push_back(dy);
@@ -119,15 +119,15 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event)
 
                 QVector2D mid = (QVector2D(front + rear) / 2);
 
-                std::cout<<"==============================="<<std::endl;
+//                std::cout<<"==============================="<<std::endl;
 
-                std::cout<<"front: "<<front.x()<<" "<<front.y()<<std::endl;
+//                std::cout<<"front: "<<front.x()<<" "<<front.y()<<std::endl;
 
-                std::cout<<"rear: "<<rear.x()<<" "<<rear.y()<<std::endl;
+//                std::cout<<"rear: "<<rear.x()<<" "<<rear.y()<<std::endl;
 
-                std::cout<<"mid: "<<mid.x()<< " "<< mid.y()<<std::endl;
+//                std::cout<<"mid: "<<mid.x()<< " "<< mid.y()<<std::endl;
 
-                std::cout<<"length: "<<length<<std::endl;
+//                std::cout<<"length: "<<length<<std::endl;
 
                 if(length >= 3)
                 {
@@ -145,7 +145,7 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event)
 
         int flag = 0;
 
-        std::cout<<"origin draw_lines_vector.size: "<<draw_lines_vector.size()<<std::endl;
+//        std::cout<<"origin draw_lines_vector.size: "<<draw_lines_vector.size()<<std::endl;
 
         // 画线过快取点少，所以我们手动添加一些点。
         for(int i = 0; i < 5; i++)
@@ -155,13 +155,13 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event)
             draw_lines_vector = divide(draw_lines_vector, addPoint_vector, flag);
         }
 
-        std::cout<<"flag: "<<flag<<std::endl;
+//        std::cout<<"flag: "<<flag<<std::endl;
 
-        std::cout<<"new draw_lines_vector.size: "<<draw_lines_vector.size()<<std::endl;
+//        std::cout<<"new draw_lines_vector.size: "<<draw_lines_vector.size()<<std::endl;
 
         draw_stack.push_back(draw_lines_vector);
 
-        std::cout<<"draw_stack size: "<<draw_stack.size()<<std::endl;
+//        std::cout<<"draw_stack size: "<<draw_stack.size()<<std::endl;
 
         draw_lines_vector.clear();
 

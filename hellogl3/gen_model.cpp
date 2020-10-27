@@ -674,16 +674,16 @@ void gen_Model::genArbitrary(QVector<float> &vec,QVector<QVector2D> head_path, Q
                 QVector2D center_bottom((max.x() + min.x())/2, (max.y() + min.y())/2);
                 centerBottom.setX(center_bottom.x());
                 centerBottom.setY(center_bottom.y());
-                centerBottom.setZ(height * heightRatio);
+                centerBottom.setZ(height * heightRatio  + centerTop.z());
             }
         }
 
         // 补最后一段三角面片
-        temp1.setZ((size-1) * (height / size) * heightRatio);
-        temp3.setZ((size-1) * (height / size) * heightRatio);
+        temp1.setZ((size-1) * (height / size) * heightRatio + centerTop.z());
+        temp3.setZ((size-1) * (height / size) * heightRatio + centerTop.z());
 
-        temp2.setZ((size) * (height / size) * heightRatio);
-        temp4.setZ((size) * (height / size) * heightRatio);
+        temp2.setZ((size) * (height / size) * heightRatio + centerTop.z());
+        temp4.setZ((size) * (height / size) * heightRatio + centerTop.z());
 
         common->genTriangle(vec,temp3,temp1,temp4); //竖条
         common->genTriangle(vec,temp1,temp2,temp4);

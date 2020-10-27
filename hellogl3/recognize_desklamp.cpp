@@ -40,7 +40,18 @@ bool Recognize_deskLamp::recognize_deskLamp(QStack<QVector<float>> draw_stack)
         if(i == 4)
             corner = draw_coorstack[i];
         else if( i < 4)
-            deskLamp_top.push_back(draw_coorstack[i]);
+        {
+            QVector<float> transfromation_y_vec;
+
+            for(int j = 0; j < draw_coorstack[i].size(); j+=2)
+            {
+                transfromation_y_vec.push_back(draw_coorstack[i][j]);
+                transfromation_y_vec.push_back(-draw_coorstack[i][j+1]);
+            }
+
+            deskLamp_top.push_back(transfromation_y_vec);
+        }
+
         else
             deskLamp_bottom.push_back(draw_coorstack[i]);
     }
