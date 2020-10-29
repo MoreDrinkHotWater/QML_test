@@ -84,7 +84,7 @@ private:
 
 signals:
 
-    void send_bezierSignal(QVector<QVector3D> draw_vector);
+    void send_bezierSignal(QStack<QVector<QVector3D>> draw_stack);
 
 private slots:
     void receive_ExtrudeProperty(float width_var, float up_var, float down_var);

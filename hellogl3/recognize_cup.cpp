@@ -33,7 +33,11 @@ bool Recognize_cup::recognize_cup(QStack<QVector<float> > draw_stack)
     std::cout<<"=========================start========================"<<std::endl;
 
     // 转换坐标
-    this->draw_coorstack = common->coordinate_transformation(draw_stack);
+//    this->draw_coorstack = common->coordinate_transformation(draw_stack);
+
+    this->draw_coorstack = draw_stack;
+
+    std::cout<<"draw_coorstack.size: "<<draw_coorstack.size()<<std::endl;
 
     QStack<QVector<float>> cylinder;
 
@@ -155,8 +159,6 @@ bool Recognize_cup::recognize_cup(QStack<QVector<float> > draw_stack)
 
     for(int i = 0; i < recognizecylinder->type_vec.size(); i++)
     {
-        //        std::cout<< "type["<<i<<"]: "<<recognizecylinder->type_vec[i].toStdString()<<std::endl;
-
         if(recognizecylinder->type_vec[i] == "直线")
         {
 
@@ -174,11 +176,10 @@ bool Recognize_cup::recognize_cup(QStack<QVector<float> > draw_stack)
             float C = p2.x() * p1.y() - p1.x() * p2.y();
 
             // 判断交点个数以及输出交点坐标
-
             for (auto peanut_point: peanutLine_vector)
             {
 
-                if(abs(A * peanut_point.x() + B  * peanut_point.y() + C) < 0.001)
+                if(abs(A * peanut_point.x() + B  * peanut_point.y() + C) < 0.01)
                 {
                     intersection_num += 1;
                     intersection_vector.push_back(peanut_point);

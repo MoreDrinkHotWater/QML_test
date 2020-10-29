@@ -25,7 +25,9 @@ bool Recognize_stool::recognize_stool(QStack<QVector<float>> draw_stack)
     std::cout<<"=========================start========================"<<std::endl;
 
     // 转换坐标
-    this->draw_coorstack = common->coordinate_transformation(draw_stack);
+//    this->draw_coorstack = common->coordinate_transformation(draw_stack);
+
+    this->draw_coorstack = draw_stack;
 
     std::cout<<"this->draw_coorstack.size: "<<this->draw_coorstack.size()<<std::endl;
 
@@ -41,7 +43,6 @@ bool Recognize_stool::recognize_stool(QStack<QVector<float>> draw_stack)
             stool_top.push_back(draw_coorstack[i]);
         else
             stool_bottom.push_back(draw_coorstack[i]);
-
     }
 
     // 识别凳子的桌面

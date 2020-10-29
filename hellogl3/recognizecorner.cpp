@@ -152,8 +152,6 @@ bool Recognizecorner::recognize_corner_shape(QStack<QVector<float>> draw_coorsta
         }
     }
 
-    std::cout<<"flag: "<<flag<<std::endl;
-
     if(flag == 1)
     {
         this -> radius = identification_type->radius;

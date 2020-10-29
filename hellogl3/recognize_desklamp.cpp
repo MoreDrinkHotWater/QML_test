@@ -25,8 +25,12 @@ bool Recognize_deskLamp::recognize_deskLamp(QStack<QVector<float>> draw_stack)
 {
     std::cout<<"=========================start========================"<<std::endl;
 
+    std::cout<<"draw_stack.size: "<<draw_stack.size()<<std::endl;
+
     // 转换坐标
-    this->draw_coorstack = common->coordinate_transformation(draw_stack);
+//    this->draw_coorstack = common->coordinate_transformation(draw_stack);
+
+    this->draw_coorstack = draw_stack;
 
     // 灯罩
     QStack<QVector<float>> deskLamp_top;
@@ -46,12 +50,11 @@ bool Recognize_deskLamp::recognize_deskLamp(QStack<QVector<float>> draw_stack)
             for(int j = 0; j < draw_coorstack[i].size(); j+=2)
             {
                 transfromation_y_vec.push_back(draw_coorstack[i][j]);
-                transfromation_y_vec.push_back(-draw_coorstack[i][j+1]);
+                transfromation_y_vec.push_back(draw_coorstack[i][j+1]);
             }
 
             deskLamp_top.push_back(transfromation_y_vec);
         }
-
         else
             deskLamp_bottom.push_back(draw_coorstack[i]);
     }
@@ -97,7 +100,7 @@ bool Recognize_deskLamp::recognize_deskLamp(QStack<QVector<float>> draw_stack)
                 {
                     for (int var = 0; var < draw_coorstack[line_index].size(); var+=2) {
 
-                        QVector2D temp(draw_coorstack[line_index][var],draw_coorstack[line_index][var+1]);
+                        QVector2D temp(draw_coorstack[line_index][var],-draw_coorstack[line_index][var+1]);
 
                         wavyline_vector_1.push_back(temp);
                     }
@@ -107,7 +110,7 @@ bool Recognize_deskLamp::recognize_deskLamp(QStack<QVector<float>> draw_stack)
                 {
                     for (int var = 0; var < draw_coorstack[line_index].size(); var+=2) {
 
-                        QVector2D temp(draw_coorstack[line_index][var],draw_coorstack[line_index][var+1]);
+                        QVector2D temp(draw_coorstack[line_index][var],-draw_coorstack[line_index][var+1]);
 
                         wavyline_vector_2.push_back(temp);
                     }

@@ -107,11 +107,7 @@ QStack<QVector<float>> Common::coordinate_transformation(QStack<QVector<float>> 
     QStack<QVector<float>> draw_coorstack;
 
     for(int i = 0; i < draw_stack.size(); i++)
-    {
-        std::cout<< "it->size: "<<draw_stack[i].size()<<std::endl;
-
         draw_coorstack.push_back(coordinate_transformation(draw_stack[i]));
-    }
 
     return draw_coorstack;
 }

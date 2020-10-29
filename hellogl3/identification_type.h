@@ -13,6 +13,8 @@ public:
 
     static Identification_type *getInstance();
 
+    int jundge_cylinder(QVector<QVector2D> head_circle);
+
     // 识别类型
     // 椭圆
     bool recognize_cylinder(QVector<float> vec);
@@ -34,6 +36,8 @@ public:
 
 private:
     Common *common;
+
+    float circle_width, circle_height;
 };
 
 #endif // IDENTIFICATION_TYPE_H

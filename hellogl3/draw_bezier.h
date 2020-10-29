@@ -21,17 +21,17 @@ public:
 
     static Draw_bezier *getInstance();
 
-    static QVector<float> bezierCurve_vector;
+    static QStack<QVector<float>> bezierCurve_stack;
 
 public slots:
-    void receiver_bezierSlot(QVector<QVector3D> draw_vector);
+    void receiver_bezierSlot(QStack<QVector<QVector3D>> draw_stack);
 
 private:
     static void draw_bezier(void);
 
     static void winReshapeFcn(int newWidth, int newHeight);
 
-    static QVector<QVector3D> draw_vector;
+    static QStack<QVector<QVector3D>> draw_stack;
 
     static void bezier(wcPt3D *ctrlPts, GLint nCtrlPts, GLint nBezCurvePts);
 
@@ -42,6 +42,8 @@ private:
     static void computeBezpt(GLfloat u, wcPt3D *bezPt, GLint nCtrlPts, wcPt3D *ctrlPts, GLint *C);
 
     static void keyboard(unsigned char key, int x, int y);
+
+    static QVector<float> bezierCurve_vector;
 };
 
 #endif // DRAW_BEZIER_H

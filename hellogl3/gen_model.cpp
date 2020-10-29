@@ -194,11 +194,15 @@ void gen_Model::genPeanut(QVector<float> &vec, QVector<QVector2D> line_path, QVe
     if(offset_cup)
     {
         // 中心的 y 值
+        std::cout<<"recognizeCup->cylinder_center.x: "<<recognizeCup->cylinder_center.x()<<std::endl;
+
         std::cout<<"recognizeCup->cylinder_center.y: "<<recognizeCup->cylinder_center.y()<<std::endl;
+
+        float peanut_offset_x = recognizeCup->cylinder_center.x();
 
         float peanut_offset_y = recognizeCup->cylinder_center.y();
 
-        offset = QVector3D(0,peanut_offset_y, 0);
+        offset = QVector3D(peanut_offset_x,peanut_offset_y,0);
         offset_cup = false;
 
     }
@@ -208,6 +212,7 @@ void gen_Model::genPeanut(QVector<float> &vec, QVector<QVector2D> line_path, QVe
         std::cout<<"cylinder_center.y: "<<recognizeDeskLamp->cylinder_center.y()<<std::endl;
 
         float peanut_offset_y = recognizeDeskLamp->cylinder_center.y();
+
         offset = QVector3D(0, peanut_offset_y, 0);
         offset_deskLamp = false;
     }
@@ -750,6 +755,10 @@ void gen_Model::genSymmetric(QVector<float> &vec,QVector<QVector2D> head_path, Q
 
     std::cout<<"=========================对称====================="<<std::endl;
 
+    std::cout<<"head_path.size: "<<head_path.size()<<std::endl;
+
+    std::cout<<"line_path.size: "<<line_path.size()<<std::endl;
+
     // 高度比 (左右线段的 Z 值偏移角度)
     float heightRatio = common->mapEllipseToCircle(head_path);
 
@@ -838,6 +847,8 @@ void gen_Model::genSymmetric(QVector<float> &vec,QVector<QVector2D> head_path, Q
         common->genTriangle(vec,temp4,temp2,centerBottom); //bottom
 
     }
+
+    std::cout<<"centerTop.z: "<< centerTop.z() <<std::endl;
 
     std::cout<<"centerBottom.z: "<< centerBottom.z() <<std::endl;
 

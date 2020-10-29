@@ -57,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     draw_bezier = Draw_bezier::getInstance();
 
-    qRegisterMetaType<QVector<QVector3D> > ("QVector<QVector3D>");
+    qRegisterMetaType<QStack<QVector<QVector3D>>> ("QStack<QVector<QVector3D>>");
 }
 
 MainWindow::~MainWindow()
@@ -369,21 +369,21 @@ void MainWindow::quitApp()
 // cup
 void MainWindow::cup_clicked()
 {
-    if(recognizeCup->recognize_cup(ui->canvas->draw_stack))
+    if(recognizeCup->recognize_cup(draw_bezier->bezierCurve_stack))
         ui->glwidget->glWidget->draw_cup();
 }
 
 // deskLamp
 void MainWindow::deskLamp_clicked()
 {
-    if(recognizeDeskLamp->recognize_deskLamp(ui->canvas->draw_stack))
+    if(recognizeDeskLamp->recognize_deskLamp(draw_bezier->bezierCurve_stack))
         ui->glwidget->glWidget->draw_deskLamp();
 }
 
 // stool
 void MainWindow::stool_clicked()
 {
-    if(recognizeStool->recognize_stool(ui->canvas->draw_stack))
+    if(recognizeStool->recognize_stool(draw_bezier->bezierCurve_stack))
         ui->glwidget->glWidget->draw_stool();
 }
 
@@ -398,7 +398,7 @@ void MainWindow::line_clicked()
 
 void MainWindow::receive_LineProperty(float width_var)
 {
-    ui->glwidget->glWidget->draw_line(ui->canvas->draw_stack[ui->canvas->draw_stack.size() - 1], width_var);
+    ui->glwidget->glWidget->draw_line(draw_bezier->bezierCurve_stack[draw_bezier->bezierCurve_stack.size() - 1], width_var);
 }
 
 void MainWindow::extrude_clicked()
@@ -411,63 +411,70 @@ void MainWindow::extrude_clicked()
 
 void MainWindow::receive_ExtrudeProperty(float width_var, float up_var, float down_var)
 {
-    ui->glwidget->glWidget->draw_Extrude(draw_bezier->bezierCurve_vector, width_var, up_var, down_var);
+    ui->glwidget->glWidget->draw_Extrude(draw_bezier->bezierCurve_stack[draw_bezier->bezierCurve_stack.size() - 1], width_var, up_var, down_var);
 }
 
 void MainWindow::circle_clicked()
 {
-    ui->glwidget->glWidget->draw_circle(draw_bezier->bezierCurve_vector);
+    ui->glwidget->glWidget->draw_circle(draw_bezier->bezierCurve_stack[draw_bezier->bezierCurve_stack.size() - 1]);
 }
 
 void MainWindow::on_BezierButton_clicked()
 {
     std::cout << "MainWindow thread: " << QThread::currentThreadId() << std::endl;
 
-    QVector<float> last_vector = common->coordinate_transformation(ui->canvas->draw_stack[ui->canvas->draw_stack.size() - 1]);
+    QStack<QVector<QVector3D>> contorlPoint_stack;
 
-    QVector<QVector3D> draw_vector;
+    for(int i = 0; i < ui->canvas->draw_stack.size(); i++)
+    {
+        QVector<float> last_vector = common->coordinate_transformation(ui->canvas->draw_stack[i]);
 
-    // 屏幕坐标转世界坐标（由于 y 轴坐标系相反，所以我们给 y 坐标添加负号）
-    for(int i = 0; i < last_vector.size() - 1; i+=2)
-        draw_vector.push_back(QVector3D(last_vector[i], - last_vector[i+1], 0));
+        QVector<QVector3D> draw_vector;
 
-    std::cout<<"draw_vector.size: "<<draw_vector.size()<<std::endl;
+        // 屏幕坐标转世界坐标（由于 y 轴坐标系相反，所以我们给 y 坐标添加负号）
+        for(int i = 0; i < last_vector.size() - 1; i+=2)
+            draw_vector.push_back(QVector3D(last_vector[i], -last_vector[i+1], 0));
 
-    // 筛选控制点
-    QVector<QVector3D> contorlPoint_vector, tempPoint_vector;
+        std::cout<<"draw_vector.size: "<<draw_vector.size()<<std::endl;
 
-    for (int j = 0; j < draw_vector.size(); j+=5) {
+        // 筛选控制点
+        QVector<QVector3D> contorlPoint_vector, tempPoint_vector;
 
-        QVector3D point = draw_vector[j];
+        for (int j = 0; j < draw_vector.size(); j+=3) {
 
-        if(j == 0 || j == draw_vector.size()-1)
-        {
-            contorlPoint_vector.push_back(point); // 首尾
-            continue;
+            QVector3D point = draw_vector[j];
+
+            if(j == 0 || j == draw_vector.size()-1)
+            {
+                contorlPoint_vector.push_back(point); // 首尾
+                continue;
+            }
+
+            // 转折点(极值点)
+            if((j != 0 && j != draw_vector.size()-1) && point.y() < draw_vector[j-1].y() && point.y() < draw_vector[j+1].y())
+            {
+                contorlPoint_vector.push_back(point);
+            }
+            else if((j != 0 && j != draw_vector.size()-1) && point.y() > draw_vector[j-1].y() && point.y() > draw_vector[j+1].y())
+            {
+                contorlPoint_vector.push_back(point);
+            }
+            else if((j != 0 && j != draw_vector.size()-1) && point.x() > draw_vector[j-1].x() && point.x() > draw_vector[j+1].x())
+            {
+                contorlPoint_vector.push_back(point);
+            }
+            else if((j != 0 && j != draw_vector.size()-1) && point.y() < draw_vector[j-1].x() && point.y() < draw_vector[j+1].x())
+            {
+                contorlPoint_vector.push_back(point);
+            }
+            else
+                contorlPoint_vector.push_back(point);
         }
 
-        // 转折点(极值点)
-        if((j != 0 && j != draw_vector.size()-1) && point.y() < draw_vector[j-1].y() && point.y() < draw_vector[j+1].y())
-        {
-            contorlPoint_vector.push_back(point);
-        }
-        else if((j != 0 && j != draw_vector.size()-1) && point.y() > draw_vector[j-1].y() && point.y() > draw_vector[j+1].y())
-        {
-            contorlPoint_vector.push_back(point);
-        }
-        else if((j != 0 && j != draw_vector.size()-1) && point.x() > draw_vector[j-1].x() && point.x() > draw_vector[j+1].x())
-        {
-            contorlPoint_vector.push_back(point);
-        }
-        else if((j != 0 && j != draw_vector.size()-1) && point.y() < draw_vector[j-1].x() && point.y() < draw_vector[j+1].x())
-        {
-            contorlPoint_vector.push_back(point);
-        }
-        else
-            contorlPoint_vector.push_back(point);
+        std::cout<<"contorlPoint_vector.size: "<<contorlPoint_vector.size()<<std::endl;
+
+        contorlPoint_stack.push_back(contorlPoint_vector);
     }
-
-    std::cout<<"contorlPoint_vector.size: "<<contorlPoint_vector.size()<<std::endl;
 
     connect(this, &MainWindow::send_bezierSignal, draw_bezier, &Draw_bezier::receiver_bezierSlot);
 
@@ -481,5 +488,5 @@ void MainWindow::on_BezierButton_clicked()
 
     draw_bezierThread.start();
 
-    emit send_bezierSignal(contorlPoint_vector);
+    emit send_bezierSignal(contorlPoint_stack);
 }
